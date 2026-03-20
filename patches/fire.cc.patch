@@ -1,0 +1,38 @@
+--- /Users/devparagiri/Research/ED/data/ed-source/code/fire.cc	2021-08-23 10:23:20
++++ src/fire.cc	2026-03-20 15:57:09
+@@ -173,14 +173,28 @@
+ 
+    /* divide by site area */
+    cs->fuel[landuse] /= (cs->area_fraction[landuse] * data->area);
+-   cs->ignition_rate[landuse] = cs->fuel[landuse] * data->fp1 
+-      * pow(cs->sdata->dryness_index_avg / 30000.0, 10.0);
+-    
+-    //Without the below cap, ignition_rate is overestimated in Amazon forest due to hight dryness and average temperature, howoever, this region
+-    // has much lower burned area than the sme latitude in Africa.
+-    if(cs->sdata->precip[data->time_period]>100.0)
+-        cs->ignition_rate[landuse] = 0.0;
+ 
++   /* Fire ignition: sigmoid x fuel hump */
++   /* Replaces power-law dryness formulation with intermediate productivity */
++   /* hypothesis (Pausas & Ribeiro 2013, GEB 22:728-736). */
++   /* Sigmoid: smooth ignition threshold as dryness accumulates. */
++   /* Fuel hump: fire peaks at intermediate biomass (savanna optimum), */
++   /* not in dense forests (humid) or deserts (no fuel). */
++   {
++       double D_bar = cs->sdata->dryness_index_avg;
++       double AGB = cs->fuel[landuse];
++
++       double k = 0.0286;
++       double D0 = 128.4;
++       double sigmoid = 1.0 / (1.0 + exp(-k * (D_bar - D0)));
++
++       double fuel_build = 0.0755;
++       double fuel_decay = 0.323;
++       double fuel_hump = (1.0 - exp(-AGB / fuel_build)) * exp(-AGB / fuel_decay);
++
++       cs->ignition_rate[landuse] = data->fp1 * sigmoid * fuel_hump;
++   }
++
+    /* calculate fire dist rate and add into array of within yr values */
+    cs->lambda1[t%N_SUB][landuse] = 0.0;
+    cp = youngest_patch;

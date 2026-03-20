@@ -1,0 +1,38 @@
+--- /Users/devparagiri/Research/ED/data/ed-source/code/phenology.cc	2021-08-23 09:40:54
++++ src/phenology.cc	2026-03-20 15:57:42
+@@ -37,23 +37,26 @@
+       while (currentc != NULL) {
+          size_t spp = currentc->species;
+          currentc->status = 0; /* set status to indicate no leaf drop */  
+-         /* if drought-deciduous or cold-deciduous species    */
+-         /* temp=10 degrees gives good growing season pattern */
+-     
++         /* Cold-deciduous threshold lowered from 10C to 0C based on */
++         /* optimization against MODIS LAI (Jolly et al. 2005 GSI). */
++         /* Original 10C was too conservative for boreal vegetation, */
++         /* causing premature leaf drop and underestimated LAI at high latitudes. */
++
+           // When if_trigger is 2, carbon in active leaf pool will be moved to virtual pool
+           int if_trigger = 0;
++          double cold_thresh_default = 0.0;  /* was 10.0 */
+           if((data->phenology[spp] == 1) && (currentp->theta < THETA_CRIT))
+               if_trigger = 1;
+-          if((data->phenology[spp] == 2) && (currents->sdata->temp[data->time_period] < 10.0))
++          if((data->phenology[spp] == 2) && (currents->sdata->temp[data->time_period] < cold_thresh_default))
+               if_trigger = 1;
+-          if((data->phenology[spp] == 4) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < 10.0)))
++          if((data->phenology[spp] == 4) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < cold_thresh_default)))
+               if_trigger = 1;
+-          if((data->phenology[spp] == 3) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < 10.0)))
++          if((data->phenology[spp] == 3) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < cold_thresh_default)))
+               if_trigger = 1;
+-          
+-          if((data->phenology[spp] == 5) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < 15.0)))
++
++          if((data->phenology[spp] == 5) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < 5.0)))
+               if_trigger = 1;
+-          if((data->phenology[spp] == 6) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < 5.0)))
++          if((data->phenology[spp] == 6) && ((currentp->theta < THETA_CRIT) || (currents->sdata->temp[data->time_period] < -5.0)))
+               if_trigger = 1;
+           
+           if(!strcmp(data->title[spp],"early_succ_trop") or !strcmp(data->title[spp],"early_succ_temp"))

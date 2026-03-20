@@ -1,0 +1,63 @@
+{
+  "soil_carbon": {
+    "description": "Decomposition scalar (A_function) and pool structure",
+    "temperature_response": {
+      "model": "Lloyd-Taylor (1994)",
+      "R0": 1.93,
+      "E0": 243.5,
+      "T_freeze": 3.6,
+      "reference": "Lloyd & Taylor 1994, Functional Ecology 8:315-323"
+    },
+    "moisture_response": {
+      "model": "Log-parabolic (Moyano et al. 2013)",
+      "theta_opt": 0.19,
+      "sigma": 3.70,
+      "reference": "Moyano et al. 2013, Biogeosciences 10:3961-3981"
+    },
+    "pool_structure": {
+      "model": "2-box (labile + stable)",
+      "K_labile": 0.61,
+      "K_stable": 0.0087,
+      "r_labile": 0.66,
+      "r_stable": 0.13,
+      "f_stable": 0.29,
+      "f_litter": 0.55,
+      "note": "Replaces 4-box CENTURY. Passive pool was inert (K4=0)."
+    }
+  },
+  "fire": {
+    "description": "Sigmoid ignition x unimodal fuel response",
+    "ignition": {
+      "model": "Logistic sigmoid",
+      "k": 0.0286,
+      "D0": 128.4
+    },
+    "fuel_coupling": {
+      "model": "Intermediate productivity hump",
+      "fuel_build": 0.0755,
+      "fuel_decay": 0.323,
+      "reference": "Pausas & Ribeiro 2013, GEB 22:728-736"
+    }
+  },
+  "phenology": {
+    "description": "Cold-deciduous leaf drop threshold",
+    "cold_threshold": {
+      "original": 10.0,
+      "optimized": 0.0,
+      "unit": "degrees C",
+      "reference": "Jolly et al. 2005, Global Change Biology 11:619-632"
+    }
+  },
+  "evapotranspiration": {
+    "description": "Hargreaves PET + Zhang Budyko + LAI partition",
+    "note": "Grid-scale ET formulation. Not a direct C++ patch but a recommended replacement for Soil_Canopy_evap.",
+    "DTR": 15.4,
+    "zhang_w": 5.2,
+    "k_extinction": 1.03,
+    "transp_scale": 1.44,
+    "references": [
+      "Hargreaves & Samani 1985, Applied Eng. Agriculture 1:96-99",
+      "Zhang et al. 2001, Water Resources Research 37:701-708"
+    ]
+  }
+}
