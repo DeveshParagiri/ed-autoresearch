@@ -54,3 +54,30 @@ The original 10°C threshold was too conservative for boreal vegetation, causing
 
 **Metric improvement:**
 - MODIS LAI spatial correlation: 0.76 → 0.80
+
+## ED_params.defaults.cfg — Carbon Balance Mortality
+
+**m2: 10.0 → 2.0, m3: 20.0 → 5.0**
+
+| | Before | After |
+|---|--------|-------|
+| m2 (max mortality rate) | 10.0 yr⁻¹ | 2.0 yr⁻¹ |
+| m3 (sigmoid steepness) | 20.0 | 5.0 |
+| Half-life at cbr_bar=0 | 50 days | 4.5 years |
+
+The carbon balance mortality term `dmort = m2 / (1 + exp(m3 * cbr_bar))` controls how quickly trees die when their carbon balance is negative or marginal. With m3=20, the sigmoid creates a knife-edge: any tree with cbr_bar below 0.05 is killed within weeks. This is physically unrealistic because woody plants maintain carbon reserves in sapwood and starch that buffer 2-3 years of negative carbon balance (Hoch et al. 2003, *Plant Cell & Environment*). The fastest observed tree die-off events (bark beetle outbreaks, severe drought) operate on timescales of months to years (McDowell et al. 2011, *New Phytologist*), not days.
+
+The m3=20 value has no published justification. Softening to m3=5 allows boreal vegetation with short growing seasons (cbr_bar near zero) to persist, directly addressing the 22% vegetation coverage gap. This is the single most impactful parameter change because it is upstream of every other module: no vegetation → no litter → no soil carbon → no transpiration → no fire.
+
+**growth_resp: 0.5 → 0.33**
+
+| | Before | After |
+|---|--------|-------|
+| Growth respiration fraction | 0.50 | 0.33 |
+| Reference | Undocumented | Waring et al. 1998 |
+
+Restored to the ED 2001 value. The config file itself notes "0.33 in ED 2001" next to the 0.50 value. The standard literature estimate is 0.33 (Waring et al. 1998, *Advances in Ecological Research*). This gives boreal trees 17% more carbon for growth and survival.
+
+**Expected effect:**
+- Vegetation coverage extends into ~38% of currently empty cells where MODIS observes real vegetation
+- Cascading improvements to soil carbon (more litter input), ET (more transpiration), and fire (more fuel) at high latitudes

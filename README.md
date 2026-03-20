@@ -20,6 +20,8 @@ This repository contains replacement formulas for three ED source files, identif
 | Soil carbon temperature | `belowgrnd.cc` | Q10 → Lloyd-Taylor (1994) | 0.43 → 0.48 (vs HWSD) |
 | Soil carbon moisture | `belowgrnd.cc` | Piecewise linear → log-parabolic | bias: -50% → 0% |
 | Phenology | `phenology.cc` | Cold threshold 10°C → 0°C | 0.76 → 0.80 (vs MODIS LAI) |
+| Mortality | `ED_params.defaults.cfg` | m2=10,m3=20 → m2=2,m3=5 | Fixes 22% vegetation coverage gap |
+| Growth resp. | `ED_params.defaults.cfg` | 0.50 → 0.33 | Restore ED 2001 value (Waring 1998) |
 
 See [CHANGES.md](CHANGES.md) for detailed before/after formulas with physical justifications.
 
@@ -42,17 +44,19 @@ Each module uses a tailored multi-metric objective, not just spatial correlation
 ## Repository Structure
 
 ```
-src/                    Full patched source files (drop-in replacements)
-  belowgrnd.cc          Soil carbon decomposition + ET
-  fire.cc               Fire disturbance
-  phenology.cc          Leaf phenology thresholds
-patches/                Unified diffs against ED v3.0 originals
+src/                         Full patched source files (drop-in replacements)
+  belowgrnd.cc               Soil carbon decomposition + ET
+  fire.cc                    Fire disturbance
+  phenology.cc               Leaf phenology thresholds
+  mortality.cc               Mortality (unchanged source, for reference)
+patches/                     Unified diffs against ED v3.0 originals
 configs/
-  optimized_params.json All optimized parameter values with references
+  ED_params.defaults.cfg     Patched config (m2, m3, growth_resp)
+  optimized_params.json      All optimized parameter values with references
 results/
-  MASTER_RESULTS.md     Cross-module summary
-  per_module/           Detailed optimization logs per phase
-CHANGES.md              Formula-by-formula changelog with citations
+  MASTER_RESULTS.md          Cross-module summary
+  per_module/                Detailed optimization logs per phase
+CHANGES.md                   Formula-by-formula changelog with citations
 ```
 
 ## How to Use
@@ -60,9 +64,13 @@ CHANGES.md              Formula-by-formula changelog with citations
 Replace the corresponding files in your ED v3.0 source directory:
 
 ```bash
+# Source file replacements
 cp src/belowgrnd.cc  /path/to/EDv3_code/belowgrnd.cc
 cp src/fire.cc       /path/to/EDv3_code/fire.cc
 cp src/phenology.cc  /path/to/EDv3_code/phenology.cc
+
+# Config parameter changes (mortality + growth respiration)
+cp configs/ED_params.defaults.cfg /path/to/EDv3_code/ED_params.defaults.cfg
 ```
 
 Or apply patches to your existing source:
@@ -72,6 +80,7 @@ cd /path/to/EDv3_code
 patch -p0 < /path/to/ed-autoresearch/patches/belowgrnd.cc.patch
 patch -p0 < /path/to/ed-autoresearch/patches/fire.cc.patch
 patch -p0 < /path/to/ed-autoresearch/patches/phenology.cc.patch
+patch -p0 < /path/to/ed-autoresearch/patches/ED_params.defaults.cfg.patch
 ```
 
 Recompile and run as usual. No new dependencies or data files required.

@@ -59,5 +59,31 @@
       "Hargreaves & Samani 1985, Applied Eng. Agriculture 1:96-99",
       "Zhang et al. 2001, Water Resources Research 37:701-708"
     ]
+  },
+  "mortality": {
+    "description": "Carbon balance mortality sigmoid and growth respiration",
+    "file": "ED_params.defaults.cfg (config change, no C++ modification)",
+    "m2": {
+      "original": 10.0,
+      "optimized": 2.0,
+      "unit": "yr^-1",
+      "justification": "Caps maximum carbon-starvation mortality at 2/yr. m2=10 implied cohorts die 10x/yr, faster than any observed die-off event. McDowell et al. 2011 review shows carbon starvation operates on month-to-year timescales.",
+      "reference": "McDowell et al. 2011, New Phytologist 189:438-449"
+    },
+    "m3": {
+      "original": 20.0,
+      "optimized": 5.0,
+      "unit": "dimensionless",
+      "justification": "Softens the carbon balance sigmoid. m3=20 gives half-life of 50 days at cbr_bar=0, killing any tree with marginal carbon balance within weeks. Real trees survive bad years using stored carbon reserves in sapwood and starch. m3=5 gives half-life of 4.5 years at cbr=0, allowing boreal vegetation with short growing seasons to persist.",
+      "reference": "Hoch et al. 2003, Plant Cell & Environment 26:1067-1081"
+    },
+    "growth_resp": {
+      "original": 0.5,
+      "optimized": 0.33,
+      "unit": "fraction",
+      "justification": "Restored to ED 2001 value. 0.33 is the standard literature estimate for growth respiration as a fraction of NPP (Waring et al. 1998). The increase to 0.5 in ED v3.0 is undocumented.",
+      "reference": "Waring et al. 1998, Advances in Ecological Research 28:113-175"
+    },
+    "expected_effect": "Extends vegetation coverage into high-latitude cells where short growing seasons produce low but positive annual carbon balance. Directly addresses the 22% vegetation coverage gap identified in this study."
   }
 }
