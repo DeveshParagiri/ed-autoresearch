@@ -1,0 +1,66 @@
+{
+  "model": "Model A v2 (TRENDY v14 inputs)",
+  "method": "exact Shapley over 2^7 = 128 subsets",
+  "n_mechanisms": 7,
+  "mechanisms": [
+    "fuel",
+    "gpp",
+    "soil_temp",
+    "precip",
+    "height",
+    "landuse",
+    "soil_c"
+  ],
+  "empty_overall": 0.6226719096302986,
+  "full_overall": 0.7304435521364212,
+  "expected_sum": 0.10777164250612259,
+  "actual_sum": 0.10777164250612259,
+  "shapley_values": {
+    "fuel": 0.04464750399901755,
+    "gpp": -0.0002970745343537565,
+    "soil_temp": 0.03678481651558762,
+    "precip": 0.01389985914741243,
+    "height": 0.007696730501594998,
+    "landuse": 0.0022462946495839524,
+    "soil_c": 0.002793512227279796
+  },
+  "shapley_sorted": [
+    {
+      "mechanism": "fuel",
+      "phi": 0.04464750399901755,
+      "percent": 41.42787746459472
+    },
+    {
+      "mechanism": "soil_temp",
+      "phi": 0.03678481651558762,
+      "percent": 34.13218510936014
+    },
+    {
+      "mechanism": "precip",
+      "phi": 0.01389985914741243,
+      "percent": 12.897510721916268
+    },
+    {
+      "mechanism": "height",
+      "phi": 0.007696730501594998,
+      "percent": 7.141702884557727
+    },
+    {
+      "mechanism": "soil_c",
+      "phi": 0.002793512227279796,
+      "percent": 2.5920661152780466
+    },
+    {
+      "mechanism": "landuse",
+      "phi": 0.0022462946495839524,
+      "percent": 2.0843095617257004
+    },
+    {
+      "mechanism": "gpp",
+      "phi": -0.0002970745343537565,
+      "percent": -0.2756518574326075
+    }
+  ],
+  "n_trials_per_subset": 500,
+  "runtime_seconds": 4817.2
+}

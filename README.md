@@ -1,121 +1,133 @@
-# Autoresearch for ED v3.0
+# ED Autoresearch: Fire Module Replacement
 
-Physically grounded formula replacements for the [Ecosystem Demography model (ED v3.0)](https://gmd.copernicus.org/articles/15/1971/2022/), derived using LLM-driven structural diagnosis and Bayesian optimization against [iLAMB](https://www.ilamb.org/) observational benchmarks.
+Closed-form, mechanistic fire formulas for the ED v3 dynamic global vegetation model. Trained against GFED4.1s burned area using TRENDY v14 ED S3 inputs, scored via ILAMB's `ConfBurntArea` confrontation.
 
-Inspired by Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) framework.
+Three variants at different complexity tiers:
 
-**Blog post:** [Autoresearch for Earth System Models](https://deveshparagiri.com/blog/2026/autoresearch-earth-system-models/)
+- **A** — full 7-mechanism formula, 19 params
+- **B** — Shapley-reduced 4 mechanisms, 13 params (**best Overall**)
+- **C** — minimal 2-mechanism physics-only, 10 params
 
-## What This Is
+## ILAMB Leaderboard (TRENDY v14 + our models)
 
-ED v3.0 is an individual-based terrestrial biosphere model that simulates plant growth, fire, soil carbon decomposition, hydrology, and phenology globally. Many of its parameterized formulas have remained unchanged since the 1990s.
+GFED4.1s burned-area benchmark, 2001-2016 monthly. `ConfBurntArea` confrontation, `mass_weighting = True`, area-weighted cos-lat.
 
-This repository contains replacement formulas for three ED source files, identified by systematically searching over both equation structure and parameters. Every replacement maps to a named physical mechanism with published justification. No neural networks or black boxes.
+| Rank | Model | Bias | RMSE | Seasonal | Spatial Dist | **Overall** |
+|-----:|-------|-----:|-----:|---------:|-------------:|------------:|
+| 1 | CLM6.0 | 0.759 | 0.474 | 0.758 | 0.838 | **0.707** |
+| 2 | CLASSIC | 0.738 | 0.507 | 0.782 | 0.797 | **0.706** |
+| 3 | ELM-FATES | 0.724 | 0.512 | 0.860 | 0.676 | **0.693** |
+| 4 | CLM-FATES | 0.725 | 0.525 | 0.802 | 0.707 | **0.690** |
+| **5** | **ED-ModelB-v2** | **0.725** | **0.482** | **0.612** | **0.791** | **0.652** |
+| **6** | **ED-ModelC-v2** | **0.701** | **0.476** | **0.662** | **0.730** | **0.642** |
+| **7** | **ED-ModelA-v2** | **0.732** | **0.478** | **0.520** | **0.806** | **0.634** |
+| 8 | JULES-ES | 0.709 | 0.506 | 0.784 | 0.447 | 0.611 |
+| 9 | ELM | 0.687 | 0.492 | 0.778 | 0.333 | 0.572 |
+| 10 | VISIT-UT | 0.636 | 0.488 | 0.695 | 0.466 | 0.571 |
+| 11 | LPJmL | 0.693 | 0.489 | 0.459 | 0.612 | 0.563 |
+| 12 | LPJ-GUESS | 0.671 | 0.489 | 0.459 | 0.288 | 0.477 |
+| 13 | **EDv3 (stock)** | **0.681** | **0.489** | **0.439** | **0.290** | **0.475** |
+| 14 | LPJ-EOSIM | 0.654 | 0.489 | 0.459 | 0.227 | 0.457 |
 
-## What Changed
+**B ranks #5** — beats JULES-ES, ELM, VISIT-UT, LPJmL, LPJ-GUESS, and ED's stock fire module (+0.18 over EDv3). All three of our models sit in the top half.
 
-| Module | File | Before → After | Spatial Correlation |
-|--------|------|----------------|-------------------|
-| Fire | `fire.cc` | Power-law → sigmoid × fuel hump | 0.09 → 0.65 (vs GFED) |
-| Soil carbon temperature | `belowgrnd.cc` | Q10 → Lloyd-Taylor (1994) | 0.43 → 0.48 (vs HWSD) |
-| Soil carbon moisture | `belowgrnd.cc` | Piecewise linear → log-parabolic | bias: -50% → 0% |
-| Phenology | `phenology.cc` | Cold threshold 10°C → 0°C | 0.76 → 0.80 (vs MODIS LAI) |
-| Mortality | `ED_params.defaults.cfg` | m2=10,m3=20 → m2=2,m3=5 | Fixes 22% vegetation coverage gap |
-| Growth resp. | `ED_params.defaults.cfg` | 0.50 → 0.33 | Restore ED 2001 value (Waring 1998) |
+For the JASMIN-reproducer scorecard that the TRENDY leaderboard numbers come from, see [trendy-v14-fire-benchmark](https://github.com/DeveshParagiri/trendy-v14-fire-benchmark).
 
-See [CHANGES.md](CHANGES.md) for detailed before/after formulas with physical justifications.
-
-## Approach
-
-For each module:
-
-1. Extract the parameterized formula from ED's C++ source
-2. Replicate in Python for fast evaluation (~1s per global 0.5° grid)
-3. Evaluate against gridded observations (iLAMB benchmarks)
-4. Use an LLM to diagnose why the formula structurally disagrees with observations
-5. Propose alternative formulas along physical axes (e.g. Q10 vs Lloyd-Taylor vs Arrhenius)
-6. Bayesian optimization ([Optuna](https://optuna.org/) TPE) over the joint structure × parameter space
-7. Validate with 5-fold spatial cross-validation
-
-Modules are optimized following ED's dependency graph (photosynthesis → growth → soil carbon → fire) since upstream improvements cascade downstream. A joint optimization phase enforces cross-module consistency (e.g. water balance closure: P = ET + R).
-
-Each module uses a tailored multi-metric objective, not just spatial correlation. Soil carbon optimizes for both stock accuracy (HWSD) and flux accuracy (Hashimoto Rh). Hydrology requires water balance closure. GPP requires biome-level skill.
-
-## Repository Structure
+## What's in this repo
 
 ```
-src/                         Full patched source files (drop-in replacements)
-  belowgrnd.cc               Soil carbon decomposition + ET
-  fire.cc                    Fire disturbance
-  phenology.cc               Leaf phenology thresholds
-  mortality.cc               Mortality (unchanged source, for reference)
-patches/                     Unified diffs against ED v3.0 originals
-configs/
-  ED_params.defaults.cfg     Patched config (m2, m3, growth_resp)
-  optimized_params.json      All optimized parameter values with references
-results/
-  MASTER_RESULTS.md          Cross-module summary
-  per_module/                Detailed optimization logs per phase
-CHANGES.md                   Formula-by-formula changelog with citations
+models/
+├── A/params.json        19 params, full 7-mechanism formula
+├── A/formula.md         math, mechanism table, citations
+├── B/params.json        13 params, Shapley-reduced 4-mechanism
+├── B/formula.md
+├── C/params.json        10 params, 2-mechanism minimal
+├── C/formula.md
+└── shapley.json         exact Shapley decomposition of A (128 subsets)
+
+scripts/
+├── reproduce.py         regenerate burntArea NetCDFs for all 3 models
+├── score.py             run ILAMB on generated NetCDFs
+└── download_inputs.sh   fetch TRENDY v14 + GFED reference
+
+WRITEUP.md               full experimental narrative
 ```
 
-## How to Use
+## Inputs required for replication
 
-Replace the corresponding files in your ED v3.0 source directory:
+The three models all use the same input set. A uses all 8, B uses 5, C uses 3.
+
+### TRENDY v14 ED S3 (downloaded from [gcb-2025-upload bucket](https://s3.eu-west-1.wasabisys.com/gcb-2025-upload/land/output/ED/S3/))
+
+| File | Size | Used by | Purpose |
+|------|-----:|:-------:|---------|
+| `EDv3_S3_gpp.nc` | 4.0 GB | A | monthly GPP (coupled ED output) |
+| `EDv3_S3_cLeaf.nc` | 337 MB | A/B/C | leaf carbon → AGB component |
+| `EDv3_S3_cWood.nc` | 337 MB | A/B/C | wood carbon → AGB component |
+| `EDv3_S3_cSoil.nc` | 337 MB | A | soil carbon pool |
+
+AGB for the `fuel_hump` term = `cLeaf + cWood` (annual, kg C/m²).
+
+### CRUJRA v3.5 climate (same as TRENDY models use for forcing)
+
+Any CRUJRA 0.5° monthly product covering 2001-2016:
+- Temperature (for PET via Thornthwaite)
+- Precipitation
+- Soil temperatures layers 1-6 (layers 3-6 averaged for `T_deep`)
+
+### ED frozen-simulation output (no TRENDY v14 equivalent exists)
+
+- `mean_height_natr` — canopy height, natural vegetation
+- `mean_height_scnd` — canopy height, secondary vegetation (A only)
+- `frac_scnd` — secondary vegetation land fraction (A only)
+
+These PFT-level state variables aren't published in TRENDY v14. They come from a frozen ED simulation. For production coupled deployment, each ED run would use its own prognostic versions — the formula parameters are scale-aware enough that this should work, but hasn't been fully validated.
+
+### Target (for validation/re-calibration only)
+
+- `GFED4.1s_*.hdf5` — 2001-2016 monthly burned-area fraction
+
+Not needed at inference time. Only used to recompute scores.
+
+## Quick start
 
 ```bash
-# Source file replacements
-cp src/belowgrnd.cc  /path/to/EDv3_code/belowgrnd.cc
-cp src/fire.cc       /path/to/EDv3_code/fire.cc
-cp src/phenology.cc  /path/to/EDv3_code/phenology.cc
+# Clone + setup
+git clone https://github.com/DeveshParagiri/ed-autoresearch.git
+cd ed-autoresearch
+python -m venv .venv && source .venv/bin/activate
+pip install numpy xarray cftime netCDF4 optuna h5py
 
-# Config parameter changes (mortality + growth respiration)
-cp configs/ED_params.defaults.cfg /path/to/EDv3_code/ED_params.defaults.cfg
+# Download inputs (~5 GB for minimal set; ~10 GB for all)
+bash scripts/download_inputs.sh
+
+# Regenerate NetCDFs for all 3 models
+python scripts/reproduce.py
+
+# Score with ILAMB (see trendy-v14-fire-benchmark for full leaderboard)
+python scripts/score.py
 ```
 
-Or apply patches to your existing source:
+## Model selection guide
 
-```bash
-cd /path/to/EDv3_code
-patch -p0 < /path/to/ed-autoresearch/patches/belowgrnd.cc.patch
-patch -p0 < /path/to/ed-autoresearch/patches/fire.cc.patch
-patch -p0 < /path/to/ed-autoresearch/patches/phenology.cc.patch
-patch -p0 < /path/to/ed-autoresearch/patches/ED_params.defaults.cfg.patch
-```
+- **Best ILAMB score**: B (0.652). Use this for benchmark comparisons.
+- **Best spatial pattern**: A (SpDist 0.806). Use if you need sharp geographic fidelity, e.g., regional attribution.
+- **Minimum dependencies for a coupled ED port**: C. Only 3 input fields, 10 params, no GPP/landuse/soil_C coupling.
+- **Best seasonal cycle**: C (Seas 0.662). Fewer mechanisms interfere less with monthly climate signal.
 
-Recompile and run as usual. No new dependencies or data files required.
+## Caveats
 
-## Observation Data Sources
-
-Optimization was performed against the following gridded datasets, all publicly available through [iLAMB](https://www.ilamb.org/datasets.html):
-
-| Dataset | Variable | Source |
-|---------|----------|--------|
-| [HWSD](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v12/en/) | Soil carbon stocks | FAO |
-| [NCSCD](https://bolin.su.se/data/ncscd/) | Northern circumpolar soil carbon | Bolin Centre |
-| [Hashimoto 2015](https://zenodo.org/records/4708444) | Heterotrophic respiration | Zenodo |
-| [GFED4.1s](https://www.globalfiredata.org/) | Burned area | Global Fire Data |
-| [GLEAM v3.3a](https://www.gleam.eu/) | Evapotranspiration | GLEAM |
-| [MODIS](https://modis.gsfc.nasa.gov/) | LAI, ET | NASA LP DAAC |
-| [FLUXCOM](https://www.fluxcom.org/) | GPP | MPI-BGC |
-| [LORA](https://geonetwork.nci.org.au/geonetwork/srv/eng/catalog.search#/metadata/f9617_9854_8096_5291) | Runoff | NCI Australia |
-| [CRU TS v4.09](https://crudata.uea.ac.uk/cru/data/hrg/) | Temperature, precipitation, PET | UEA CRU |
-
-ED simulation output (Ma et al. 2022) from [Zenodo](https://zenodo.org/records/5765486).
-
-## Limitations
-
-These formulas were optimized against steady-state approximations, not a coupled ED re-run. The actual improvement in iLAMB scores requires patching the C++ source, recompiling, running a 500-year spinup, and re-evaluating. Nonlinear feedbacks between modules may alter results.
-
-The steady-state assumption for soil carbon is particularly questionable at high latitudes where permafrost soils are out of equilibrium. The boreal GPP problem (no single formula captures all biomes) remains partially unresolved.
+- Trained on TRENDY v14 offline inputs. Coupled-ED transferability validated in principle (rank-invariance under GPP/AGB scale shifts) but not in a full production deployment.
+- Absolute Bias and Overall scores are ~2-3× higher than JASMIN's internal leaderboard because they use a private `BurnedAreaExtended` confrontation with a burnable-area mask (GFED4.1S16). Rankings match; absolute magnitudes don't.
+- These models predict **burned area fraction**. Emissions, mortality, and coupling to vegetation state are handled by ED's existing machinery.
 
 ## References
 
-- Ma, L., et al. (2022). Global evaluation of the Ecosystem Demography model (ED v3.0). GMD 15: 1971-1994.
-- Collier, N., et al. (2018). The International Land Model Benchmarking (ILAMB) system. JAMES 10: 2731-2754.
-- Lloyd, J. & Taylor, J.A. (1994). On the temperature dependence of soil respiration. Functional Ecology 8: 315-323.
-- Moyano, F.E., et al. (2013). Responses of soil heterotrophic respiration to moisture availability. Biogeosciences 10: 3961-3981.
-- Pausas, J.G. & Ribeiro, E. (2013). The global fire-productivity relationship. GEB 22: 728-736.
-- Jolly, W.M., et al. (2005). A generalized, bioclimatic index to predict foliar phenology. GCB 11: 619-632.
-- Zhang, L., et al. (2001). Response of mean annual ET to vegetation changes. WRR 37: 701-708.
-- Hargreaves, G.H. & Samani, Z.A. (1985). Reference crop evapotranspiration from temperature. AEA 1: 96-99.
+- Bistinas et al. 2014 · Archibald et al. 2009, 2010, 2013 · Pausas & Ribeiro 2013 · Pausas & Keeley 2009 · van der Werf 2008, 2010 · Venevsky et al. 2002 · Krawchuk et al. 2009
+- ILAMB: Collier et al. 2018
+- GFED4.1s: van der Werf et al. 2017
+- TRENDY v14: Global Carbon Project 2025
+
+## License
+
+MIT (see LICENSE).
