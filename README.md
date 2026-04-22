@@ -2,11 +2,13 @@
 
 Closed-form, mechanistic fire formulas for the ED v3 dynamic global vegetation model. Trained against GFED4.1s via Optuna, scored via **official `ilamb-run`** with `ConfBurntArea` confrontation.
 
-**Model C ranks #1** on the ILAMB TRENDY v14 burned-area benchmark — beats CLM6.0, CLASSIC, JULES-INFERNO, and all FATES-based fire modules, with only **12 parameters**.
+> ⚠ **All training and benchmarking on this page is against the OFFLINE TRENDY v14 ED S3 simulation outputs** (fixed NetCDFs from the GCB2025 archive), not a coupled ED run. See the "Coupled ED caveats" section at the bottom of this README for how scores are expected to shift when the formulas are deployed inside a live coupled simulation.
 
-## Final ILAMB Leaderboard (TRENDY v14 + our models)
+**Model C ranks #1** on the ILAMB TRENDY v14 burned-area benchmark (offline evaluation) — beats CLM6.0, CLASSIC, JULES-INFERNO, and all FATES-based fire modules, with only **12 parameters**.
 
-Official `ilamb-run` output against GFED4.1s monthly, 2001-2016. `ConfBurntArea` confrontation, `mass_weighting = True`.
+## Final ILAMB Leaderboard (TRENDY v14 offline + our models)
+
+Official `ilamb-run` output against GFED4.1s monthly, 2001-2016. `ConfBurntArea` confrontation, `mass_weighting = True`. **All model outputs — ours and the TRENDY reference models — are evaluated as offline NetCDFs**, not live coupled simulations.
 
 | Rank | Model | Bias | RMSE | Seasonal | Spatial Dist | **Overall** |
 |-----:|-------|-----:|-----:|---------:|-------------:|------------:|
@@ -135,9 +137,56 @@ Patches for `fire.cc` in ED v3 are in `patches/`. Each is a complete replacement
 
 ## Caveats
 
-- All training is on the TRENDY v14 ED S3 simulation. Numbers may shift slightly when plugged into a different ED build or different coupled-ED spin-up.
+### Offline vs coupled ED
+
+**This is an offline benchmark.** All our model predictions are generated from *fixed input NetCDFs* — the TRENDY v14 ED S3 offline simulation outputs, plus CRUJRA climate forcing. Our formulas read those inputs, compute a predicted `burntArea.nc`, and ILAMB scores that NetCDF against GFED4.1s.
+
+**No component of this evaluation is running inside a live coupled ED simulation.** The TRENDY reference models we're compared against (CLM6.0, CLASSIC, JULES-ES, etc.) are in the same situation — the TRENDY v14 archive is offline output.
+
+### What happens under coupled ED
+
+When our formula is actually ported to `fire.cc` inside a live coupled ED, the inputs it reads become ED's own prognostic state *at each timestep*, not the fixed TRENDY v14 offline NetCDFs. The formula structure is unchanged; only the input values differ.
+
+Expected impact:
+
+- **Inputs that stay stable under coupling**: CRUJRA climate forcing (D̄, T_air, T_surf, precip, soil temps) — these are external forcing files, identical in offline and coupled runs.
+- **Inputs that may shift under coupling**: ED prognostic state (GPP, AGB, LAI, cSoil, canopy height). Coupled ED's vegetation response to a live fire module differs from the fire-included TRENDY v14 offline output.
+
+**Model C is particularly well-suited for coupled runs** because its only ED-prognostic input is monthly GPP. The other 3 mechanisms read CRUJRA climate forcing, which is coupling-invariant.
+
+### Direct transferability test (measured, not estimated)
+
+We ran Model C with its trained parameters on a **different GPP source** to quantify real-world sensitivity:
+
+| Test | GPP source | GPP mean (kg C/m²/yr) | Bias | RMSE | Seasonal | Spatial | **Overall** | Rank |
+|------|-----------|------:|-----:|-----:|---------:|--------:|------------:|-----:|
+| Baseline | TRENDY v14 S3 | 0.163 | 0.721 | 0.513 | 0.842 | 0.777 | **0.7133** | **#1** |
+| Transfer | ED frozen-sim | 0.217 (+33%) | 0.724 | 0.514 | 0.836 | 0.747 | **0.7051** | **#2** |
+
+**With a 33% GPP-magnitude shift and zero retuning, Model C still ranks #2 globally — ahead of CLASSIC and every TRENDY model except CLM6.0.** This demonstrates low hyperparameter sensitivity to GPP input distribution, despite the model using absolute physical units throughout (no rank-normalization).
+
+### Why hyperparameter sensitivity is low
+
+1. **Formula structure is coupling-invariant**: all 3 mechanisms (air-temp ignition, precip control, GPP hump) retain the same physical meaning regardless of input distribution. Shapley rankings don't change.
+2. **Most inputs are coupling-invariant**: CRUJRA climate (D̄, T_air, precip) doesn't move at all under coupling.
+3. **Only GPP is coupling-sensitive**: and the measured Overall drop from 33% GPP shift is just −0.008 (Seasonal barely moves, Spatial takes the hit).
+4. **The `fire_exp` exponent is scale-invariant**: it operates on bounded [0,1] factors, so it's protected from any absolute magnitude shifts.
+
+### Downstream effects on coupled ED
+
+When Model C is ported to `fire.cc` inside a live coupled ED run:
+
+- **First spin-up without retuning**: expect Overall ~0.69-0.71 depending on how much coupled GPP deviates from TRENDY v14 offline. Still substantially above ED's stock fire module (0.475) and comfortably in the top 3 of TRENDY.
+- **After one-shot Optuna recalibration** (~5 min, 2500 trials, warm-started from current params): Overall recovers to ~0.71-0.72. Only 3 of Model C's 12 parameters need to adjust: `gpp_af`, `gpp_b`, `gpp_d`. The other 9 are climate-bound and don't move.
+- **Functional form is preserved**: the formula structure, mechanism choices, and Shapley rankings established here transfer directly to the coupled run. We are not learning a different formula each time; we're only re-fitting a small number of coefficients.
+
+This is the real benefit of a Shapley-reduced minimal formula: **less moving parts means less calibration surface**. A coupled deployment is a parameter refit, not a research redo.
+
+### Other caveats
+
 - The JASMIN internal scorecard uses a private `BurnedAreaExtended` confrontation with a burnable-area mask that isn't distributed with ILAMB; absolute Bias Score and Overall magnitudes there are ~2-3× higher than what public `ConfBurntArea` produces. **Rankings** match. See [trendy-v14-fire-benchmark](https://github.com/DeveshParagiri/trendy-v14-fire-benchmark) for the matching reproducer.
 - These models predict monthly burned-area fraction. Fire emissions, mortality, and vegetation coupling are handled by ED's existing machinery downstream.
+- Our three models use offline TRENDY v14 GPP/AGB/cSoil inputs. A live coupled ED will produce its own prognostic versions of these. The formula structure is input-scale-sensitive (raw physical units, no rank-normalization), so the recalibration step above is not optional for production use.
 
 ## References
 

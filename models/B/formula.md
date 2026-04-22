@@ -1,7 +1,7 @@
 # Model B — Shapley-Reduced 5-Mechanism Formula
 
 **17 parameters, 5 mechanism groups, Official ILAMB Overall: 0.6943**
-**Rank: #7 of 24 models on TRENDY v14 leaderboard**
+**Rank: #7 of 24 models on TRENDY v14 offline leaderboard**
 
 Middle-tier simplification of Model A. Keeps the top-5 Shapley mechanisms, drops fuel, height, and soil_temp (the 3 lowest-φ mechanisms from the v8 Shapley decomposition).
 

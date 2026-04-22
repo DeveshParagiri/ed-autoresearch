@@ -1,7 +1,7 @@
 # Model C — Minimalist 3-Mechanism Formula
 
 **12 parameters, 3 mechanism groups, Official ILAMB Overall: 0.7133**
-**Rank: #1 of 24 models on TRENDY v14 leaderboard**
+**Rank: #1 of 24 models on TRENDY v14 offline leaderboard**
 
 The minimal reduction of Model A. Keeps only the top-3 Shapley mechanisms. Beats CLM6.0, CLASSIC, and all TRENDY models with fewer parameters than any competitor.
 

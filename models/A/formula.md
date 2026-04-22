@@ -1,7 +1,7 @@
 # Model A — Full 8-Mechanism Fire Formula
 
 **27 parameters, 8 mechanism groups, Official ILAMB Overall: 0.6989**
-**Rank: #4 of 24 models on TRENDY v14 leaderboard**
+**Rank: #4 of 24 models on TRENDY v14 offline leaderboard**
 
 Full mechanistic formula. The starting point for Shapley analysis — Models B and C are derived by dropping the least-contributing mechanisms.
 
