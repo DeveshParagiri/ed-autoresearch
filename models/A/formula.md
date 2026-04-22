@@ -1,7 +1,7 @@
 # Model A — Full 8-Mechanism Fire Formula
 
-**27 parameters, 8 mechanism groups, Official ILAMB Overall: 0.6989**
-**Rank: #4 of 24 models on TRENDY v14 offline leaderboard**
+**27 parameters, 8 mechanism groups, ILAMB Overall: 0.6574** (native tier-2 aggregation from `scalar_database.csv`)
+**Rank: #4 on TRENDY v14 offline leaderboard**
 
 Full mechanistic formula. The starting point for Shapley analysis — Models B and C are derived by dropping the least-contributing mechanisms.
 
@@ -53,6 +53,8 @@ From 2⁸ = 256-subset exact Shapley on Model A (500 trials per subset, 6 worker
 
 Empty subset (base ignition only): 0.6225. Full subset: 0.7362. ΣΦ = 0.1137 (verified).
 
+> Scores above are the Optuna training objective (equal-weighted mean of 4 component scores), not ILAMB native Overall. Mechanism *rankings* are what drive B and C construction and are expected to be stable under either aggregation. See README "Shapley results" section.
+
 **Key finding**: monthly seasonal mechanisms (t_air_ign, gpp_monthly, gpp_anom, t_surf = 61% of explained variance) dominate. Fuel's Shapley contribution is small here because GPP-based mechanisms already carry most biomass/productivity signal.
 
 ## Scores (Official ILAMB)
@@ -63,7 +65,7 @@ Empty subset (base ignition only): 0.6225. Full subset: 0.7362. ΣΦ = 0.1137 (v
 | RMSE Score | 0.492 | +0.018 |
 | Seasonal Cycle | **0.805** | **+0.047** |
 | Spatial Distribution | 0.783 | −0.055 |
-| **Overall** | **0.6989** | **−0.008** |
+| **Overall** | **0.6574** | **−0.003** |
 
 ## Inputs
 

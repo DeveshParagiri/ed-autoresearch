@@ -1,7 +1,7 @@
 # Model B — Shapley-Reduced 5-Mechanism Formula
 
-**17 parameters, 5 mechanism groups, Official ILAMB Overall: 0.6943**
-**Rank: #7 of 24 models on TRENDY v14 offline leaderboard**
+**17 parameters, 5 mechanism groups, ILAMB Overall: 0.6506** (native tier-2 aggregation from `scalar_database.csv`)
+**Rank: #7 on TRENDY v14 offline leaderboard**
 
 Middle-tier simplification of Model A. Keeps the top-5 Shapley mechanisms, drops fuel, height, and soil_temp (the 3 lowest-φ mechanisms from the v8 Shapley decomposition).
 
@@ -43,7 +43,7 @@ B's 5 mechanisms cover **78% of Model A's total explained Shapley variance**. Dr
 | RMSE | 0.476 | −0.016 | +0.002 |
 | Seasonal | **0.833** | **+0.028** | **+0.075** |
 | Spatial | 0.763 | −0.020 | −0.075 |
-| **Overall** | **0.6943** | −0.005 | −0.013 |
+| **Overall** | **0.6506** | −0.007 | −0.010 |
 
 **Model B actually improves Seasonal over A** by +0.028 — fewer mechanisms, less interference. Loses some Spatial (no explicit height or fuel) but within the ILAMB top 7.
 

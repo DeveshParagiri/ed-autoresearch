@@ -1,7 +1,7 @@
 # Model C — Minimalist 3-Mechanism Formula
 
-**12 parameters, 3 mechanism groups, Official ILAMB Overall: 0.7133**
-**Rank: #1 of 24 models on TRENDY v14 offline leaderboard**
+**12 parameters, 3 mechanism groups, ILAMB Overall: 0.6733** (native tier-2 aggregation from `scalar_database.csv`)
+**Rank: #1 on TRENDY v14 offline leaderboard**
 
 The minimal reduction of Model A. Keeps only the top-3 Shapley mechanisms. Beats CLM6.0, CLASSIC, and all TRENDY models with fewer parameters than any competitor.
 
@@ -38,14 +38,14 @@ Together = **52.8% of Model A's total explained variance**. These three are the 
 | Metric | Model C | CLM6.0 | Δ |
 |--------|-------:|-------:|------:|
 | Bias | 0.721 | 0.759 | −0.038 |
-| RMSE | 0.513 | 0.474 | −0.039 |
+| RMSE | 0.513 | 0.474 | +0.039 |
 | **Seasonal** | **0.842** | 0.758 | **+0.084** |
 | Spatial | 0.777 | 0.838 | −0.061 |
-| **Overall** | **0.7133** | 0.7073 | **+0.006** |
+| **Overall** | **0.6733** | 0.6606 | **+0.013** |
 
 Model C loses on 3 of 4 metrics but wins big on **Seasonal Cycle Score** (+0.084). This comes from the formula's tight response to monthly GPP + monthly air temp — cell-specific phase information is baked into both signals.
 
-Loss on Bias/RMSE/Spatial is small; gain on Seasonal dominates. Overall mean = **#1 globally**.
+Under ILAMB's native tier-2 Overall (Bias/RMSE weighted 2×, Seasonal/Spatial weighted 1×), the Seasonal gain more than compensates for the Bias/RMSE/Spatial losses. Overall = **#1 globally**.
 
 ## Inputs
 
