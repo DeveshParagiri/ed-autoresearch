@@ -1,44 +1,82 @@
-#!/bin/bash
-# Download TRENDY v14 ED inputs from Wasabi + GFED4.1s reference.
-# Total: ~10 GB for full Model A inputs, ~5 GB for B, ~4 GB for C.
+#!/usr/bin/env bash
+# Download the pinned Model C input bundle from Google Drive.
+#
+# Bundle contents (~5 GB):
+#   crujra/       dbar, p_ann, p_month, t_air  (.npy, 1deg, 192 months)
+#   trendy_v14/   EDv3_S3_gpp.nc (raw, full time range)
+#   gfed/         GFED4.1s_{2001..2016}.hdf5  (for rescale)
+#   outputs/      reference burntArea.nc + params.json
+#   CHECKSUMS.txt + README.txt
+#
+# SHA256 of modelC-inputs.zip: f124b21e778c3a28532acd3fdaea70a701a6d8cb714fafa423a8d748b4a7b4d3
+#
+# After download, contents merge into ed-autoresearch/data/ and
+# ed-autoresearch/ilamb/MODELS/ED-ModelC-final/ automatically.
+set -euo pipefail
 
-set -u
-DATA=$(dirname "$0")/../data
-mkdir -p "$DATA/trendy_v14" "$DATA/gfed"
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+ZIP_URL="https://drive.google.com/uc?id=1ID5pswHyaaF9Ej1CDgZ7j7pGjpQkKEhQ"
+ZIP_SHA256="f124b21e778c3a28532acd3fdaea70a701a6d8cb714fafa423a8d748b4a7b4d3"
+ZIP_PATH="$REPO/modelC-inputs.zip"
 
-BASE=https://s3.eu-west-1.wasabisys.com/gcb-2025-upload/land/output/ED/S3
+if ! command -v gdown &>/dev/null; then
+  echo "Installing gdown (for Google Drive downloads)..."
+  pip install --quiet gdown
+fi
 
-# Required by all 3 models
-for v in cLeaf cWood; do
-    target="$DATA/trendy_v14/EDv3_S3_${v}.nc"
-    if [[ -f "$target" ]]; then
-        echo "SKIP $v (already have)"
-        continue
-    fi
-    echo "downloading $v..."
-    curl -L -# -C - -o "$target" "$BASE/EDv3_S3_${v}.nc"
-done
+if [ -f "$ZIP_PATH" ]; then
+  echo "Zip already present at $ZIP_PATH — verifying SHA256..."
+  actual=$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')
+  if [ "$actual" = "$ZIP_SHA256" ]; then
+    echo "  SHA256 match — skipping download."
+  else
+    echo "  SHA256 mismatch (got $actual); re-downloading."
+    rm -f "$ZIP_PATH"
+  fi
+fi
 
-# Required by Model A only
-echo "downloading gpp (4 GB, ~20 min)..."
-curl -L -# -C - -o "$DATA/trendy_v14/EDv3_S3_gpp.nc" "$BASE/EDv3_S3_gpp.nc"
+if [ ! -f "$ZIP_PATH" ]; then
+  echo "Downloading modelC-inputs.zip (~5 GB) from Drive..."
+  gdown "$ZIP_URL" -O "$ZIP_PATH"
+  actual=$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')
+  if [ "$actual" != "$ZIP_SHA256" ]; then
+    echo "FATAL: downloaded zip SHA256 mismatch"
+    echo "  expected $ZIP_SHA256"
+    echo "  got      $actual"
+    exit 2
+  fi
+  echo "  SHA256 verified."
+fi
 
-echo "downloading cSoil..."
-curl -L -# -C - -o "$DATA/trendy_v14/EDv3_S3_cSoil.nc" "$BASE/EDv3_S3_cSoil.nc"
+echo
+echo "Extracting into repo layout..."
+TMP="$REPO/.modelC-extract-tmp"
+rm -rf "$TMP"
+mkdir -p "$TMP"
+unzip -q "$ZIP_PATH" -d "$TMP"
 
-# GFED4.1s reference (for scoring)
-for yr in 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016; do
-    target="$DATA/gfed/GFED4.1s_${yr}.hdf5"
-    if [[ -f "$target" ]]; then continue; fi
-    echo "downloading GFED $yr..."
-    curl -L -# -C - -o "$target" "https://www.globalfiredata.org/data_new/GFED4.1s_${yr}.hdf5" 2>/dev/null || echo "GFED download needs manual setup; see globalfiredata.org"
-done
+# Zip's top-level dir is "modelC-inputs/"
+SRC="$TMP/modelC-inputs"
+if [ ! -d "$SRC" ]; then
+  echo "FATAL: unexpected zip layout; no modelC-inputs/ at top level"
+  exit 2
+fi
 
-echo ""
-echo "DONE. Inputs in $DATA/"
-echo ""
-echo "Still need (not on public bucket):"
-echo "  - CRUJRA v3.5 monthly climate 2001-2016 (any source)"
-echo "  - ED frozen-sim mean_height_natr/scnd + frac_natr/scnd"
-echo ""
-echo "See README.md for input specifications."
+mkdir -p "$REPO/data/crujra" "$REPO/data/trendy_v14" "$REPO/data/gfed"
+mkdir -p "$REPO/ilamb/MODELS/ED-ModelC-final"
+
+cp -v "$SRC"/crujra/*.npy          "$REPO/data/crujra/"
+cp -v "$SRC"/trendy_v14/*.nc       "$REPO/data/trendy_v14/"
+cp -v "$SRC"/gfed/*.hdf5           "$REPO/data/gfed/"
+cp -v "$SRC"/outputs/burntArea.nc  "$REPO/ilamb/MODELS/ED-ModelC-final/"
+# Don't overwrite the repo's params.json with the bundle's — they should be the same.
+# But warn if they differ:
+if ! diff -q "$SRC/outputs/params.json" "$REPO/models/C/params.json" >/dev/null 2>&1; then
+  echo "WARNING: bundle params.json differs from repo's models/C/params.json"
+  echo "         Keeping the repo's version. Bundle's copy is at $SRC/outputs/params.json."
+fi
+
+rm -rf "$TMP"
+echo
+echo "Extraction complete."
+echo "Next: python scripts/verify.py"

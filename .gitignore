@@ -1,7 +1,15 @@
 data/
 out/
+out_terms/
 .venv/
 __pycache__/
 *.pyc
 .DS_Store
 *.nc.tmp
+
+# Produced outputs (regenerable; users pull from Drive bundle or run reproduce)
+ilamb/MODELS/ED-ModelC-final/burntArea.nc
+ilamb/output*/
+
+# ILAMB reference data — fetched via ilamb-fetch
+ilamb/DATA/

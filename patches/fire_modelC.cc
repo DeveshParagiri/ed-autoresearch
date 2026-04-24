@@ -1,44 +1,56 @@
 // ====================================================================
 // ED Fire Module Replacement — Model C (minimal, 12 params, 3 mechs)
-// Rank #1 on TRENDY v14 ILAMB benchmark (Overall = 0.7133)
+// Rank #1 on TRENDY v14 ILAMB benchmark (Overall Score = 0.6703, native
+// tier-2 aggregation from scalar_database.csv; beats CLASSIC 0.6660 and
+// CLM6.0 0.6606). All training on OFFLINE frozen inputs; coupled-run
+// scores will depend on ED's prognostic state trajectories.
 //
 // Shapley top-3 mechanisms from v8 decomposition:
-//   M1: monthly air temperature ignition sigmoid (t_air_ign) — Shapley #1, 18.5%
-//   M2: precipitation control (annual floor + monthly dampener) — Shapley #2, 17.5%
-//   M3: monthly GPP hump (van der Werf 2008) — Shapley #3, 16.7%
+//   M1: monthly air temperature ignition sigmoid (t_air_ign)
+//   M2: precipitation control (annual floor + monthly dampener)
+//   M3: monthly GPP hump (van der Werf 2008)
 //
 // Base: ignition double-sigmoid on accumulated dryness D_bar.
-// Output: fire risk (unitless); scale to cs->fp1 at caller site.
+// Output: fire risk (unitless); scale via cs->fp1 at caller site.
 //
-// Required inputs at each call:
-//   - cs->sdata->dryness_index_avg : accumulated D_bar (mm) for this timestep
-//   - cs->sdata->temperature_month : monthly air temperature (°C)
-//   - cs->sdata->precip_month      : monthly precipitation (mm/month)
-//   - cs->sdata->precip_annual     : annual precipitation (mm/yr)
+// Required inputs per call:
+//   - cs->sdata->dryness_index_avg : accumulated D_bar (mm)
+//   - cs->sdata->temp[month]       : monthly air temperature (°C)
+//   - cs->sdata->precip[month]     : monthly precipitation (mm/month)
+//   - cs->sdata->precip_average    : annual precipitation (mm/yr)
 //   - cs->gpp                      : GPP for current month (kg C / m² / yr)
+//
+// NOTE on D_bar: these params were fit against a canonical offline dbar
+// computed with Thornthwaite+daylength PET, K=1, continuous accumulator,
+// reset at monthly precip >= 200 mm/month. ED's internal
+// calcSiteDrynessIndex produces numerically different values (different
+// PET, unit mixing, hard reset). For bit-exact transfer to coupled ED,
+// either (a) compute the canonical dbar inside ED alongside or in place
+// of dryness_index_avg, or (b) re-tune these 4 params {k1,D_low,k2,
+// D_high} against ED's own dryness_index_avg.
 // ====================================================================
 
 #include <cmath>
 #include <algorithm>
 
-// --- Model C fitted parameters (from experiments/fire/modelC_v8.json) ---
+// --- Model C fitted parameters (models/C/params.json, retuned 12-param) ---
 namespace ModelC {
-  // Ignition double sigmoid
-  constexpr double k1          = 0.000254003;
-  constexpr double D_low       = 180.173;
-  constexpr double k2          = 0.00041942;
-  constexpr double D_high      = 5010.32;
-  constexpr double fire_exp    = 2.44744;
-  // Precipitation
-  constexpr double P_half          = 404.758;   // mm/yr (annual floor)
-  constexpr double pre_dampen_half = 5.67607;   // mm/month (monthly dampener)
+  // Ignition double sigmoid on D_bar
+  constexpr double k1          = 0.00298237126;
+  constexpr double D_low       = 49.9132152;
+  constexpr double k2          = 0.00543206014;
+  constexpr double D_high      = 680.954295;
+  constexpr double fire_exp    = 3.42466093;
+  // Precipitation control
+  constexpr double P_half          = 353.795082;   // mm/yr (annual floor)
+  constexpr double pre_dampen_half = 42.0220614;   // mm/month (monthly dampener)
   // Monthly GPP hump
-  constexpr double gpp_af      = 1.79582;
-  constexpr double gpp_b       = 0.0100025;
-  constexpr double gpp_d       = 24.3555;
+  constexpr double gpp_af      = 0.177748208;
+  constexpr double gpp_b       = 0.000103763065;
+  constexpr double gpp_d       = 0.558323619;
   // Monthly air-temp ignition sigmoid
-  constexpr double ign_k       = 0.627346;
-  constexpr double ign_c       = 17.4517;
+  constexpr double ign_k       = 0.0901417957;
+  constexpr double ign_c       = 31.7257297;
 }
 
 // Helpers (bounded for numerical stability)

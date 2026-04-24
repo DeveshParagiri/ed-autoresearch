@@ -1,5 +1,5 @@
 {
-  "model": "Model C (Shapley-reduced from v8)",
+  "model": "Model C (full 12-param retune on canonical dbar)",
   "mechanisms": [
     "gpp_monthly",
     "precip",
@@ -7,27 +7,21 @@
   ],
   "n_mechanisms": 3,
   "n_params": 12,
-  "scores_internal": {
-    "bias_score": 0.8282919526100159,
-    "rmse_score": 0.7974985241889954,
-    "seasonal_score": 0.5347974300384521,
-    "spatial_score": 0.7869589328765869,
-    "overall": 0.7368867099285126
-  },
-  "params": {
-    "k1": 0.00025400345376549527,
-    "D_low": 180.1732206970131,
-    "k2": 0.0004194202333137273,
-    "D_high": 5010.3204223057455,
-    "fire_exp": 2.4474422152415913,
-    "P_half": 404.7576963854802,
-    "pre_dampen_half": 5.676072419028506,
-    "gpp_af": 1.7958192364300463,
-    "gpp_b": 0.01000250640406956,
-    "gpp_d": 24.355508380572182,
-    "ign_k": 0.6273463894132201,
-    "ign_c": 17.45169580737175
-  },
+  "retune_note": "All 12 params jointly retuned on canonical dbar from scripts/prep_monthly_inputs.py (Thornthwaite + daylength, K=1, continuous accumulator, reset on monthly precip >= 200 mm). Warm-started from the 4-param retune.",
+  "optuna_best_eq4": 0.5264898673419509,
   "n_trials": 2500,
-  "runtime_min": 4.1
+  "params": {
+    "k1": 0.0029823712581587246,
+    "D_low": 49.913215166687735,
+    "k2": 0.005432060139714356,
+    "D_high": 680.9542945367037,
+    "fire_exp": 3.424660933690945,
+    "P_half": 353.795082259217,
+    "pre_dampen_half": 42.022061426811646,
+    "gpp_af": 0.17774820808094854,
+    "gpp_b": 0.00010376306545088823,
+    "gpp_d": 0.5583236187754161,
+    "ign_k": 0.09014179570617699,
+    "ign_c": 31.725729686380355
+  }
 }
