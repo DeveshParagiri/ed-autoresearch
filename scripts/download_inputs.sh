@@ -10,14 +10,38 @@
 #
 # SHA256 of modelC-inputs.zip: f124b21e778c3a28532acd3fdaea70a701a6d8cb714fafa423a8d748b4a7b4d3
 #
-# After download, contents merge into ed-autoresearch/data/ and
-# ed-autoresearch/ilamb/MODELS/ED-ModelC-final/ automatically.
+# Optional: pass --with-terms to also fetch the 107 MB per-term debug NetCDF
+# (out_terms/modelC_terms.nc — 5 input drivers + 6 intermediate mechanism
+# terms + final product; useful for coupled-ED cross-comparison).
+#
+# After download, contents merge into ed-autoresearch/data/,
+# ed-autoresearch/ilamb/MODELS/ED-ModelC-final/, and ed-autoresearch/out_terms/.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 ZIP_URL="https://drive.google.com/uc?id=1ID5pswHyaaF9Ej1CDgZ7j7pGjpQkKEhQ"
 ZIP_SHA256="f124b21e778c3a28532acd3fdaea70a701a6d8cb714fafa423a8d748b4a7b4d3"
 ZIP_PATH="$REPO/modelC-inputs.zip"
+
+TERMS_URL="https://drive.google.com/uc?id=1ges8y2qw1KF8eNt8ruIgO3Akj8HGaTYo"
+TERMS_SHA256="c25f60810a1b49e228c4dd6905da99acd2831727ad0cb7668a23567e71ebb802"
+TERMS_PATH="$REPO/out_terms/modelC_terms.nc"
+
+WITH_TERMS=0
+for arg in "$@"; do
+  case "$arg" in
+    --with-terms) WITH_TERMS=1 ;;
+    -h|--help)
+      echo "Usage: bash scripts/download_inputs.sh [--with-terms]"
+      echo ""
+      echo "  --with-terms    Also download the 107 MB per-term debug NetCDF"
+      echo "                  (modelC_terms.nc). Useful for coupled-ED"
+      echo "                  cross-comparison. Not needed for reproducing"
+      echo "                  the ILAMB score."
+      exit 0 ;;
+    *) echo "Unknown arg: $arg (use --help)"; exit 2 ;;
+  esac
+done
 
 if ! command -v gdown &>/dev/null; then
   echo "Installing gdown (for Google Drive downloads)..."
@@ -79,4 +103,30 @@ fi
 rm -rf "$TMP"
 echo
 echo "Extraction complete."
+
+# Optional: fetch per-term debug NetCDF
+if [ "$WITH_TERMS" -eq 1 ]; then
+  echo
+  echo "Fetching per-term debug NetCDF (modelC_terms.nc, ~107 MB)..."
+  mkdir -p "$(dirname "$TERMS_PATH")"
+  if [ -f "$TERMS_PATH" ]; then
+    actual=$(shasum -a 256 "$TERMS_PATH" | awk '{print $1}')
+    if [ "$actual" = "$TERMS_SHA256" ]; then
+      echo "  Already present and SHA256 match — skipping download."
+    else
+      rm -f "$TERMS_PATH"
+    fi
+  fi
+  if [ ! -f "$TERMS_PATH" ]; then
+    gdown "$TERMS_URL" -O "$TERMS_PATH"
+    actual=$(shasum -a 256 "$TERMS_PATH" | awk '{print $1}')
+    if [ "$actual" != "$TERMS_SHA256" ]; then
+      echo "FATAL: terms SHA256 mismatch (got $actual, expected $TERMS_SHA256)"
+      exit 2
+    fi
+    echo "  SHA256 verified."
+  fi
+fi
+
+echo
 echo "Next: python scripts/verify.py"

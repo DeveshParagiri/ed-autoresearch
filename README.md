@@ -55,6 +55,12 @@ pip install -r requirements.txt
 #     Source: https://drive.google.com/file/d/1ID5pswHyaaF9Ej1CDgZ7j7pGjpQkKEhQ/view
 #     Contents: crujra/{4 .npy}, trendy_v14/gpp.nc, gfed/16 hdf5, outputs/reference burntArea.nc
 #
+#     Add --with-terms to also grab the 107 MB per-term debug NetCDF
+#     (modelC_terms.nc: 5 inputs + 6 intermediate terms + final product,
+#     for coupled-ED cross-comparison):
+#         bash scripts/download_inputs.sh --with-terms
+#     Source: https://drive.google.com/file/d/1ges8y2qw1KF8eNt8ruIgO3Akj8HGaTYo/view
+#
 # (b) You have raw CRUJRA / TRENDY / GFED on disk — regenerate .npy locally:
 #     ED_RAW_DATA=/your/path/to/data python scripts/prep_monthly_inputs.py
 #     Raw data layout expected (override per-subdir by editing prep_monthly_inputs.py):
