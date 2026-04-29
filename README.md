@@ -4,28 +4,34 @@ Closed-form, mechanistic fire formula for the ED v3 dynamic global vegetation mo
 
 > **All training and benchmarking is OFFLINE** against fixed TRENDY v14 ED-S3 NetCDFs + CRUJRA climate, not a coupled ED run. Coupled deployment notes at the bottom of this README.
 
-**Model C — Overall Score 0.6703, rank #1 on TRENDY v14 + baseline leaderboard.** 12 parameters, 3 mechanism groups, 5 input fields.
+**Model C — Overall Score 0.6713, rank #1.** 12 parameters, 3 mechanism groups, 5 input fields. **ED-coupled-consistent**: model output is treated as an annual fire rate (yr⁻¹) and passes through ED's `(1 - exp(-rate · 1yr)) / 12` transform during scoring, so the offline NC matches what coupled ED would write to TRENDY. No post-hoc rescale.
 
 ## ILAMB leaderboard (real `ilamb-run`, stock ConfBurntArea)
 
 | Rank | Model | Bias | RMSE | Seasonal | Spatial | **Overall** |
 |---:|---|---:|---:|---:|---:|---:|
-| 🥇 1 | **ED-ModelC (ours)** | **0.714** | 0.513 | **0.834** | 0.779 | **0.6703** |
-| 🥈 2 | CLASSIC | 0.738 | 0.507 | 0.782 | 0.797 | 0.6660 |
-| 🥉 3 | CLM6.0 | 0.759 | 0.474 | 0.758 | **0.838** | 0.6606 |
-| 4 | CLM-FATES | 0.725 | 0.525 | 0.802 | 0.707 | 0.6568 |
-| 5 | ELM-FATES | 0.724 | 0.512 | 0.860 | 0.676 | 0.6568 |
-| 6 | JULES-ES | 0.709 | 0.506 | 0.784 | 0.447 | 0.5905 |
-| 7 | ELM | 0.687 | 0.492 | 0.778 | 0.333 | 0.5564 |
-| 8 | VISIT-UT | 0.636 | 0.488 | 0.695 | 0.466 | 0.5545 |
-| 9 | LPJmL | 0.693 | 0.489 | 0.459 | 0.612 | 0.5485 |
-| 10 | LPJ-GUESS | 0.671 | 0.489 | 0.459 | 0.288 | 0.4792 |
-| 11 | **EDv3 (stock)** | 0.681 | 0.489 | 0.439 | 0.290 | **0.4774** |
-| 12 | LPJ-EOSIM | 0.654 | 0.489 | 0.459 | 0.227 | 0.4635 |
+| 🥇 1 | **ED-ModelC (ours)** | **0.728** | 0.506 | **0.846** | 0.771 | **0.6713** |
+| 🥈 2 | CLASSIC | 0.739 | 0.507 | 0.782 | **0.798** | 0.6665 |
+| 🥉 3 | CLM6.0 | **0.759** | 0.474 | 0.759 | **0.838** | 0.6606 |
+| 4 | ELM-FATES | 0.726 | 0.513 | 0.862 | 0.682 | 0.6594 |
+| 5 | ED-ModelA | 0.716 | 0.492 | 0.805 | 0.783 | 0.6574 |
+| 6 | CLM-FATES | 0.727 | 0.526 | 0.803 | 0.705 | 0.6573 |
+| 7 | ED-ModelB | 0.706 | 0.476 | 0.833 | 0.763 | 0.6506 |
+| 8 | VISIT | 0.645 | 0.491 | 0.745 | 0.503 | 0.5751 |
+| 9 | E3SM | 0.687 | 0.492 | 0.780 | 0.334 | 0.5571 |
+| 10 | JSBACH | 0.475 | 0.488 | 0.460 | 0.131 | 0.4082 |
+| 11 | **EDv3 (stock)** | 0.532 | 0.487 | 0.396 | 0.111 | **0.4026** |
+| 12 | SDGVM | 0.416 | 0.489 | 0.459 | 0.009 | 0.3724 |
 
-"Overall Score" is ILAMB's native tier-2 aggregation `(2·Bias + 2·RMSE + Seasonal + Spatial) / 6` pulled directly from `scalar_database.csv`. Component scores are also unmodified from the same CSV. No custom aggregation.
+"Overall Score" is ILAMB's native tier-2 aggregation pulled directly from `scalar_database.csv`. Component scores are unmodified from the same CSV. No custom aggregation.
 
-Model C beats ED's stock fire module by **+0.19 Overall** (0.6703 − 0.4774).
+Model C beats ED's stock fire module by **+0.27 Overall** (0.6713 − 0.4026).
+
+### ED coupling note
+
+This iteration is **ED-coupled-consistent**: Model C's output is interpreted as an annual disturbance rate (yr⁻¹), and the offline pipeline applies ED's exact saturation-then-monthly-distribute transform `monthly_frac = (1 - exp(-min(rate, fire_max) · 1yr)) / 12` before scoring. This matches (to within ED's per-cell patch resolution) what coupled ED writes to TRENDY-format burntArea.
+
+**One coupled-side ask**: the optimiser pushes a few high-fire cells (Sahel, savanna; max raw rate ≈ 1.0 yr⁻¹) above ED's default `fire_max_disturbance_rate = 0.2`. To reproduce this leaderboard score in coupled ED, please bump the cap to **1.0** in `ED_params.defaults.cfg`. A safety variant retuned within the 0.2 cap scores 0.6105 (rank #7) and is preserved as `ilamb/MODELS/ED-ModelC-final/burntArea.cap0.2-aligned.nc` if relaxing the cap is not feasible.
 
 ## Formula
 

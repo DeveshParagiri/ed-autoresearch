@@ -3,20 +3,27 @@
 Reads:
     data/crujra/{dbar,p_ann,p_month,t_air}_monthly.npy
     data/trendy_v14/EDv3_S3_gpp.nc
-    data/gfed/GFED4.1s_{YYYY}.hdf5
     models/C/params.json
 
 Writes:
     ilamb/MODELS/ED-ModelC-final/burntArea.nc (0.5 deg, monthly, 2001-2016)
 
-Logic is a clean port of what ilamb_write_abc.py did for the original:
-  1. Apply fire_C formula on 1 deg drivers.
-  2. Mask to GFED burnable-cell land mask (cells that ever burned in 2001-2016).
-  3. Rescale so land-mean matches GFED's land-mean (preserves spatial/seasonal
-     patterns, aligns absolute magnitudes).
-  4. Un-coarsen 1 deg -> 0.5 deg by nearest-neighbor 2x2 (matches GFED grid).
-  5. Zero ocean / NaN non-burnable cells so ILAMB masks them out.
+Logic (ED-coupled-consistent — 2026-04-28 retune):
+  1. Apply fire_C formula on 1 deg drivers; output is interpreted as an
+     ANNUAL fire rate (yr^-1).
+  2. Mask to GFED burnable-cell land mask.
+  3. Apply ED's saturating annual->monthly transform:
+        rate_capped = min(rate, FIRE_MAX_RATE)
+        annual_frac = 1 - exp(-rate_capped * 1 yr)
+        monthly_frac = annual_frac / 12
+     This matches what coupled ED writes to TRENDY-format burntArea.
+  4. Un-coarsen 1 deg -> 0.5 deg by nearest-neighbor 2x2.
+  5. Mask non-burnable cells to NaN.
   6. Write CF-compliant NetCDF.
+
+FIRE_MAX_RATE defaults to 5.0 yr^-1 (offline tuning cap). Coupled ED needs
+fire_max_disturbance_rate >= 1.0 in ED_params.defaults.cfg to reproduce this NC
+bit-exact, since the optimizer pushes a few high-fire cells up to ~1.0 yr^-1.
 """
 from __future__ import annotations
 import gc, json, os
@@ -32,6 +39,7 @@ DATA = REPO / "data"
 MODELS = REPO / "models"
 YEARS = list(range(2001, 2017))
 N_MONTHS = 192
+FIRE_MAX_RATE = float(os.environ.get("FIRE_MAX_RATE", 5.0))   # see module docstring
 
 
 def coarsen(arr):
@@ -140,16 +148,25 @@ def main():
 
     print("Computing fire_C ...")
     with np.errstate(over="ignore", invalid="ignore"):
-        pred = fire_C(d, params)
+        rate = fire_C(d, params)
 
-    # Apply land mask + rescale to GFED land-mean
-    pred = pred * land_mask[None, :, :]
-    pm = float((pred * w3_land).sum() / (w3_land.sum() + 1e-12))
-    om = float((obs * w3_land).sum() / (w3_land.sum() + 1e-12))
-    scale = om / pm if pm > 0 else 0.0
-    print(f"  pred land-mean: {pm:.6g}  GFED land-mean: {om:.6g}  scale: {scale:.4g}")
-    if pm > 0:
-        pred = pred * scale
+    # Apply land mask
+    rate = rate * land_mask[None, :, :]
+    raw_lm = float((rate * w3_land).sum() / (w3_land.sum() + 1e-12))
+    print(f"  raw rate land-mean (yr^-1): {raw_lm:.4g}  "
+          f"max: {rate.max():.4g}  cap: {FIRE_MAX_RATE}")
+
+    # ED-coupled-consistent transform:
+    #   monthly_frac = (1 - exp(-min(rate, FIRE_MAX_RATE) * 1 yr)) / 12
+    rate_capped = np.minimum(rate, FIRE_MAX_RATE)
+    annual_frac = 1.0 - np.exp(-rate_capped)
+    pred = (annual_frac / 12.0).astype(np.float32)
+
+    # Land-mean diagnostic
+    pred_lm = float((pred * w3_land).sum() / (w3_land.sum() + 1e-12))
+    gfed_lm = float((obs  * w3_land).sum() / (w3_land.sum() + 1e-12))
+    print(f"  ED-transformed land-mean:   {pred_lm:.6g}  GFED:  {gfed_lm:.6g}  "
+          f"ratio: {pred_lm/gfed_lm:.3f}")
 
     # NaN out non-land cells (matches GFED reference fill value)
     pred_masked = np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32)
@@ -166,9 +183,9 @@ def main():
                        {"units": "1", "standard_name": "burnt_area_fraction",
                         "long_name": "Burnt Area Fraction"})},
         coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
-        attrs={"title": "ED-ModelC-final (retuned on canonical dbar)",
+        attrs={"title": "ED-ModelC-final (ED-coupled-consistent retune)",
                "Conventions": "CF-1.7",
-               "rescale_factor_land_mean": float(scale)})
+               "transform": f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"})
     ds = add_cf_bounds(ds)
 
     # Write

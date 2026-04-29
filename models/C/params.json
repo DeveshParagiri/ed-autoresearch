@@ -1,5 +1,5 @@
 {
-  "model": "Model C (full 12-param retune on canonical dbar)",
+  "model": "Model C (ED-coupled-consistent retune; rank #1 at 0.6713)",
   "mechanisms": [
     "gpp_monthly",
     "precip",
@@ -7,21 +7,46 @@
   ],
   "n_mechanisms": 3,
   "n_params": 12,
-  "retune_note": "All 12 params jointly retuned on canonical dbar from scripts/prep_monthly_inputs.py (Thornthwaite + daylength, K=1, continuous accumulator, reset on monthly precip >= 200 mm). Warm-started from the 4-param retune.",
-  "optuna_best_eq4": 0.5264898673419509,
+  "objective": "ILAMB-aligned (mass-weighted; phase-shift seasonal; Taylor spatial)",
+  "ed_consistency": {
+    "interpretation": "Model C output = annual fire rate (yr^-1).",
+    "transform": "monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12",
+    "fire_max_rate_offline": 5.0,
+    "max_observed_raw_rate_yr-1": 0.999,
+    "cells_above_0.2_yr-1_pct": 2.5,
+    "ed_default_fire_max_disturbance_rate": 0.2,
+    "coupled_ask": "set fire_max_disturbance_rate = 1.0 in ED_params.defaults.cfg"
+  },
+  "scores_real_ilamb_global": {
+    "Bias Score": 0.728,
+    "RMSE Score": 0.506,
+    "Seasonal Cycle Score": 0.846,
+    "Spatial Distribution Score": 0.771,
+    "Overall Score": 0.6713,
+    "rank": 1,
+    "comparators": "CLASSIC=0.6665 (#2), CLM6=0.6606 (#3), EDv3-stock=0.4026 (#11)"
+  },
+  "scores_internal_optuna": {
+    "bias": 0.7071,
+    "rmse": 0.3791,
+    "seas": 0.8506,
+    "spatial": 0.7544,
+    "overall": 0.6728
+  },
   "n_trials": 2500,
+  "runtime_min": 44.58,
   "params": {
-    "k1": 0.0029823712581587246,
-    "D_low": 49.913215166687735,
-    "k2": 0.005432060139714356,
-    "D_high": 680.9542945367037,
-    "fire_exp": 3.424660933690945,
-    "P_half": 353.795082259217,
-    "pre_dampen_half": 42.022061426811646,
-    "gpp_af": 0.17774820808094854,
-    "gpp_b": 0.00010376306545088823,
-    "gpp_d": 0.5583236187754161,
-    "ign_k": 0.09014179570617699,
-    "ign_c": 31.725729686380355
+    "k1": 0.02128012643297453,
+    "D_low": 33.107928264466416,
+    "k2": 0.0032479995010666245,
+    "D_high": 3020.3711370643746,
+    "fire_exp": 0.5746291131439772,
+    "P_half": 3.1845074798114754,
+    "pre_dampen_half": 5.714386941567207,
+    "gpp_af": 0.4621796973523708,
+    "gpp_b": 5.190713720036356e-05,
+    "gpp_d": 128.62113841235993,
+    "ign_k": 0.8146117322506592,
+    "ign_c": 20.126441845162326
   }
 }
