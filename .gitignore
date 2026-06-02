@@ -5,6 +5,7 @@ out_terms/
 __pycache__/
 *.pyc
 .DS_Store
+._*
 *.nc.tmp
 
 # Produced outputs (regenerable; users pull from Drive bundle or run reproduce)
