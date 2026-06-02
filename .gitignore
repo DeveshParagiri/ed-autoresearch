@@ -13,3 +13,51 @@ ilamb/output*/
 
 # ILAMB reference data — fetched via ilamb-fetch
 ilamb/DATA/
+
+# Large binaries — carry these via Google Drive, NOT git
+*.nc
+*.pdf
+*.pptx
+*.key
+*.gdoc
+*.bak
+global_baseline_*.nc
+ED_Source_Code/
+ilamb_ref_official/
+ilamb/MODELS/
+ilamb/MODELS_LEADERBOARD/
+ilamb/MODELS_LEADERBOARD_FFIRE/
+ilamb/MODELS_LEADERBOARD_FFIRE_GFED5/
+ilamb/_archive_modelC_variants/
+ilamb_out/
+ilamb_out_*/
+models_full/
+models/A/
+models/A-*/
+models/C-*/
+models/ED-Model*/
+models/CLASSIC/
+models/CLM6/
+models/CLM-FATES/
+models/ELM-FATES/
+models/E3SM/
+models/EDv3/
+models/JSBACH/
+models/SDGVM/
+models/VISIT/
+models/hurtt-betas-*/
+models/C/*.nc
+out_*/
+stageB_models/
+NEW MAPS/
+figures/
+email_attachments/
+from_lei/
+for_lei_*/
+"THE THESIS JOURNEY -REAL ONE/"
+"NEW DIRECTION - MEETING.gdoc"
+.claude/
+.strict_reported
+*_extract.txt
+essd-*.txt
+gfed5_emissions_nature.txt

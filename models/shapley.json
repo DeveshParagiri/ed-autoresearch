@@ -1,0 +1,12 @@
+{
+  "shapley_sorted": [
+    {"mechanism": "t_air_ign",   "phi": 0.0210, "percent": 18.5},
+    {"mechanism": "precip",      "phi": 0.0199, "percent": 17.5},
+    {"mechanism": "gpp_monthly", "phi": 0.0190, "percent": 16.7},
+    {"mechanism": "gpp_anom",    "phi": 0.0150, "percent": 13.2},
+    {"mechanism": "t_surf",      "phi": 0.0143, "percent": 12.6},
+    {"mechanism": "soil_temp",   "phi": 0.0112, "percent":  9.9},
+    {"mechanism": "height",      "phi": 0.0073, "percent":  6.4},
+    {"mechanism": "fuel",        "phi": 0.0059, "percent":  5.2}
+  ]
+}

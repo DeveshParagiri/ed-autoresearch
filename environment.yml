@@ -1,0 +1,15 @@
+name: edfire
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - cartopy
+  - esmpy
+  - matplotlib
+  - netcdf4
+  - numpy
+  - xarray
+  - xesmf
+  - ipykernel
+  - h5py
+prefix: C:\Users\owusu\miniforge3\envs\edfire

@@ -1,8 +1,8 @@
 """Regenerate ED-ModelC-final/burntArea.nc from canonical inputs + current params.
 
 Reads:
-    data/crujra/{dbar,p_ann,p_month,t_air}_monthly.npy
-    data/trendy_v14/EDv3_S3_gpp.nc
+    data/crujra/{dbar,p_ann,p_month,t_air}_monthly.npy  (CRUJRA climate)
+    global_baseline_modelC_inputs_1997-2016.nc           (coupled GPP from Lei's dump)
     models/C/params.json
 
 Writes:
@@ -64,7 +64,8 @@ def hump(x, b, dec):
 
 
 def fire_C(d, p):
-    """Model C: onset + suppress on dbar, precip floor+dampen, GPP hump, T_air sigmoid."""
+    """Model C: onset + suppress on dbar, precip floor+dampen, GPP hump, T_air sigmoid,
+    plus optional vegetation suppression on AGB (high biomass = forest = low fire)."""
     onset    = sig(d["dbar"],    p["k1"],  p["D_low"])
     suppress = supp(d["dbar"],   p["k2"],  p["D_high"])
     p_floor  = d["p_ann"] / (d["p_ann"] + p["P_half"] + 1e-12)
@@ -72,10 +73,19 @@ def fire_C(d, p):
     gpp_mod  = hump(p["gpp_af"] * d["gpp_monthly"], p["gpp_b"], p["gpp_d"])
     ign_mod  = sig(d["t_air"], p["ign_k"], p["ign_c"])
     product  = onset * suppress * p_floor * p_damp * gpp_mod * ign_mod
+    # Vegetation suppression (optional; defaults to 1.0 if not in params or drivers)
+    if "agb" in d and "k_veg" in p and "agb_crit" in p:
+        veg_mod = supp(d["agb"], p["k_veg"], p["agb_crit"])
+        product = product * veg_mod
     return np.power(np.clip(product, 0, None), p["fire_exp"]).astype(np.float32)
 
 
 def load_drivers():
+    """Hybrid: CRUJRA climate (D_bar, T_air, P_*) + coupled GPP from Lei's dump.
+
+    GPP is the area-weighted sum of per-landuse fields (ntrl/scnd/past), sliced
+    to 2001-2016 from the 1997-2016 dump and coarsened 0.5 deg to 1 deg.
+    """
     cru = DATA / "crujra"
     d = {
         "dbar":    np.load(cru / "dbar_monthly.npy").astype(np.float32),
@@ -83,14 +93,33 @@ def load_drivers():
         "p_month": np.load(cru / "p_month_monthly.npy").astype(np.float32),
         "t_air":   np.load(cru / "t_air_monthly.npy").astype(np.float32),
     }
-    ds = xr.open_dataset(DATA / "trendy_v14" / "EDv3_S3_gpp.nc", decode_times=False)
-    gpp = ds["gpp"].isel(time=slice(3612, 3804)).values.astype(np.float32) * 86400 * 365
-    lat_v = ds.latitude.values if "latitude" in ds.coords else ds.lat.values
-    if lat_v[0] > 0:
-        gpp = gpp[:, ::-1, :]
-    gpp = np.nan_to_num(gpp, nan=0.0)
-    d["gpp_monthly"] = coarsen(gpp)
+
+    dump = REPO / "global_baseline_modelC_inputs_1997-2016.nc"
+    ds = xr.open_dataset(dump)
+    sl = slice(48, 240)
+
+    def grab(name):
+        return np.nan_to_num(ds[name].isel(time=sl).values.astype(np.float32), nan=0.0)
+
+    gpp_n = np.clip(grab("GPP_month_ntrl"), 0, None)
+    gpp_s = np.clip(grab("GPP_month_scnd"), 0, None)
+    gpp_p = np.clip(grab("GPP_month_past"), 0, None)
+    af_n  = grab("area_frac_ntrl")
+    af_s  = grab("area_frac_scnd")
+    af_p  = grab("area_frac_past")
+    gpp_total = (gpp_n * af_n + gpp_s * af_s + gpp_p * af_p).astype(np.float32)
     ds.close()
+
+    d["gpp_monthly"] = coarsen(gpp_total)
+
+    # AGB for vegetation-aware suppression (kg C / m2, monthly mean broadcast)
+    agb_p = REPO / "global_baseline_modelCfuel_inputs_1997-2016.nc"
+    if agb_p.exists():
+        ds_agb = xr.open_dataset(agb_p)
+        agb = np.nan_to_num(ds_agb["AGB"].isel(time=slice(48, 240)).values.astype(np.float32),
+                            nan=0.0, posinf=0.0, neginf=0.0)
+        ds_agb.close()
+        d["agb"] = coarsen(agb)
     return d
 
 
