@@ -2,6 +2,30 @@
 
 Persistent context for Claude Code. Read this first, then `HANDOFF_NOTE.md` for current state.
 
+## Session ritual (this repo lives on an external drive, moved between home and office)
+
+State is carried by git + the docs, not by memory (the auto-memory path changes per machine).
+The docs are only as current as the last session that updated them, so the git log is the
+authoritative record of what actually happened.
+
+**Start of every session** — orient before doing anything:
+1. Read `CLAUDE.md` and `HANDOFF_NOTE.md`.
+2. Run `git log -15 --oneline` and `git status`.
+3. Reconcile docs vs git history (the note may be a few commits stale) and state where we
+   actually are before touching anything.
+
+**End of every session** — carry state forward (this is the step that prevents drift):
+1. Update `HANDOFF_NOTE.md`: what we did this session + what the next step is.
+2. Append a dated line to `PROGRESS.md`.
+3. Commit with a clear, specific message. Push if auth is set up on this machine.
+
+**Per-machine one-time setup** (office vs home are different computers):
+- `conda env create -f environment.yml` (the `ed-fire` env is not on the drive).
+- `gh auth login` as `RichardOwusu-Ansah` (credentials live in the machine keyring, not the drive).
+
+**Commit discipline:** commit at every milestone with a descriptive message. The commit log is
+the fallback if the prose docs ever go stale, so good messages matter more than perfect notes.
+
 ## What this project is
 
 Model C is a burned-area + fire-emissions submodule for the ED vegetation model (part of the
