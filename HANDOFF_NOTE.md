@@ -1,7 +1,83 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-05-21. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-06-03. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## This session (2026-06-03) — global-scalar / error-distribution exploration
+
+Explored "the model is ~1.26x high everywhere, what if we just multiply by 0.8?" Answer: it fixes the
+GLOBAL-SUM bias but not the ILAMB score, and the reason is the real finding.
+- Best scalar: 0.792 matches the global mean (model 83.4 vs GFED5 66.1 Mha/month), 0.779 min global RMSE.
+- Spatial cancellation: net signed bias +17.3 Mha = +46.1 over cancelling -28.8 under. Gross per-cell
+  |bias| is 75.0 Mha (~4.3x the net). ILAMB scores per cell so it feels the 75. A 0.8x scalar drives net
+  to ~0 but only drops gross 75.0 -> 67.7 (~11%). Correlation/phase (global r=0.405) is scale-invariant.
+- The deeper cause is a **dynamic-range / ceiling problem** (seen in the per-cell scatter): model
+  period-mean burned fraction caps at ~0.039 while GFED5 reaches ~0.10. Points form a horizontal band,
+  not a 1:1 line. So errors split: over-prediction in low-fire dry/boreal cells (scalar helps) vs
+  under-prediction in the high-fire African savanna core (scalar makes WORSE). For 1666 cells with
+  GFED5>0.04, model 0.024 vs GFED5 0.054; scaled drops to 0.019. Net bias vanishes, ILAMB barely moves.
+- Takeaway: bias is not uniform amplitude inflation, it is "too flat." Fix is slope/saturation in the
+  refit (tighter MAG_BAND, currently 1.3 vs effective 1.26; plus the false-positive objective), not a
+  post-hoc multiply. A global scalar is also metric-tuning a reviewer would flag.
+- IMPORTANT: ILAMB score deltas above are EMULATED. This machine has no conda / `ed-fire` env / ILAMB
+  (system python3 has xarray+cartopy only). `scripts/score_scaled_ba.sh` is ready to produce the OFFICIAL
+  number once on a machine with the env. Also note: this machine's `git` is blocked by an unsigned Xcode
+  license (`sudo xcodebuild -license`), so this session may need to be committed from another machine.
+- Advisor asked about the error distribution; saved to auto-memory `error-distribution-scalar-finding.md`.
+
+Artifacts this session (all new, none overwrite canonical):
+- `NEW MAPS/Seasonal/1_global_timeseries_scaled08.png` — GFED5 vs original vs 0.792x overlay.
+- `NEW MAPS/Seasonal/2_diff_scatter_scaled.png` — per-cell scatter + difference histogram (shows ceiling).
+- `NEW MAPS/Seasonal/3_map_scaled_ba.png` — 4-panel map GFED5/original/scaled/(scaled-GFED5).
+- `ilamb/MODELS_SCALED/ED-ModelC-scaled08/` and `-scaled0792/` — scaled `burntArea.nc` (not canonical).
+- `scripts/score_scaled_ba.sh` — one-command official ILAMB scoring of canonical vs both scaled variants.
+
+## >>> NEXT TASK TO RUN AT HOME (Claude: execute this) <<<
+
+Goal from the professor: the model burns too much in total (1.26x GFED5) and that is wrong even where we
+do not match GFED5 spatially. Bring the total down the PRINCIPLED way, not with a post-hoc scalar.
+
+Why this is tractable (diagnosis already done 2026-06-03, annual basis):
+- Model 1001 vs GFED5 793 Mha/yr -> excess +208 Mha/yr (1.26x).
+- **76% of the excess (157 Mha/yr) is FALSE POSITIVES**: fire in cells where GFED5 is essentially zero
+  (annual burned fraction < 0.5%). Mostly productive, seasonally-dry CLOSED-CANOPY TROPICAL FOREST
+  (Amazon, Congo, SE Asia/Indonesia), plus scattered boreal/temperate.
+- In cells that genuinely burn, model is ~balanced on net (over +394 cancels under -343 -> only +51).
+- **Removing the false positives alone takes the total from 1001 -> 844 Mha/yr = 1.06x GFED5.** Magnitude
+  essentially solved, WITHOUT touching the African savanna core (which is already too LOW, so a global
+  scalar would wrongly cut it). See auto-memory [[error-distribution-scalar-finding]].
+
+Do this (steps):
+0. First commit the pending 2026-06-03 work (see auto-memory [[pending-commit-scalar-session]]). Then
+   `conda activate ed-fire`; confirm git works (this needs a machine where Xcode license is accepted).
+1. Add a TROPICAL CLOSED-CANOPY fire-suppression term to `fire_C` (in the Model C core; the suppression
+   hook already exists and activates only when its params are present — the earlier GLOBAL veg term did
+   NOT help, so make this one TROPICAL + canopy-specific, not global). Form: suppress burned fraction
+   where AGB is high and the cell is closed-canopy tropical forest, e.g. multiply BA by
+   `1 / (1 + (AGB/agb_crit)**k_veg)` gated to |lat|<~23.5 and high-AGB, with `agb_crit`,`k_veg` as new
+   optimizable params. AGB field: `global_baseline_modelCfuel_inputs_1997-2016.nc` (already a driver for
+   emissions). Keep it OFF by default (only active when the new params are in `params.json`).
+2. Re-run the optimizer with a TIGHTER magnitude band and stronger false-positive weight so the total is
+   forced down while the ILAMB spatial score is protected:
+   `PHYSICAL=1 MAG_BAND=1.05 FP_MIN=0.85 W_FP=0.30 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix \
+    N_TRIALS=2500 python scripts/optimize_modelC_coupled.py`
+   (Canonical came from MAG_BAND=1.3 FP_MIN=0.80 SAMPLER=nsga2 WARM=params.nsga2.json. Start from there
+   and tighten; do not overwrite canonical files — use the TAG.)
+3. Regenerate BA from the new params (`scripts/reproduce_modelC.py`), score with official ILAMB
+   (CLAUDE.md "How to score"), and check BOTH: (a) annual total Mha/yr is now ~1.0-1.1x GFED5, and (b)
+   ILAMB Overall did not drop below the canonical 0.6482 (ideally it rises as false positives clear).
+4. Regenerate the diagnostic figures (`scripts/diagnose_false_positives.py`, `scripts/maps_hybrid_ba_ffire.py`,
+   the seasonal maps). Compare false-positive Mha before/after.
+5. ONLY promote to canonical if total improved AND ILAMB held/improved. Back up canonical first (see the
+   CLAUDE.md "DO NOT overwrite without backing up" table). Update HANDOFF_NOTE/PROGRESS and commit.
+
+Acceptance: annual total ~1.0-1.1x GFED5 (down from 1.26x), false-positive Mha cut by most of the 157,
+ILAMB Overall >= 0.6482. If ILAMB drops, the suppression is too aggressive — loosen `agb_crit`/band.
+
+Fallback if the code change is too involved in one sitting: do step 2 alone (refit with tighter
+MAG_BAND/W_FP, no new term) as a quick first cut, then add the tropical term in a second pass.
+
+## >>> END NEXT TASK <<<
 
 ## TL;DR
 

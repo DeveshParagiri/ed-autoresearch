@@ -6,6 +6,29 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-03 — Global-scalar test and the error-distribution finding
+
+Tested the "model is ~1.26x high, just multiply by 0.8" idea. Best scalar 0.792 (matches global mean),
+0.779 (min global RMSE). It fixes the GLOBAL-SUM bias but NOT the ILAMB score. Two reasons, the second
+is the real finding:
+1. Spatial cancellation. Net signed bias +17.3 Mha hides +46.1 over / -28.8 under. Gross per-cell |bias|
+   is 75.0 Mha (4.3x the net). ILAMB scores per cell, so the scalar dropping net to ~0 only moves gross
+   75.0 -> 67.7 (~11%). Global-series correlation 0.405 is scale-invariant.
+2. Dynamic-range / ceiling problem. Per-cell scatter shows model period-mean burned fraction caps at
+   ~0.039 while GFED5 reaches ~0.10 — a horizontal band, not a 1:1 line. Over-prediction in dry/boreal
+   low-fire cells, under-prediction in the African savanna core. The scalar helps the former and makes
+   the latter worse, so ILAMB barely moves. Bias is "too flat," not uniform inflation; the fix is
+   slope/saturation in a refit (tighter MAG_BAND, plus the false-positive objective), not a multiply.
+
+Advisor asked about the error distribution; saved to auto-memory `error-distribution-scalar-finding.md`.
+New figures: `NEW MAPS/Seasonal/{1_global_timeseries_scaled08,2_diff_scatter_scaled,3_map_scaled_ba}.png`.
+Scaled outputs: `ilamb/MODELS_SCALED/ED-ModelC-{scaled08,scaled0792}/burntArea.nc`. Scorer:
+`scripts/score_scaled_ba.sh`. ILAMB deltas are EMULATED — no ed-fire env / ILAMB on this machine
+(system python3 has xarray+cartopy only); run the scorer on a real env for the official number. This
+machine's git is blocked by an unsigned Xcode license, so commit from another machine if needed.
+
+---
+
 ## 2026-05-15 — Native TRENDY v14 fFire comparison, final ranking, names locked
 
 **Two important corrections rolled into this session:**
