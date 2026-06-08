@@ -51,16 +51,22 @@ All Python (xarray, optuna, ILAMB, cartopy, h5py, cmaes) lives in the `ed-fire` 
 
 | File | What |
 |---|---|
-| `models/C/params.json` | Final 12-parameter set (NSGA-II refit). |
+| `models/C/params.json` | Final 14-parameter set (tropfix2 k4 refit; adds `trop_agb_crit`/`trop_k_veg`). |
 | `ilamb/MODELS/ED-ModelC-final/burntArea.nc` | Canonical offline BA output (0.5deg monthly 2001-2016). |
-| `models/combustion-params/betas.gfed5.json` | Retuned combustion betas for fFire. |
+| `models/combustion-params/betas.gfed5.json` | Retuned combustion betas for fFire (retuned for the k4 BA). |
 | `ilamb/MODELS_LEADERBOARD_FFIRE_GFED5/ED-ModelC-Hybrid/fFire.nc` | Canonical fFire output. |
-| `models/C/params.nsga2.json` | Tagged copy of the canonical params (source of truth). |
+| `models/C/params.tropfix2.k4.json` | Tagged copy of the canonical params (source of truth). |
+| `models/C/params.PRE-tropfix2.json` | Backup of the previous (NSGA-II) canonical, pre-tropfix2. |
+| `models/C/params.nsga2.json` | Previous canonical params (pre-tropfix2; identical to params.PRE-tropfix2). |
 | `models/C/params.PRE-coupled.json` | Pre-refit backup (the original benchmark). |
+| `backups_PRE-tropfix2/` | Pre-tropfix2 canonical BA + fFire .nc and old betas (drive-only, gitignored). |
 
-Current scores vs **10 external TRENDY models** (excluding our own old variants):
-- Burned area: ILAMB Overall **0.6482, rank #3** (CLM6 0.6562 #1, ELM-FATES 0.6502 #2).
-- Fire emissions: ILAMB Overall **0.6465, rank #5**.
+Current scores vs **10 external TRENDY models** (excluding our own old variants), after the 2026-06-08
+tropfix2-k4 promotion (magnitude over-burn cut 1.26x -> **1.11x** GFED5):
+- Burned area: ILAMB Overall **0.6473, rank #3** (CLM6 0.6562 #1, ELM-FATES 0.6502 #2; #4 CLASSIC 0.6268).
+- Fire emissions: ILAMB Overall **0.6534, rank #4** (was 0.6465 #5; CLM6 0.6913, ELM-FATES 0.6677, CLASSIC 0.6576).
+- Previous canonical (NSGA-II, pre-tropfix2) was BA 0.6485 / fFire 0.6465 at 1.26x. The tropfix2 refit
+  added a gated tropical closed-canopy AGB suppression to cut Amazon/Congo false fire (see PROGRESS 2026-06-08).
 
 ## Drivers (hybrid — this is the key design decision)
 

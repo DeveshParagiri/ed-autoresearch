@@ -3,21 +3,39 @@
 Last updated: 2026-06-08. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
-## >>> READ THIS FIRST (2026-06-08, updated later same day) — fixes done, tropfix2 RUNNING <<<
+## >>> READ THIS FIRST (2026-06-08, updated later same day) — tropfix2-k4 PROMOTED to canonical <<<
 
-STATUS UPDATE (later on 2026-06-08): the backlog below has been cleared and the next moves started.
-- Pending commits: DONE (3 commits) and PUSHED. FIX 1: DONE (`929a816`). FIX 2: DONE (`cb7e054`).
-  All 5 commits are on `origin/coupled-refit-gfed5` (`7f96cf6..cb7e054`). See PROGRESS 2026-06-08.
-- tropfix2 re-run (NEXT STEP 3): LAUNCHED in the background -> `logs/opt_tropfix2.log`. Recipe:
-  `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix2 N_TRIALS=2500
-  TOPK=8`. When it finishes, jump to NEXT STEPS 4-5 below (score the 8 top-K candidates with official
-  ILAMB, promote the official winner only if Overall held AND magnitude improved). Canonical untouched.
-- The history below (diagnosis, the original 5-step plan) is kept for context; the checkmarks above say
-  what is already done.
+DONE THIS SESSION: the magnitude over-burn fix is finished and SHIPPED. tropfix2 candidate **k4**
+(trial 2465) is now the canonical model. Richard made the call to promote (his paper; George guides).
 
-The 2026-06-03 section below is STALE. The "next task to run at home" (tropical false-fire fix) was
-ALREADY RUN on 2026-06-07 (a session that did not update the docs — the exact drift CLAUDE.md warns
-about). Do not re-run it blind. Here is the true state and the next move.
+What the promotion achieved (all official ILAMB, verified):
+- Burned area: 0.6485 -> **0.6473** (rank #3 held; #4 CLASSIC is far back at 0.6268).
+- Magnitude: **1.26x -> 1.11x** GFED5 (the over-burn roughly halved; the whole point).
+- Fire emissions: 0.6465 -> **0.6534** (rank #5 -> **#4**) after retuning betas for the lower BA;
+  total 3.41 PgC/yr vs GFED5 3.40. Emissions IMPROVED, not just held.
+
+What changed on disk (canonical table in CLAUDE.md updated to match):
+- `models/C/params.json` <- k4 (14 params, adds trop_agb_crit/trop_k_veg). Source of truth tagged copy:
+  `models/C/params.tropfix2.k4.json`.
+- `ilamb/MODELS/ED-ModelC-final/burntArea.nc` and `.../MODELS_LEADERBOARD/ED-ModelC-Hybrid/burntArea.nc`
+  regenerated from k4 (kept in sync manually; reproduce only writes the first).
+- `models/combustion-params/betas.gfed5.json` <- retuned for k4 BA. fFire regenerated.
+- Backups of the PRE-tropfix2 canonical: `models/C/params.PRE-tropfix2.json`,
+  `models/combustion-params/betas.PRE-tropfix2.gfed5.json`, and `backups_PRE-tropfix2/` (the old .nc).
+  `params.nsga2.json` is unchanged and still equals the old canonical params.
+
+GOTCHAS handled this session (note for next time): both scored model folders had stray .nc that would
+trigger ILAMB MonotonicityError (burntArea.{nsga2,tropfix,tropfix2}.nc and fFire (1..6).nc dups) -
+moved to backups_PRE-tropfix2/strays/. compute_emissions.py crashes on a unicode print under Windows
+cp1252 - run it with `PYTHONIOENCODING=utf-8`. The "GFED ref ~2.0 PgC/yr" note in that script is STALE
+(GFED5 here is actually 3.40 PgC/yr).
+
+NEXT (optional, not blocking): regenerate the paper figures from the new canonical (the 4-panel maps +
+seasonal figures have HARDCODED old score/mean annotations in their scripts that need updating, e.g.
+maps_hybrid_ba_ffire.py titles say ILAMB=0.6482 / rank #12 / mean 6.27%). The k4-specific figures are
+already in `NEW MAPS/tropfix2/`. Also: rezip/send Lei the updated bundle if desired.
+
+The 2026-06-03 section below is STALE. Everything above supersedes the old 5-step plan (which is DONE).
 
 ### What the 2026-06-07 tropfix run produced (NOT promoted, canonical untouched — correct)
 

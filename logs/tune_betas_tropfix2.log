@@ -1,0 +1,15 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+D:\FIRE_OFFLINE\scripts\tune_combustion_params.py:106: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  sampler = optuna.samplers.TPESampler(seed=args.seed, multivariate=True, group=True,
+D:\FIRE_OFFLINE\scripts\tune_combustion_params.py:106: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  sampler = optuna.samplers.TPESampler(seed=args.seed, multivariate=True, group=True,
+Loading inputs (BA=ED-ModelC-Hybrid, train 2001-2010) ...
+  CLM5-defaults seed: overall=0.5838 (b=0.799 r=0.325 s=0.652 sp=0.603)
+
+TPE n_trials=2500 timeout=0.5h
+
+done, 1160 trials in 30.0 min
+Best #991: overall=0.6653
+  b=1.000 r=0.333 s=0.656 sp=0.670
+  params: {'beta_leaf': 0.9154962853668075, 'beta_fine': 0.3843868953791183, 'beta_coarse': 0.02852874521609368, 'beta_litter': 0.7671106482419083, 'D_REF': 260.19319474244037}

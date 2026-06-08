@@ -1,0 +1,46 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/ilamb_out_tropfix2_topk/ilamb.cfg' and 'D:/FIRE_OFFLINE/ilamb_out_tropfix2_topk\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/ilamb/MODELS_TOPK_tropfix2
+
+                              ED-ModelC-canonical
+                            ED-ModelC-tropfix2-k1
+                            ED-ModelC-tropfix2-k2
+                            ED-ModelC-tropfix2-k3
+                            ED-ModelC-tropfix2-k4
+                            ED-ModelC-tropfix2-k5
+                            ED-ModelC-tropfix2-k6
+                            ED-ModelC-tropfix2-k7
+                            ED-ModelC-tropfix2-k8
+
+Parsing config file D:/FIRE_OFFLINE/ilamb_out_tropfix2_topk/ilamb.cfg...
+
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-canonical  [92mCompleted[0m  0:00:38
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k1 [92mCompleted[0m  0:00:32
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k2 [92mCompleted[0m  0:00:31
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k3 [92mCompleted[0m  0:00:24
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k4 [92mCompleted[0m  0:00:24
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k5 [92mCompleted[0m  0:00:24
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k6 [92mCompleted[0m  0:00:24
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k7 [92mCompleted[0m  0:00:24
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k8 [92mCompleted[0m  0:00:24
+
+Finishing post-processing which requires collectives...
+
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-canonical  [92mCompleted[0m  0:00:08
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k1 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k2 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k3 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k4 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k5 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k6 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k7 [92mCompleted[0m  0:00:06
+    FIRE_OFFLINE/ilamb_out_tropfix2_topk\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-tropfix2-k8 [92mCompleted[0m  0:00:06
+
+Completed in  0:05:08
+

@@ -1,0 +1,22 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/ilamb_out_promote_ba/ilamb.cfg' and 'D:/FIRE_OFFLINE/ilamb_out_promote_ba\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/ilamb/MODELS
+
+                                  ED-ModelC-final
+
+Parsing config file D:/FIRE_OFFLINE/ilamb_out_promote_ba/ilamb.cfg...
+
+    FIRE_OFFLINE/ilamb_out_promote_ba\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    FIRE_OFFLINE/ilamb_out_promote_ba\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-final      [92mCompleted[0m  0:00:28
+
+Finishing post-processing which requires collectives...
+
+    FIRE_OFFLINE/ilamb_out_promote_ba\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-ModelC-final      [92mCompleted[0m  0:00:08
+
+Completed in  0:00:38
+

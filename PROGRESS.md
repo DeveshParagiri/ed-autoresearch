@@ -6,6 +6,31 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-08 (later) — PROMOTED tropfix2-k4 to canonical (magnitude over-burn fixed)
+
+Ran tropfix2 (2500 trials, 60 min): `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2
+WARM=params.nsga2.json TAG=tropfix2 N_TRIALS=2500 TOPK=8`. FIX 2 dumped 8 Pareto candidates; scored all
+8 + canonical with official ILAMB. Best official candidate = **k4** (trial 2465): BA Overall 0.6474,
+Spatial 0.7620, magnitude 1.11x. (The earlier failed tropfix run dropped to 0.6416/0.7252 - tropfix2
+held spatial because FIX 1 fixed the selection target and MAG_BAND was loosened 1.05->1.12.)
+
+Richard decided to promote (his paper). Promotion executed and verified with official ILAMB:
+- BA: 0.6485 -> **0.6473** (reproduce-regenerated shipped file; rank #3 held, #4 CLASSIC 0.6268).
+- Magnitude: **1.26x -> 1.11x** GFED5 (881 vs 793 Mha/yr).
+- Retuned combustion betas for the lower BA (internal fit 0.6537 -> 0.6653; beta_leaf 0.58 -> 0.92).
+- fFire: 0.6465 -> **0.6534** (rank #5 -> **#4**); total 3.41 PgC/yr vs GFED5 3.40 (was 3.47). IMPROVED.
+
+Net: corrected the over-burn the principled way (targeted tropical closed-canopy suppression, not a
+global scalar) at a negligible -0.0012 BA cost, and emissions actually got better. Canonical files
+swapped (params.json, betas.gfed5.json, burntArea.nc x2, fFire.nc); PRE-tropfix2 backups kept
+(params.PRE-tropfix2.json, betas.PRE-tropfix2.gfed5.json, backups_PRE-tropfix2/). CLAUDE.md canonical
+table + scores updated. New figures: NEW MAPS/tropfix2/{BA_k4_vs_gfed5,1_global_timeseries_k4}.png.
+
+Gotchas: moved stray .nc (burntArea.{nsga2,tropfix,tropfix2}.nc, fFire (1..6).nc dups) out of the
+scored folders to avoid ILAMB MonotonicityError; compute_emissions.py needs PYTHONIOENCODING=utf-8 on
+Windows; its "GFED ref ~2.0 PgC/yr" note is stale (GFED5 is 3.40). TODO (optional): regenerate the
+4-panel/seasonal paper figures (their scripts have hardcoded old score annotations to update).
+
 ## 2026-06-08 — Committed pending work, applied scorer fixes 1+2, launched tropfix2
 
 Caught the docs up to git and cleared the backlog the 2026-06-08 handoff flagged. On Windows so git
