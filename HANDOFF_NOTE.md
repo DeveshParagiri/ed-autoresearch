@@ -1,7 +1,98 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-06-03. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-06-08. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-06-08) — state reconciled, what to do + check before starting <<<
+
+The 2026-06-03 section below is STALE. The "next task to run at home" (tropical false-fire fix) was
+ALREADY RUN on 2026-06-07 (a session that did not update the docs — the exact drift CLAUDE.md warns
+about). Do not re-run it blind. Here is the true state and the next move.
+
+### What the 2026-06-07 tropfix run produced (NOT promoted, canonical untouched — correct)
+
+- Code (step 1) is fully wired: `fire_C` in `reproduce_modelC.py:86-92` applies a gated tropical
+  closed-canopy AGB suppression; the optimizer imports it and searches `trop_agb_crit`/`trop_k_veg`.
+- Run output: `models/C/params.tropfix.json`, `ilamb/MODELS/ED-ModelC-final/burntArea.tropfix.nc`,
+  scored in `ilamb_out_tropfix/`. Recipe used: `PHYSICAL=1 MAG_BAND=1.05 FP_MIN=0.85 SAMPLER=nsga2`.
+- Result: MAGNITUDE GOAL HIT. Annual total 1001 -> 818 Mha/yr = 1.05x GFED5 (was 1.29x). False
+  positives largely cleared (fp_score 0.956). BUT official ILAMB Burned Area DROPPED 0.6485 -> 0.6416,
+  below the 0.6482 promotion bar. So it was correctly NOT promoted.
+
+### Diagnosis of WHY (done 2026-06-08, this is the key finding)
+
+The whole official drop is the SPATIAL DISTRIBUTION SCORE (0.7691 -> 0.7252, -0.044). Every other
+component held or improved (RMSE even got better, 0.4754 -> 0.4827, because magnitude is closer). And
+it is a VARIANCE effect, not correlation: spatial correlation rho actually rose (0.54 -> 0.56), but the
+model/ref std ratio sigma fell 0.77 -> 0.69. The suppression made an already-too-flat map flatter
+(GFED5 burn-cell std 0.0111, canonical 0.0089, tropfix 0.0079). This is the SAME ceiling /
+dynamic-range problem as [[error-distribution-scalar-finding]]. Killing tropical fire removed amplitude
+the model could not spare.
+
+LESSON: cutting the total cannot come from suppression ALONE — it flattens the field and the Taylor
+spatial term punishes it. The next run must pair the tropical cut with KEEPING (or lifting) amplitude
+in the cells that genuinely burn, so sigma stays near 1.
+
+Two real scorer-fidelity bugs also surfaced (independent of the science):
+1. The optimizer's internal Overall is an UNWEIGHTED mean of 4 components
+   (`optimize_modelC_coupled.py:216`). Official ILAMB weights RMSE double: `(Bias + 2*RMSE + Seasonal +
+   Spatial)/5` (verified: reproduces official Overall to 4 decimals for both models). FIX 1 below.
+2. The internal per-component values are offset from official (internal RMSE 0.38 vs official 0.48,
+   internal Bias 0.68 vs 0.70) because internal scores on the 1deg grid with burn-mask weighting while
+   official scores on 0.5deg with ILAMB regridding. So internal Overall (0.6501) and official (0.6485)
+   are DIFFERENT SCALES. Never compare the internal number to the official 0.6482 bar — re-score
+   candidates with official ILAMB before any promotion decision (FIX 2 below).
+
+### BEFORE YOU START (pre-flight checklist — this drive moves between Mac and Windows)
+
+This drive is exFAT and moves between machines. On whatever machine you are on:
+1. `source $(conda info --base)/etc/profile.d/conda.sh && conda activate ed-fire` and confirm
+   `python -c "import optuna, xarray; print('ok')"` AND `which ilamb-run`. If the env is missing,
+   recreate it: `conda env create -f environment.yml` (the yml is on the drive; the env is not).
+2. Confirm git works: `git status`. (On the office Mac git is blocked by an unaccepted Xcode license,
+   `sudo xcodebuild -license`; on Windows git works fine.) See PENDING COMMITS below.
+3. If on WINDOWS: run the ILAMB scoring from a bash shell (WSL or Git Bash), not PowerShell — the
+   CLAUDE.md scoring recipe uses `$PWD`/`ilamb-run`/`rm -rf`/`cp`. The Python scripts are path-portable.
+4. exFAT GOTCHA: macOS leaves AppleDouble `._*` files all over the drive. ILAMB globs `*.nc` in a model
+   folder and `._burntArea.nc` matches, so it will try to read an AppleDouble file as NetCDF and crash
+   the model-dir merge. In ANY model folder you score, run `find . -name '._*' -delete` first. (Same
+   failure family as the MonotonicityError gotcha in CLAUDE.md.)
+5. Confirm the big data files are present (they ARE on the drive as of 2026-06-08): the two
+   `global_baseline_*.nc` dumps, `ilamb_ref_official/DATA/{burntArea,fFire}/GFED5/*.nc`,
+   `data/crujra/*_monthly.npy` (6 files), `ilamb/MODELS_LEADERBOARD*`.
+
+### PENDING COMMITS (do these once git works — Windows clears the Mac Xcode block)
+
+- The 2026-06-03 scalar/error-distribution session (see [[pending-commit-scalar-session]]).
+- The 2026-06-07 tropfix run (params.tropfix.json, burntArea.tropfix.nc, ilamb_out_tropfix/, logs).
+- This 2026-06-08 diagnosis (this handoff section; consider a memory too).
+Commit these as separate, clearly-messaged commits. Nothing canonical was overwritten in any of them.
+
+### NEXT STEPS (in order)
+
+1. APPLY FIX 1 (one line, low risk, do first): in `optimize_modelC_coupled.py:216` change the Overall
+   from the unweighted `np.mean([bias, rmse_s, seas, spatial])` to ILAMB's weighting
+   `(bias + 2*rmse_s + seas + spatial)/5`. This makes the selection target match official aggregation.
+2. APPLY FIX 2 (selection, more work): have the optimizer dump the params of the top-K Pareto points
+   (not just the single internal-best), so each can be re-scored with official ILAMB and the OFFICIAL
+   winner promoted. Today it writes one params file chosen on the internal metric.
+3. RE-RUN the optimizer to cut magnitude WITHOUT flattening (protect sigma). Loosen the magnitude band
+   so the optimizer keeps amplitude in true-fire cells, e.g.
+   `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix2 N_TRIALS=2500`.
+   Goal: total ~1.10-1.15x GFED5 (a bit higher than tropfix's 1.05x is fine) while official Spatial
+   Distribution Score holds near canonical's 0.7691 and official Overall >= 0.6482. If spatial still
+   sags, the deeper lever is RAISING the African-savanna core toward GFED5's dynamic range (the ceiling
+   problem), not more suppression.
+4. SCORE each candidate with official ILAMB (CLAUDE.md recipe; remember step-4 `._*` cleanup). Check
+   BOTH (a) annual Mha/yr is ~1.0-1.15x GFED5 and (b) official Overall >= 0.6482 AND Spatial held.
+5. Only promote if official Overall held/improved AND magnitude improved. Back up canonical first
+   (CLAUDE.md table). Then regenerate emissions + figures, update HANDOFF/PROGRESS, commit.
+
+Acceptance: magnitude ~1.0-1.15x GFED5 (down from 1.29x) AND official ILAMB Overall >= 0.6482 with the
+Spatial Distribution Score not below ~0.76. The tropfix run already proved magnitude is achievable; the
+open problem is doing it without losing spatial variance.
+
+## >>> END READ-THIS-FIRST <<<
 
 ## This session (2026-06-03) — global-scalar / error-distribution exploration
 
