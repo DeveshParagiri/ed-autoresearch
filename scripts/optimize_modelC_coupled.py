@@ -241,10 +241,13 @@ LOG_PARAMS = {
     "gpp_d":           (1e-2, 1e3),
     "ign_k":           (1e-3, 1e1),
     "ign_c":           (1e-1, 1e3),
-    # Vegetation suppression: fire decreases as AGB > agb_crit (kg C / m2)
-    # Forest biomass ~ 5-20 kg/m2, grass ~ 0.1-1 kg/m2
-    "k_veg":           (1e-2, 1e1),
-    "agb_crit":        (5e-1, 5e1),
+    # Tropical closed-canopy suppression: kill false-positive fire in high-AGB
+    # tropical forest (Amazon/Congo/SE-Asia). Gated to |lat|<23.5 inside fire_C.
+    # Closed-canopy tropical forest AGB ~ 10-25 kgC/m2; savanna grass < 2 kgC/m2,
+    # so a crit in this band leaves savanna untouched. (The earlier GLOBAL veg
+    # term k_veg/agb_crit did not help and is intentionally dropped here.)
+    "trop_agb_crit":   (1e0,  3e1),
+    "trop_k_veg":      (5e-1, 8e0),
 }
 
 # Warm start from $WARM env var (path to a params.{tag}.json) if set,
@@ -258,9 +261,9 @@ else:
     WARM_FILE = MODELS_DIR / "params.json"
 print(f"[opt] warm-start from {WARM_FILE.name}")
 WARM_START = json.load(open(WARM_FILE))["params"]
-# Add veg-suppression defaults if missing (so old warm-starts behave as before)
-WARM_START.setdefault("k_veg", 0.1)
-WARM_START.setdefault("agb_crit", 30.0)
+# Leave the warm-start point WITHOUT the tropical params so the smoke-test/warm
+# trial reproduces the canonical baseline exactly; Optuna samples trop_* for the
+# enqueued trial. (Old global k_veg/agb_crit are no longer in the search space.)
 
 
 GFED5_LM = float((obs * w3_land).sum() / (w3_land.sum() + 1e-12))
@@ -286,8 +289,15 @@ def objective(trial):
         trial.set_user_attr("fp_score", fp_score)
         trial.set_user_attr("hot_score", hot_score)
         trial.set_user_attr("pred_lm_ratio", ratio)
-        if MAG_BAND > 0 and (ratio > MAG_BAND or ratio < 1.0 / MAG_BAND):
-            return (1.0, 1.0)  # infeasible, both objectives high
+        if MAG_BAND > 0:
+            viol = max(ratio - MAG_BAND, (1.0 / MAG_BAND) - ratio, 0.0)
+            if viol > 0.0:
+                # Graded penalty so NSGA-II has a gradient TOWARD the band: any
+                # feasible point (objectives <= ~1) dominates all infeasible ones,
+                # and among infeasible the smaller magnitude violation is preferred.
+                # (A flat constant here gives zero selection pressure and the search
+                # degenerates to random when the warm start is outside the band.)
+                return (10.0 + viol, 10.0 + viol)
         return (-overall, 1.0 - fp_score)
 
     if MAG_BAND > 0 and (ratio > MAG_BAND or ratio < 1.0 / MAG_BAND):
@@ -400,7 +410,7 @@ def main():
         "reference":      "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
         "mechanisms":     ["gpp_monthly", "precip", "t_air_ign"],
         "n_mechanisms":   3,
-        "n_params":       12,
+        "n_params":       len(best_p),
         "objective":      "Collier-4 (Bias + RMSE + Seas + Spatial) / 4 against GFED5 monthly fraction",
         "ed_consistency": {
             "interpretation": "Model C output is an annual fire rate (yr^-1)",

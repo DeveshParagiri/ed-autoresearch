@@ -1,0 +1,30 @@
+cp: T7/FIRE_OFFLINE/ilamb_out_tropfix/ilamb.cfg: Not a directory
+
+Searching for model results in /Volumes/RICHIE - T7/FIRE_OFFLINE/ilamb/MODELS_TROPFIX_CMP
+
+                                 ED-ModelC-Hybrid
+                                ED-ModelC-tropfix
+
+Parsing config file /Volumes/RICHIE - T7/FIRE_OFFLINE/ilamb_out_tropfix/ilamb.cfg...
+
+                                 BurnedArea/GFED5[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                                 BurnedArea/GFED5 ED-ModelC-Hybrid     [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-tropfix    [92mCompleted[0m  0:00:11
+
+Finishing post-processing which requires collectives...
+
+                                 BurnedArea/GFED5 ED-ModelC-Hybrid     [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-tropfix    [92mCompleted[0m  0:00:02
+Traceback (most recent call last):
+  File "/opt/miniconda3/envs/ed-fire/bin/ilamb-run", line 1110, in <module>
+    S.harvestInformation(M)
+  File "/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/ILAMB/Scoreboard.py", line 943, in harvestInformation
+    HarvestScalarDatabase(self.build_dir)
+  File "/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/ILAMB/Post.py", line 1434, in HarvestScalarDatabase
+    with Dataset(os.path.join(root, fname)) as dset:
+  File "src/netCDF4/_netCDF4.pyx", line 2522, in netCDF4._netCDF4.Dataset.__init__
+  File "src/netCDF4/_netCDF4.pyx", line 2159, in netCDF4._netCDF4._ensure_nc_success
+OSError: [Errno -101] NetCDF: HDF error: '/Volumes/RICHIE - T7/FIRE_OFFLINE/ilamb_out_tropfix/EcosystemandCarbonCycle/BurnedArea/GFED5/._GFED5_ED-ModelC-Hybrid.nc'

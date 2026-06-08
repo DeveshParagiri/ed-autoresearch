@@ -77,6 +77,19 @@ def fire_C(d, p):
     if "agb" in d and "k_veg" in p and "agb_crit" in p:
         veg_mod = supp(d["agb"], p["k_veg"], p["agb_crit"])
         product = product * veg_mod
+    # Tropical closed-canopy suppression (optional): kill fire in high-AGB
+    # tropical-forest cells (Amazon, Congo, SE Asia) where GFED5 is near-zero.
+    # Active only when trop params are present; gated to |lat| < trop_lat (default
+    # 23.5 deg) so it never touches the African savanna core. Form follows the
+    # handoff: BA *= 1 / (1 + (AGB/agb_crit)**k_veg), so low-AGB savanna (ratio<1)
+    # is unaffected while high-AGB forest is strongly suppressed.
+    if "agb" in d and "trop_k_veg" in p and "trop_agb_crit" in p:
+        nlat = d["agb"].shape[-2]
+        lat = (-90.0 + (np.arange(nlat, dtype=np.float32) + 0.5) * (180.0 / nlat))
+        trop = (np.abs(lat) < p.get("trop_lat", 23.5)).astype(np.float32)[None, :, None]
+        ratio = np.clip(d["agb"] / (p["trop_agb_crit"] + 1e-12), 0, None)
+        canopy_mod = 1.0 / (1.0 + np.power(ratio, p["trop_k_veg"]))
+        product = product * (trop * canopy_mod + (1.0 - trop))
     return np.power(np.clip(product, 0, None), p["fire_exp"]).astype(np.float32)
 
 
