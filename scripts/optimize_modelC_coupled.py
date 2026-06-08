@@ -323,6 +323,34 @@ def objective(trial):
     return -overall
 
 
+def write_ba_nc(pred, path):
+    """Write a monthly-fraction BA prediction (1deg, land-masked) to a 0.5deg CF
+    NetCDF at `path`, creating parent dirs. Shared by the primary output and the
+    FIX-2 top-K candidate dump so every candidate is encoded identically and can
+    be re-scored with official ILAMB without surprises."""
+    pred_hd = uncoarsen(np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32))
+    times = [cftime.DatetimeNoLeap(y, m, 15) for y in YEARS for m in range(1, 13)]
+    lat   = np.arange(-89.75, 90.0, 0.5)
+    lon   = np.arange(-179.75, 180.0, 0.5)
+    ds = xr.Dataset(
+        {"burntArea": (("time","lat","lon"), pred_hd,
+                       {"units":"1", "standard_name":"burnt_area_fraction",
+                        "long_name":"Burnt Area Fraction"})},
+        coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
+        attrs={"title": "ED-ModelC-final (coupled-consistent retune, GFED5)",
+               "Conventions": "CF-1.7",
+               "transform": f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"})
+    ds = add_cf_bounds(ds)
+    enc = {"burntArea":   {"zlib":True, "complevel":4, "_FillValue":1e20},
+           "time":        {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"},
+           "time_bounds": {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"}}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".nc.tmp")
+    ds.to_netcdf(tmp, encoding=enc, format="NETCDF4_CLASSIC")
+    os.replace(tmp, path)
+    return path
+
+
 def main():
     backup = MODELS_DIR / "params.PRE-coupled.json"
     if not backup.exists():
@@ -399,6 +427,27 @@ def main():
         print(f"       best Overall = {best_overall:.4f}")
         best_p = study.best_params
 
+    def build_out(params, breakdown):
+        return {
+            "model": "Model C (coupled-consistent retune; drivers + GPP from Lei's ED dump; GFED5 target)",
+            "drivers_source": str(DUMP_NC.name),
+            "reference":      "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
+            "mechanisms":     ["gpp_monthly", "precip", "t_air_ign"],
+            "n_mechanisms":   3,
+            "n_params":       len(params),
+            "objective":      "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
+            "ed_consistency": {
+                "interpretation": "Model C output is an annual fire rate (yr^-1)",
+                "fire_max_rate":   FIRE_MAX_RATE,
+                "transform":       "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12",
+            },
+            "scores_internal": breakdown,
+            "warm_start_internal": warm_breakdown,
+            "n_trials":   len(study.trials),
+            "runtime_min": round(elapsed, 2),
+            "params":     params,
+        }
+
     pred   = predict(best_p)
     overall, breakdown = score_BA(pred)
     print(f"[best] Bias={breakdown['bias']:.4f}  RMSE={breakdown['rmse']:.4f}  "
@@ -409,50 +458,56 @@ def main():
     print(f"[diag] raw rate land-mean (yr^-1): {raw_lm:.4g}  "
           f"(target ~ {12*float((obs * w3_land).sum() / w3_land.sum()):.4g})")
 
-    out = {
-        "model": "Model C (coupled-consistent retune; drivers + GPP from Lei's ED dump; GFED5 target)",
-        "drivers_source": str(DUMP_NC.name),
-        "reference":      "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
-        "mechanisms":     ["gpp_monthly", "precip", "t_air_ign"],
-        "n_mechanisms":   3,
-        "n_params":       len(best_p),
-        "objective":      "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
-        "ed_consistency": {
-            "interpretation": "Model C output is an annual fire rate (yr^-1)",
-            "fire_max_rate":   FIRE_MAX_RATE,
-            "transform":       "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12",
-        },
-        "scores_internal": breakdown,
-        "warm_start_internal": warm_breakdown,
-        "n_trials":   len(study.trials),
-        "runtime_min": round(elapsed, 2),
-        "params":     best_p,
-    }
     out_name = f"params.{TAG}.json" if TAG else "params.json"
-    (MODELS_DIR / out_name).write_text(json.dumps(out, indent=2))
+    (MODELS_DIR / out_name).write_text(json.dumps(build_out(best_p, breakdown), indent=2))
     print(f"[write] {MODELS_DIR / out_name}")
 
-    pred_hd = uncoarsen(np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32))
-    times = [cftime.DatetimeNoLeap(y, m, 15) for y in YEARS for m in range(1, 13)]
-    lat   = np.arange(-89.75, 90.0, 0.5)
-    lon   = np.arange(-179.75, 180.0, 0.5)
-    ds = xr.Dataset(
-        {"burntArea": (("time","lat","lon"), pred_hd,
-                       {"units":"1", "standard_name":"burnt_area_fraction",
-                        "long_name":"Burnt Area Fraction"})},
-        coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
-        attrs={"title": "ED-ModelC-final (coupled-consistent retune, GFED5)",
-               "Conventions": "CF-1.7",
-               "transform": f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"})
-    ds = add_cf_bounds(ds)
-    enc = {"burntArea":   {"zlib":True, "complevel":4, "_FillValue":1e20},
-           "time":        {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"},
-           "time_bounds": {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"}}
     nc_out = ILAMB_OUT_NC.with_name(f"burntArea.{TAG}.nc") if TAG else ILAMB_OUT_NC
-    tmp = nc_out.with_suffix(".nc.tmp")
-    ds.to_netcdf(tmp, encoding=enc, format="NETCDF4_CLASSIC")
-    os.replace(tmp, nc_out)
+    write_ba_nc(pred, nc_out)
     print(f"[write] {nc_out}  ({nc_out.stat().st_size/1e6:.1f} MB)")
+
+    # FIX 2 (2026-06-08): dump the top-K Pareto candidates, not just the single
+    # internal-best, each as its own params JSON + a scoreable burntArea.nc in its
+    # own model dir. The internal Overall is on a different grid/weighting than
+    # official ILAMB, so the internal-best is NOT necessarily the official winner;
+    # score every candidate with official ILAMB and promote the official best.
+    TOPK = int(os.environ.get("TOPK", 5))
+    if SAMPLER == "nsga2" and TOPK > 0:
+        topk = candidates[:TOPK]
+        tag = TAG or "run"
+        topk_root = REPO / "ilamb" / f"MODELS_TOPK_{tag}"
+        print(f"\n[FIX2] dumping top-{len(topk)} Pareto candidates -> {topk_root}")
+        manifest = []
+        for rank, t in enumerate(topk, 1):
+            p = t.params
+            pr = predict(p)
+            ov, bd = score_BA(pr)
+            pj = build_out(p, bd)
+            pj["pareto_rank"]   = rank
+            pj["trial_number"]  = t.number
+            pj["fp_score"]      = t.user_attrs.get("fp_score")
+            pj["pred_lm_ratio"] = t.user_attrs.get("pred_lm_ratio")
+            pjpath = MODELS_DIR / f"params.{tag}.k{rank}.json"
+            pjpath.write_text(json.dumps(pj, indent=2))
+            mdir = topk_root / f"ED-ModelC-{tag}-k{rank}"
+            write_ba_nc(pr, mdir / "burntArea.nc")
+            manifest.append({
+                "rank": rank, "trial": t.number,
+                "internal_overall": round(ov, 4),
+                "fp_score":      round(float(t.user_attrs.get("fp_score", 0)), 4),
+                "pred_lm_ratio": round(float(t.user_attrs.get("pred_lm_ratio", 0)), 4),
+                "params_json": pjpath.relative_to(REPO).as_posix(),
+                "model_dir":   mdir.relative_to(REPO).as_posix(),
+            })
+            print(f"  k{rank}: trial {t.number}  internal_overall={ov:.4f}  "
+                  f"fp={float(t.user_attrs.get('fp_score',0)):.3f}  "
+                  f"ratio={float(t.user_attrs.get('pred_lm_ratio',0)):.2f}")
+        (MODELS_DIR / f"topk.{tag}.json").write_text(json.dumps(manifest, indent=2))
+        print(f"[FIX2] manifest -> {MODELS_DIR / f'topk.{tag}.json'}")
+        print(f"[FIX2] re-score all candidates with official ILAMB (CLAUDE.md recipe; "
+              f"clean ._* first), e.g. --model_root \"$PWD/ilamb/MODELS_TOPK_{tag}\"")
+        print(f"[FIX2] promote the candidate with the best OFFICIAL Overall, "
+              f"NOT the internal one.")
 
 
 if __name__ == "__main__":
