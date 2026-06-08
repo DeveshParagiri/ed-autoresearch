@@ -6,6 +6,33 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-08 — Committed pending work, applied scorer fixes 1+2, launched tropfix2
+
+Caught the docs up to git and cleared the backlog the 2026-06-08 handoff flagged. On Windows so git
+works (the Mac Xcode-license block does not apply here).
+
+- Committed the previously-uncommitted backlog as three clean commits: the tropfix CODE + 2026-06-07
+  run (`39adac4`), the 2026-06-08 spatial-drop diagnosis (`2b843f7`), and CLAUDE/handoff state. Nothing
+  canonical was overwritten in any of them.
+- FIX 1 (`929a816`): optimizer internal Overall now uses official ILAMB weighting
+  `(Bias + 2*RMSE + Seas + Spatial)/5` instead of the unweighted mean of the four components, so the
+  selection target matches the official aggregation used for promotion.
+- FIX 2 (`cb7e054`): optimizer now dumps the top-K Pareto candidates (env `TOPK`, default 5; NSGA-II
+  only), each as its own params JSON + a scoreable `burntArea.nc` in its own model dir under
+  `ilamb/MODELS_TOPK_{tag}/`, plus a manifest `models/C/topk.{tag}.json`. Because internal Overall and
+  official Overall are on different grids/weightings, the internal-best is NOT necessarily the official
+  winner; this lets us re-score every candidate with official ILAMB and promote the official best.
+  Refactored NC encoding into `write_ba_nc()` and the params dict into `build_out()` (primary output
+  unchanged). Smoke-tested end-to-end (5 trials, TOPK=2), artifacts verified then removed.
+- Pushed all 5 commits to `origin/coupled-refit-gfed5` (`7f96cf6..cb7e054`).
+- Launched the tropfix2 re-run in the background (handoff step 3 — cut magnitude WITHOUT flattening
+  sigma): `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix2
+  N_TRIALS=2500 TOPK=8` -> `logs/opt_tropfix2.log`. Goal: total ~1.10-1.15x GFED5 while official Spatial
+  holds near 0.769 and Overall >= 0.6482. Next: score the 8 top-K candidates with official ILAMB and
+  promote the official winner only if Overall held/improved AND magnitude improved (NOT the internal best).
+
+---
+
 ## 2026-06-03 — Global-scalar test and the error-distribution finding
 
 Tested the "model is ~1.26x high, just multiply by 0.8" idea. Best scalar 0.792 (matches global mean),

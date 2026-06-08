@@ -3,7 +3,17 @@
 Last updated: 2026-06-08. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
-## >>> READ THIS FIRST (2026-06-08) — state reconciled, what to do + check before starting <<<
+## >>> READ THIS FIRST (2026-06-08, updated later same day) — fixes done, tropfix2 RUNNING <<<
+
+STATUS UPDATE (later on 2026-06-08): the backlog below has been cleared and the next moves started.
+- Pending commits: DONE (3 commits) and PUSHED. FIX 1: DONE (`929a816`). FIX 2: DONE (`cb7e054`).
+  All 5 commits are on `origin/coupled-refit-gfed5` (`7f96cf6..cb7e054`). See PROGRESS 2026-06-08.
+- tropfix2 re-run (NEXT STEP 3): LAUNCHED in the background -> `logs/opt_tropfix2.log`. Recipe:
+  `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix2 N_TRIALS=2500
+  TOPK=8`. When it finishes, jump to NEXT STEPS 4-5 below (score the 8 top-K candidates with official
+  ILAMB, promote the official winner only if Overall held AND magnitude improved). Canonical untouched.
+- The history below (diagnosis, the original 5-step plan) is kept for context; the checkmarks above say
+  what is already done.
 
 The 2026-06-03 section below is STALE. The "next task to run at home" (tropical false-fire fix) was
 ALREADY RUN on 2026-06-07 (a session that did not update the docs — the exact drift CLAUDE.md warns
@@ -61,31 +71,34 @@ This drive is exFAT and moves between machines. On whatever machine you are on:
    `global_baseline_*.nc` dumps, `ilamb_ref_official/DATA/{burntArea,fFire}/GFED5/*.nc`,
    `data/crujra/*_monthly.npy` (6 files), `ilamb/MODELS_LEADERBOARD*`.
 
-### PENDING COMMITS (do these once git works — Windows clears the Mac Xcode block)
+### PENDING COMMITS — DONE 2026-06-08 (on Windows, git works)
 
-- The 2026-06-03 scalar/error-distribution session (see [[pending-commit-scalar-session]]).
-- The 2026-06-07 tropfix run (params.tropfix.json, burntArea.tropfix.nc, ilamb_out_tropfix/, logs).
-- This 2026-06-08 diagnosis (this handoff section; consider a memory too).
-Commit these as separate, clearly-messaged commits. Nothing canonical was overwritten in any of them.
+All committed as separate, clearly-messaged commits and PUSHED to origin. Nothing canonical overwritten.
+- The 2026-06-03 scalar/error-distribution session: already committed earlier as `e65149f`.
+- The 2026-06-07 tropfix run (params.tropfix.json, logs; the .nc files are gitignored): `39adac4`.
+- The 2026-06-08 diagnosis: `2b843f7`.
+(Left untracked on purpose: the thesis-docs folder, a `betas (1).gfed5.json` download dup, and
+`prep_monthly_inputs.LOCAL-BACKUP.py`. The thesis folder's `.gitignore` entry has literal quotes so it
+never matches — fix the quoting if you want it actually ignored.)
 
 ### NEXT STEPS (in order)
 
-1. APPLY FIX 1 (one line, low risk, do first): in `optimize_modelC_coupled.py:216` change the Overall
-   from the unweighted `np.mean([bias, rmse_s, seas, spatial])` to ILAMB's weighting
-   `(bias + 2*rmse_s + seas + spatial)/5`. This makes the selection target match official aggregation.
-2. APPLY FIX 2 (selection, more work): have the optimizer dump the params of the top-K Pareto points
-   (not just the single internal-best), so each can be re-scored with official ILAMB and the OFFICIAL
-   winner promoted. Today it writes one params file chosen on the internal metric.
-3. RE-RUN the optimizer to cut magnitude WITHOUT flattening (protect sigma). Loosen the magnitude band
-   so the optimizer keeps amplitude in true-fire cells, e.g.
-   `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json TAG=tropfix2 N_TRIALS=2500`.
-   Goal: total ~1.10-1.15x GFED5 (a bit higher than tropfix's 1.05x is fine) while official Spatial
-   Distribution Score holds near canonical's 0.7691 and official Overall >= 0.6482. If spatial still
-   sags, the deeper lever is RAISING the African-savanna core toward GFED5's dynamic range (the ceiling
-   problem), not more suppression.
-4. SCORE each candidate with official ILAMB (CLAUDE.md recipe; remember step-4 `._*` cleanup). Check
-   BOTH (a) annual Mha/yr is ~1.0-1.15x GFED5 and (b) official Overall >= 0.6482 AND Spatial held.
-5. Only promote if official Overall held/improved AND magnitude improved. Back up canonical first
+1. ~~APPLY FIX 1~~ DONE (`929a816`): optimizer Overall now uses `(bias + 2*rmse_s + seas + spatial)/5`.
+2. ~~APPLY FIX 2~~ DONE (`cb7e054`): optimizer dumps the top-K Pareto candidates (env `TOPK`, default 5;
+   NSGA-II only), each as its own `models/C/params.{tag}.k{rank}.json` + a scoreable `burntArea.nc` in
+   `ilamb/MODELS_TOPK_{tag}/ED-ModelC-{tag}-k{rank}/`, plus manifest `models/C/topk.{tag}.json`.
+3. ~~RE-RUN to cut magnitude WITHOUT flattening sigma~~ LAUNCHED (running in background ->
+   `logs/opt_tropfix2.log`): `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.nsga2.json
+   TAG=tropfix2 N_TRIALS=2500 TOPK=8`. Goal: total ~1.10-1.15x GFED5 while official Spatial holds near
+   canonical's 0.7691 and official Overall >= 0.6482. If spatial still sags, the deeper lever is RAISING
+   the African-savanna core toward GFED5's dynamic range (the ceiling problem), not more suppression.
+4. TODO (do when the run finishes): SCORE the 8 top-K candidates with official ILAMB. They are already
+   laid out as model dirs, so:
+   `find ilamb/MODELS_TOPK_tropfix2 -name '._*' -delete` then score with
+   `--model_root "$PWD/ilamb/MODELS_TOPK_tropfix2"` (CLAUDE.md recipe). Read `models/C/topk.tropfix2.json`
+   for the candidate list. Check BOTH (a) annual Mha/yr is ~1.0-1.15x GFED5 and (b) official Overall >=
+   0.6482 AND Spatial held. Pick the OFFICIAL winner, not the internal best (different grid/weighting).
+5. TODO: Only promote if official Overall held/improved AND magnitude improved. Back up canonical first
    (CLAUDE.md table). Then regenerate emissions + figures, update HANDOFF/PROGRESS, commit.
 
 Acceptance: magnitude ~1.0-1.15x GFED5 (down from 1.29x) AND official ILAMB Overall >= 0.6482 with the
