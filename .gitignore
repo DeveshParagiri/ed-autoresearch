@@ -62,3 +62,6 @@ for_lei_*/
 *_extract.txt
 essd-*.txt
 gfed5_emissions_nature.txt
+
+# tropfix2-k4 canonical bundle (deliverable; carried on Drive, regenerable via scripts/bundle_k4_figures.py)
+ED-ModelC-tropfix2-k4/
