@@ -213,7 +213,12 @@ def score_BA(pred_monthly):
     else:
         spatial = 0.0
 
-    overall = float(np.mean([bias, rmse_s, seas, float(spatial)]))
+    # FIX 1 (2026-06-08): match official ILAMB aggregation, which weights RMSE
+    # double: Overall = (Bias + 2*RMSE + Seasonal + Spatial) / 5. The old
+    # unweighted mean of the four components made the selection target diverge
+    # from the official Overall used for promotion (verified: this weighting
+    # reproduces official Overall to 4 decimals for both canonical and tropfix).
+    overall = float((bias + 2.0 * rmse_s + seas + float(spatial)) / 5.0)
     return overall, dict(bias=bias, rmse=rmse_s, seas=seas, spatial=float(spatial),
                          overall=overall)
 
@@ -411,7 +416,7 @@ def main():
         "mechanisms":     ["gpp_monthly", "precip", "t_air_ign"],
         "n_mechanisms":   3,
         "n_params":       len(best_p),
-        "objective":      "Collier-4 (Bias + RMSE + Seas + Spatial) / 4 against GFED5 monthly fraction",
+        "objective":      "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
         "ed_consistency": {
             "interpretation": "Model C output is an annual fire rate (yr^-1)",
             "fire_max_rate":   FIRE_MAX_RATE,
