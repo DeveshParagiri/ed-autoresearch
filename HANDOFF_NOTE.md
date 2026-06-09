@@ -23,6 +23,9 @@ What changed on disk (canonical table in CLAUDE.md updated to match):
 - Backups of the PRE-tropfix2 canonical: `models/C/params.PRE-tropfix2.json`,
   `models/combustion-params/betas.PRE-tropfix2.gfed5.json`, and `backups_PRE-tropfix2/` (the old .nc).
   `params.nsga2.json` is unchanged and still equals the old canonical params.
+- SELF-CONTAINED DELIVERABLE BUNDLE: `ED-ModelC-tropfix2-k4/` (model files + corrected-annotation
+  figures + README + scores/SCORES.md). This is the folder to show George or zip/send. It is gitignored
+  (Drive deliverable, has the .nc + pngs); regenerate figures with `scripts/bundle_k4_figures.py`.
 
 GOTCHAS handled this session (note for next time): both scored model folders had stray .nc that would
 trigger ILAMB MonotonicityError (burntArea.{nsga2,tropfix,tropfix2}.nc and fFire (1..6).nc dups) -
@@ -30,10 +33,15 @@ moved to backups_PRE-tropfix2/strays/. compute_emissions.py crashes on a unicode
 cp1252 - run it with `PYTHONIOENCODING=utf-8`. The "GFED ref ~2.0 PgC/yr" note in that script is STALE
 (GFED5 here is actually 3.40 PgC/yr).
 
-NEXT (optional, not blocking): regenerate the paper figures from the new canonical (the 4-panel maps +
-seasonal figures have HARDCODED old score/mean annotations in their scripts that need updating, e.g.
-maps_hybrid_ba_ffire.py titles say ILAMB=0.6482 / rank #12 / mean 6.27%). The k4-specific figures are
-already in `NEW MAPS/tropfix2/`. Also: rezip/send Lei the updated bundle if desired.
+NEXT (optional, not blocking):
+1. The bundle figures (`ED-ModelC-tropfix2-k4/figures/`) are DONE with CORRECT new-score annotations.
+   But the OLDER paper figures in `NEW MAPS/Hybrid_GFED5/` and `NEW MAPS/Seasonal/` still come from
+   scripts with HARDCODED old annotations (maps_hybrid_ba_ffire.py titles say ILAMB=0.6482 / rank #12 /
+   mean 6.27%; maps_seasonal*.py). If you want those refreshed, update their hardcoded strings to the
+   new numbers (BA 0.6473 #3, fFire 0.6534 #4) before re-running, or just rely on the bundle figures.
+2. Send Lei / George the updated bundle if desired (the old Lei draft references the pre-tropfix2 model).
+3. Paper writeup: the tropfix2 story (principled tropical-canopy suppression, not a scalar; magnitude
+   1.26x->1.11x at ~zero ILAMB cost; emissions improved) is a clean methods + results narrative.
 
 The 2026-06-03 section below is STALE. Everything above supersedes the old 5-step plan (which is DONE).
 
