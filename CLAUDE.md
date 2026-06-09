@@ -47,6 +47,15 @@ source $(conda info --base)/etc/profile.d/conda.sh && conda activate ed-fire
 All Python (xarray, optuna, ILAMB, cartopy, h5py, cmaes) lives in the `ed-fire` conda env.
 `Date.now`-style nondeterminism is irrelevant here; runs are seeded.
 
+**Per-machine env names differ** (this drive moves between machines), so `conda info --envs` first:
+- **Home Mac**: no conda / ILAMB (system python only) — diagnose + emulate here, score elsewhere.
+- **Windows (miniforge3)**: the env is **`edfire`** (no dash), and **ILAMB lives in `base`**, not in
+  `edfire` (`ilamb-run` is on PATH and its shebang points to base python). So: activate `edfire` for the
+  optimizer / reproduce / figure scripts (optuna, xarray), but run `ilamb-run` from `base` (or just call
+  it directly — `conda activate base` for the scoring step). `cmaes` is NOT installed in `edfire`, so use
+  `SAMPLER=nsga2`/`tpe`, not `cmaes`, on Windows. Run scripts that redirect stdout will block-buffer
+  `print()`; only optuna's stderr logging shows live — the run is fine, the summary flushes at the end.
+
 ## The canonical (shipped) model — DO NOT overwrite without backing up
 
 | File | What |
