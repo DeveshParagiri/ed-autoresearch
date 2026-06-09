@@ -6,7 +6,34 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
-## 2026-06-09 — 1:1 / spatial-variance thread: diagnosed the 0.039 ceiling, prototyped the transform fix
+## 2026-06-09 (Windows) — SEASONAL_TRANSFORM refit DONE; seasonal-k1 is the official winner (not yet promoted)
+
+Picked up the Mac thread on Windows (git + conda + ILAMB all work here; env is `edfire`, no dash; ILAMB
+lives in the `base` miniforge3 env). Ran autonomously end-to-end while Richard was away.
+
+- COMMITTED the Mac work (000b57f, pushed): the 5 diagnosis/prototype scripts + doc edits.
+- OFFICIAL-scored the Mac prototype vs canonical k4 (one single-model run, apples-to-apples): the
+  corrected transform 1-exp(-rate/12) gave official Spatial 0.7617 -> 0.8135, Overall 0.6473 -> 0.6596,
+  no component dropped. Confirms the emulated +Spatial under official ILAMB. (Prototype un-retuned 1.47x.)
+- WIRED a `SEASONAL_TRANSFORM=1` env flag into optimize_modelC_coupled.py (ed_transform) and
+  reproduce_modelC.py (main); OFF by default so canonical k4 is bit-unchanged (5c3fc46). Verified math +
+  py_compile + import.
+- RAN the refit (52.7 min, NSGA-II 2500 trials): `SEASONAL_TRANSFORM=1 PHYSICAL=1 MAG_BAND=1.12
+  FP_MIN=0.85 SAMPLER=nsga2 WARM=params.tropfix2.k4.json TAG=seasonal TOPK=8`. 6 Pareto candidates.
+- OFFICIAL-scored all 6 + canonical k4 in one run (ilamb_out_topk_seasonal/). WINNER = **seasonal-k1**
+  (trial 2438): Overall 0.6473 -> **0.6495 (+0.0022)**, Spatial 0.7617 -> **0.7797 (+0.018)**, magnitude
+  **1.11x = same as canonical**. Strictly better than canonical at equal magnitude. (k2-k6 at 0.91-0.97x
+  score lower: Seasonal drops ~0.03 and they go slightly under GFED5. MAG_BAND trades back some of the
+  prototype's +0.052 Spatial for correct magnitude; k1 is the best balance.)
+- 1:1 FIGURE (scripts/per_cell_scatter_seasonal_k1.py -> NEW MAPS/proto_seasonal/
+  per_cell_scatter_seasonal_k1.png): per-cell ceiling 0.0393 -> 0.0503, sigma_ratio 0.768 -> 0.865, mean
+  diff ~0. Band climbing the diagonal at zero magnitude cost. Still short of GFED5 0.104 (Cause 1 remains).
+- NOT PROMOTED. Promotion needs (1) a COUPLING CHECK with Lei — the legacy /12 even-spread matched what
+  coupled ED writes; 1-exp(-rate/12) is per-month disturbance fraction and Lei's ED must emit the same
+  sub-annual timing — and (2) Richard's call. If promoted, RE-TUNE combustion betas (k1's BA is spatially
+  redistributed vs k4) and regenerate fFire. See HANDOFF top block for the exact promotion recipe.
+
+## 2026-06-09 (Mac) — 1:1 / spatial-variance thread: diagnosed the 0.039 ceiling, prototyped the transform fix
 
 George's bar: not satisfied until the model is good on the 1:1 per-cell scatter (it is a flat band
 capping at 0.039 vs GFED5 0.104). tropfix2-k4 (canonical) fixed magnitude/false-positives but not this

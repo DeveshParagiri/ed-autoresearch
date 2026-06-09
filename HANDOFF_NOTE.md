@@ -3,16 +3,67 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
-## >>> READ THIS FIRST (2026-06-09) — the 1:1 / spatial-variance thread (active work) <<<
+## >>> READ THIS FIRST (2026-06-09, Windows session) — SEASONAL_TRANSFORM refit DONE, k1 is the official winner (NOT yet promoted) <<<
 
 CONTEXT: George said he will not be satisfied until the model is good on the **1:1 plot** (the per-cell
-scatter of model vs GFED5 burned fraction). Right now that scatter is a flat horizontal band that caps
-at ~0.039 while GFED5 reaches 0.104 — the "too flat" / dynamic-range ceiling. tropfix2-k4 (canonical,
-still shipped, NOT changed this session) fixed magnitude + false positives but did NOTHING for this
-ceiling (by design — it only ever suppresses). So this is the next problem.
+scatter of model vs GFED5 burned fraction). The scatter was a flat band capping at ~0.039 while GFED5
+reaches 0.104 — the "too flat" / dynamic-range ceiling. The Mac session (below) diagnosed it and
+prototyped the fix; THIS Windows session wired the fix behind a flag and ran the full refit.
 
-DONE THIS SESSION (all on the Mac, so NOTHING is committed — Xcode-license blocks git here; commit from
-Windows). Canonical files were NOT touched. New scripts + a tagged prototype only.
+WHAT THIS WINDOWS SESSION DID (committed; canonical files NOT touched):
+1. Committed the Mac work (commit 000b57f). Pushed.
+2. OFFICIAL-scored the Mac prototype vs canonical k4 (apples-to-apples single-model run): the corrected
+   transform 1-exp(-rate/12) raised official Spatial 0.7617 -> 0.8135 and Overall 0.6473 -> 0.6596 with
+   NO component dropped. Direction CONFIRMED (the emulated +Spatial held under official ILAMB). Caveat as
+   flagged: prototype was un-retuned at ~1.47x GFED5, so not promotable — the refit fixes that.
+3. WIRED a `SEASONAL_TRANSFORM=1` env flag into BOTH `optimize_modelC_coupled.py` (`ed_transform`) and
+   `reproduce_modelC.py` (`main`). OFF by default => canonical k4 behavior is bit-unchanged (commit 5c3fc46).
+4. RAN the refit (52.7 min): `SEASONAL_TRANSFORM=1 PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2
+   WARM=params.tropfix2.k4.json TAG=seasonal N_TRIALS=2500 TOPK=8`. 6 Pareto candidates dumped to
+   `ilamb/MODELS_TOPK_seasonal/`, params to `models/C/params.seasonal.k{1..6}.json`, manifest
+   `models/C/topk.seasonal.json`. (params.seasonal.json == k1, trial 2438.)
+5. OFFICIAL-scored all 6 + canonical k4 in ONE single-model run (`ilamb_out_topk_seasonal/`):
+
+   | model            | Bias  | RMSE  | Seas  | Spatial | Overall | mag  |
+   |------------------|-------|-------|-------|---------|---------|------|
+   | canonical k4     | 0.6972| 0.4771| 0.8234| 0.7617  | 0.6473  | 1.11x|
+   | **seasonal-k1**  | 0.6917| 0.4796| 0.8169| **0.7797** | **0.6495** | **1.11x** |
+   | seasonal-k2      | 0.6946| 0.4843| 0.8123| 0.7645  | 0.6480  | 0.95x|
+   | seasonal-k3/k4   | 0.6909| 0.4731| 0.7868| 0.7758  | 0.6399  | 0.97x|
+   | seasonal-k5      | 0.6906| 0.4706| 0.7903| 0.7709  | 0.6386  | 0.95x|
+   | seasonal-k6      | 0.6883| 0.4701| 0.7902| 0.7581  | 0.6353  | 0.91x|
+
+   OFFICIAL WINNER = **seasonal-k1 (trial 2438)**: Overall 0.6473 -> **0.6495 (+0.0022)**, Spatial
+   0.7617 -> **0.7797 (+0.018)**, magnitude **1.11x = same as canonical**. Strictly better than canonical
+   on the metrics that matter, at equal magnitude. (The refit gives back some of the prototype's +0.052
+   Spatial because MAG_BAND pulls the 1.47x inflation back to 1.11x — expected tradeoff; k1 is the best
+   balance. The lower-mag k2-k6 score lower because Seasonal drops ~0.03 and they go slightly UNDER GFED5.)
+6. 1:1 FIGURE (`scripts/per_cell_scatter_seasonal_k1.py` -> `NEW MAPS/proto_seasonal/
+   per_cell_scatter_seasonal_k1.png`): per-cell period-mean ceiling lifted **0.0393 -> 0.0503**,
+   sigma_ratio (model/GFED5 burnable-cell std) **0.768 -> 0.865**, mean diff ~0 (magnitude unchanged).
+   Band is climbing the diagonal. Still short of GFED5's 0.104 max because Cause 1 (rate<=1 cap) remains.
+
+NEXT STEPS (in order — promotion is NOT done; needs Richard's call + a coupling check):
+1. COUPLING CHECK WITH LEI (lma6@umd.edu) BEFORE promoting. The legacy `/12` even-spread existed to MATCH
+   what coupled ED writes to TRENDY-format burntArea (see reproduce_modelC.py docstring). The corrected
+   `1-exp(-rate/12)` is per-month disturbance fraction — Lei's coupled ED must be able to emit the same
+   sub-annual fire timing. CONFIRM this is reproducible in the coupled run before k1 becomes canonical.
+2. IF coupled-consistent AND Richard approves: PROMOTE k1. Back up canonical first (CLAUDE.md table):
+   cp models/C/params.json -> params.PRE-seasonal.json, cp betas + the two burntArea.nc + fFire.nc to a
+   backups_PRE-seasonal/ dir. Then `SEASONAL_TRANSFORM=1 python scripts/reproduce_modelC.py` with k1's
+   params copied to params.json (regenerates burntArea.nc; ALSO copy to MODELS_LEADERBOARD/ED-ModelC-Hybrid/
+   — reproduce only writes the MODELS/ED-ModelC-final one). RETUNE combustion betas for the k1 BA
+   (`scripts/tune_combustion_params.py`), regenerate fFire, re-score emissions. Update CLAUDE.md canonical
+   table + scores, HANDOFF/PROGRESS, commit. NOTE: emissions betas were retuned for k4's BA; k1's BA is
+   spatially redistributed (more dry-season concentration) so betas SHOULD be re-tuned, not reused.
+3. OPTIONAL deeper lever (Cause 1) if George wants the band to reach GFED5's 0.104: let the fire RATE
+   exceed 1.0 (additive/exponential fuel term instead of a pure product of [0,1] sigmoids). Bigger
+   model-structure change; the transform fix alone moved sigma 0.77 -> 0.87, not all the way to 1.
+
+The Mac-session diagnosis that motivated all this is preserved below as background.
+
+CONTEXT (Mac session, 2026-06-09 — the diagnosis + prototype that this Windows session built on):
+Canonical files were NOT touched. New scripts + a tagged prototype only.
 
 1. DIAGNOSED where the 0.039 ceiling comes from (`scripts/diag_saturation.py`). It is TWO structural
    facts in the rate->fraction transform, neither tunable by the 14 params:
@@ -44,36 +95,13 @@ Windows). Canonical files were NOT touched. New scripts + a tagged prototype onl
    region-weights) may treat the inflation less kindly. So the prototype is EVIDENCE the direction is
    right, NOT promotable as-is.
 
-NEXT STEPS ON WINDOWS (in order):
-0. Commit this session's uncommitted work. Confirm `git status` first. Per .gitignore, ONLY the 5 new
-   scripts commit (`scripts/{diag_saturation,proto_seasonal_transform,emulate_ilamb_ba,
-   per_cell_scatter_k4}.py`, `scripts/score_proto_official.sh`) plus the HANDOFF/PROGRESS edits. The
-   prototype nc (*.nc), the NEW MAPS/ figure, and the ED-ModelC-tropfix2-k4/ figure are all gitignored
-   (Drive-only, regenerable by re-running the scripts) — that is fine and intended.
-1. RUN OFFICIAL ILAMB on the prototype to confirm the emulated +Spatial holds:
-   `bash scripts/score_proto_official.sh`  (activates ed-fire, deletes AppleDouble, runs ilamb-run on
-   ilamb/MODELS_SEASONAL_PROTO, prints global Overall; output -> ilamb_out_proto_seasonal/). Compare
-   Spatial + Overall to canonical k4 (re-score canonical the same way if needed for an apples-to-apples
-   official delta). If official Spatial also rises, the transform direction is confirmed.
-2. REFIT with the corrected transform LOCKED IN. The transform lives in `scripts/optimize_modelC_coupled.py`
-   `ed_transform()` (line ~142) and `scripts/reproduce_modelC.py` `main()` (line ~201). Suggest wiring a
-   `SEASONAL_TRANSFORM=1` env flag into BOTH so canonical behavior is unchanged when off (Claude offered
-   to do this; not done yet). Then re-run the optimizer with the magnitude band to pull total back to
-   ~1.1x GFED5 WHILE keeping sigma~1, e.g. start from:
-   `SEASONAL_TRANSFORM=1 PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2 WARM=params.tropfix2.k4.json
-    TAG=seasonal N_TRIALS=2500 TOPK=8 python scripts/optimize_modelC_coupled.py`
-   Goal: official Overall >= 0.6473 AND Spatial UP AND magnitude ~1.1x. Score the TOPK with official
-   ILAMB (find ... -name '._*' -delete first), pick the OFFICIAL winner.
-3. Cause 1 (optional deeper lever): if sigma still short of 1 after the transform refit, let the fire
-   RATE exceed 1.0 (an additive/exponential fuel term instead of a pure product of [0,1] sigmoids) so
-   peak savanna cells can drive annual_frac->1. Bigger model-structure change; only if step 2 is not enough.
-4. COUPLING CHECK before promoting any transform change: the `/12` even-spread was put in to MATCH what
-   coupled ED writes to TRENDY-format burntArea (see reproduce_modelC.py docstring). Changing it means
-   Lei's ED would need to emit the same sub-annual fire timing. Confirm with Lei (lma6@umd.edu) that the
-   coupled run can reproduce `1-exp(-rate/12)` before this becomes canonical.
+[The original Mac-session "NEXT STEPS ON WINDOWS" list — commit, official-score, wire the flag, refit,
+score TOPK — is DONE as of this Windows session; see the top block. Steps that remain (Lei coupling
+check, optional Cause-1 lever) are restated in the top block's NEXT STEPS.]
 
-Acceptance for a promotable result: official BA Overall held/improved vs 0.6473, Spatial UP (sigma toward
-1, the 1:1 band climbing the diagonal), magnitude ~1.0-1.15x GFED5, AND a coupling-consistent transform.
+Acceptance for a promotable result (MET by seasonal-k1 except the coupling check): official BA Overall
+held/improved vs 0.6473 (0.6495 ✓), Spatial UP / sigma toward 1 (0.7617->0.7797 ✓), magnitude ~1.0-1.15x
+GFED5 (1.11x ✓), AND a coupling-consistent transform (NOT yet confirmed — needs Lei).
 
 The 2026-06-08 block below is STILL the canonical state (tropfix2-k4 shipped, unchanged this session).
 
