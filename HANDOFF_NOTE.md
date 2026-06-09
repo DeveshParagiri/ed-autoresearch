@@ -3,6 +3,62 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> NEXT TO DO — Fire Meeting outcomes (2026-06-09) — Richard will action these later <<<
+
+These came out of the June-09 fire meeting (George + group). They RE-PRIORITIZE the work. None are
+started; the SEASONAL_TRANSFORM refit (block below) is a partial down-payment on A/B but is NOT the
+finish line. Canonical tropfix2-k4 is still shipped and unchanged. NOT promoting seasonal-k1 yet.
+
+GEORGE'S HARD BAR (restated, firmer): the model is NOT acceptable to him until we are **EQUAL on the
+1:1 line** of the per-cell scatter (model vs GFED5 burned fraction). Not "climbing toward" the diagonal
+— ON it. We are currently at sigma ~0.87, per-cell ceiling 0.050 vs GFED5 0.104. So this is the gate
+on everything.
+
+The four workstreams:
+
+A. FIRE-PHYSICS — let the fire RATE exceed 1.0 (meeting agenda item "fire-physics"; our long-standing
+   "Cause 1"). Today `fire_C` is a product of [0,1] sigmoids so the rate hard-caps at 1.0 yr^-1, which
+   (even with the corrected transform) caps the per-cell band at ~0.05. To reach GFED5's 0.104 the peak
+   savanna cells need annual_frac -> ~1, i.e. rate must be allowed > 1 via an additive/exponential fuel
+   term instead of a pure product. This is the direct mechanical lever for George's 1:1 bar. Structural
+   change to the model core; keep it behind a flag like SEASONAL_TRANSFORM so canonical is unchanged.
+
+B. NEW OPTIMIZATION / GOODNESS-OF-FIT CRITERIA — the paper's intellectual core, and the reason the band
+   is flat. We optimized ILAMB Overall, which is dominated by bias/RMSE and barely rewards spatial
+   pattern ("ILAMB does not produce a good global total"; "we are missing a very strong spatial
+   pattern"). Build and COMPARE alternative objectives:
+     (a) ILAMB Overall (current baseline)
+     (b) global mean / average ANNUAL burned area  ("average annual burned area should be the focus")
+     (c) PIXEL-LEVEL SPATIAL CORRELATION on the annual-mean map (the one that should pull the band onto
+         the diagonal)
+   Restrict the fit/scoring to GRID CELLS THAT ACTUALLY BURN (GFED5 > 0) — meeting page-2 item 3.
+   Design an objective that explicitly WEIGHTS the spatial pattern. Also wanted: a "structural"
+   goodness-of-fit criterion (page-2 item 2) alongside the statistical ones. Paper framing: "different
+   optimization criteria give different results, and that is interesting precisely because ILAMB is the
+   community standard." This is a scoring/criteria module + a comparison figure/table; touches the
+   optimizer's objective, not necessarily the model core. OPEN QUESTION for Richard: does the new
+   criterion REPLACE ILAMB as our optimization target, or sit ALONGSIDE it as a paper comparison?
+
+C. CONTINENT-SPECIFIC MODELS + A UNIFIED MODEL (page-2 item 1) — "different fires need different models
+   for different continents, and then one unified model that explains them." Separate fire formulations
+   per continent (African savanna vs Amazon deforestation vs boreal vs ...), then unify. Bigger
+   structural research direction (echoes CLM6's multi-fire-type design that Model C lacks); longer
+   horizon. OPEN QUESTION: near-term task or eventual? (Confirm scope with George before building.)
+
+D. LEI'S COUPLED RUN (agenda item 3) — Lei reported the coupled global total burn is **2x too high**,
+   and he refitted the equation (all parameters) in the coupled run. Sub-tasks: (a) test with Africa,
+   (b) reconcile the 2x global over-burn. This is the coupling-consistency thread and is partly Lei's
+   job, but it directly gates whether OUR offline refits transfer. It is ALSO the same coupling check
+   that blocks promoting any transform change (the legacy /12 even-spread matched coupled-ED output;
+   see the SEASONAL_TRANSFORM block below). Coordinate with Lei (lma6@umd.edu).
+
+SUGGESTED ORDER (Claude's read, not George's ruling): A and B are the same problem from two ends — B's
+spatial-correlation objective is what should DRIVE the fit onto the 1:1 line, and A is the mechanism
+that lets peak cells get there. Natural to build B's scoring/criteria module first (low risk, no
+canonical change, produces the paper's comparison figure), then add A's rate>1 term and refit against
+the new criterion. C is longer-horizon; D is coordinated with Lei. CONFIRM priority with Richard/George
+before starting — see the OPEN QUESTIONS under B and C.
+
 ## >>> READ THIS FIRST (2026-06-09, Windows session) — SEASONAL_TRANSFORM refit DONE, k1 is the official winner (NOT yet promoted) <<<
 
 CONTEXT: George said he will not be satisfied until the model is good on the **1:1 plot** (the per-cell

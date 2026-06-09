@@ -6,6 +6,26 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-09 — Fire meeting outcomes logged as next-to-do (Richard will action later)
+
+June-09 fire meeting (George + group) re-prioritized the work. Logged in full at the TOP of
+HANDOFF_NOTE.md ("NEXT TO DO — Fire Meeting outcomes"). Nothing started; canonical unchanged; not
+promoting seasonal-k1. George's bar firmed up: the model is NOT acceptable until we are EQUAL on the
+1:1 scatter line (on the diagonal, not just climbing). Currently sigma ~0.87, ceiling 0.050 vs 0.104.
+Four workstreams:
+- A. Fire-physics: let the fire RATE exceed 1.0 (additive/exponential fuel term, not a product of [0,1]
+  sigmoids) so peak savanna cells reach GFED5's 0.104 — the direct lever for the 1:1 bar.
+- B. New optimization / goodness-of-fit criteria (the paper's core): ILAMB Overall barely rewards spatial
+  pattern, so build + compare alternatives — global mean, average ANNUAL burned area, and PIXEL-LEVEL
+  SPATIAL CORRELATION — restricted to cells that actually burn (GFED5>0). Design an objective that
+  weights the spatial pattern; also a "structural" goodness-of-fit. Open Q: replace ILAMB or sit
+  alongside it?
+- C. Continent-specific fire models + one unified model (longer horizon; confirm scope with George).
+- D. Lei's coupled run: coupled global total burn was 2x too high, Lei refitted all params; test with
+  Africa; reconcile the 2x. Also the coupling check that gates any transform-change promotion.
+Suggested order (not George's ruling): B's spatial-correlation objective should DRIVE the fit onto the
+1:1 line and A is the mechanism; build B's scoring module first, then add A. Confirm priority first.
+
 ## 2026-06-09 (Windows) — SEASONAL_TRANSFORM refit DONE; seasonal-k1 is the official winner (not yet promoted)
 
 Picked up the Mac thread on Windows (git + conda + ILAMB all work here; env is `edfire`, no dash; ILAMB
