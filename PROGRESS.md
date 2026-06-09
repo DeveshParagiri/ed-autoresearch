@@ -6,6 +6,34 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-09 — 1:1 / spatial-variance thread: diagnosed the 0.039 ceiling, prototyped the transform fix
+
+George's bar: not satisfied until the model is good on the 1:1 per-cell scatter (it is a flat band
+capping at 0.039 vs GFED5 0.104). tropfix2-k4 (canonical) fixed magnitude/false-positives but not this
+ceiling. On the Mac (git blocked by Xcode license, no conda/ILAMB), so all work is uncommitted and
+emulated-scored only; canonical files untouched. Commit + official-score from Windows.
+
+- DIAGNOSED the ceiling (`scripts/diag_saturation.py`): two structural causes in the rate->fraction
+  transform, neither param-tunable. (1) `fire_C` is a product of [0,1] sigmoids so rate is hard-capped at
+  1.0 yr^-1 (max 0.997, zero cells hit FIRE_MAX=5). (2) `monthly_frac=(1-exp(-rate))/12` spreads annual
+  fire evenly over 12 months -> monthly<=1/12=0.083 and seasonality flattened. Chain gives period-mean
+  <=0.039; GFED5 0.104 is above even the 1/12 cap, so the model architecturally cannot reach peak cells.
+- PROTOTYPED the fix (`scripts/proto_seasonal_transform.py`, tagged): use the physically-correct
+  per-month disturbance fraction `1-exp(-rate/12)`. Lifts high-rate cells x1.5-x4, low-fire cells x1.05,
+  so it raises the savanna core without re-inflating false positives. Ceiling 0.039 -> 0.057. Wrote
+  `ilamb/MODELS_SEASONAL_PROTO/ED-ModelC-seasonal/burntArea.nc` and
+  `NEW MAPS/proto_seasonal/per_cell_scatter_seasonal_proto.png`. Also made the canonical 1:1 figure
+  `ED-ModelC-tropfix2-k4/figures/per_cell_scatter_k4.png` (k4 vs PRE-tropfix2, requested earlier).
+- EMULATED ILAMB (`scripts/emulate_ilamb_ba.py`, 0.5deg, NOT official, trust deltas): prototype raised
+  sigma (model/ref spatial std ratio) 0.747 -> 1.017 (near-perfect variance match), Spatial 0.7144 ->
+  0.7782, Overall 0.5955 -> 0.6097, with Bias/RMSE/Seas flat. First thing to move sigma toward 1.
+  CAVEAT: un-retuned, magnitude now ~1.47x GFED5; evidence the direction is right, not promotable as-is.
+- STAGED official scoring: `scripts/score_proto_official.sh` (one command on the ed-fire machine).
+- NEXT (Windows): commit; run official score on the prototype; then refit with the transform locked in
+  (wire a `SEASONAL_TRANSFORM=1` flag into optimize_modelC_coupled.py + reproduce_modelC.py, re-run with
+  MAG_BAND to pull total back to ~1.1x while keeping sigma~1); coupling-check the transform with Lei
+  before any promotion (the /12 was there to match what coupled ED writes). See HANDOFF READ-THIS-FIRST.
+
 ## 2026-06-08 (later) — PROMOTED tropfix2-k4 to canonical (magnitude over-burn fixed)
 
 Ran tropfix2 (2500 trials, 60 min): `PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2
