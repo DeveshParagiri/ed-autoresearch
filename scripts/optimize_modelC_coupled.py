@@ -50,6 +50,12 @@ DUMP_SLICE_START = (YEARS[0] - DUMP_START_YEAR) * 12   # 48
 DUMP_SLICE_STOP  = DUMP_SLICE_START + N_MONTHS         # 240
 FIRE_MAX_RATE = float(os.environ.get("FIRE_MAX_RATE", 5.0))
 DT_YEARS      = 1.0
+# SEASONAL_TRANSFORM=1 uses the physically-correct per-month disturbance fraction
+# 1 - exp(-rate/12) instead of the legacy even-spread (1 - exp(-rate))/12. The
+# legacy form hard-caps any month at 1/12 and flattens seasonality; the corrected
+# form lifts high-rate (dry-season) cells, raising the spatial std ratio sigma
+# toward 1 (the 1:1-plot fix). OFF by default -> canonical behavior unchanged.
+SEASONAL_TRANSFORM = os.environ.get("SEASONAL_TRANSFORM", "0") == "1"
 N_TRIALS      = int(os.environ.get("N_TRIALS", 2500))
 MAG_PENALTY   = float(os.environ.get("MAG_PENALTY", 0.0))
 # Hard magnitude band: trials where mean is outside [1/MAG_BAND, MAG_BAND]x
@@ -141,6 +147,9 @@ obs_anom    = (obs - gfed_tm[None, :, :]).astype(np.float64)
 # ── 3. ED-consistent transform ──────────────────────────────────────────────
 def ed_transform(rate_yr):
     rate_capped = np.minimum(rate_yr, FIRE_MAX_RATE)
+    if SEASONAL_TRANSFORM:
+        # per-month disturbance fraction (no 1/12 cap; concentrates dry-season fire)
+        return (1.0 - np.exp(-rate_capped * DT_YEARS / 12.0)).astype(np.float32)
     annual_frac = 1.0 - np.exp(-rate_capped * DT_YEARS)
     return (annual_frac / 12.0).astype(np.float32)
 
@@ -339,7 +348,9 @@ def write_ba_nc(pred, path):
         coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
         attrs={"title": "ED-ModelC-final (coupled-consistent retune, GFED5)",
                "Conventions": "CF-1.7",
-               "transform": f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"})
+               "transform": (f"monthly_frac = 1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) / 12)"
+                             if SEASONAL_TRANSFORM else
+                             f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12")})
     ds = add_cf_bounds(ds)
     enc = {"burntArea":   {"zlib":True, "complevel":4, "_FillValue":1e20},
            "time":        {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"},
@@ -439,7 +450,10 @@ def main():
             "ed_consistency": {
                 "interpretation": "Model C output is an annual fire rate (yr^-1)",
                 "fire_max_rate":   FIRE_MAX_RATE,
-                "transform":       "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12",
+                "seasonal_transform": SEASONAL_TRANSFORM,
+                "transform":       ("burnt_monthly_frac = 1 - exp(-min(rate, fire_max) / 12)"
+                                    if SEASONAL_TRANSFORM else
+                                    "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12"),
             },
             "scores_internal": breakdown,
             "warm_start_internal": warm_breakdown,

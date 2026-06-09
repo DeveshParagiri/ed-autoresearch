@@ -40,6 +40,10 @@ MODELS = REPO / "models"
 YEARS = list(range(2001, 2017))
 N_MONTHS = 192
 FIRE_MAX_RATE = float(os.environ.get("FIRE_MAX_RATE", 5.0))   # see module docstring
+# SEASONAL_TRANSFORM=1 uses the physically-correct per-month disturbance fraction
+# 1 - exp(-rate/12) instead of the legacy even-spread (1 - exp(-rate))/12 (the 1:1
+# spatial-variance fix). OFF by default -> regenerates the canonical k4 BA unchanged.
+SEASONAL_TRANSFORM = os.environ.get("SEASONAL_TRANSFORM", "0") == "1"
 
 
 def coarsen(arr):
@@ -199,10 +203,14 @@ def main():
           f"max: {rate.max():.4g}  cap: {FIRE_MAX_RATE}")
 
     # ED-coupled-consistent transform:
-    #   monthly_frac = (1 - exp(-min(rate, FIRE_MAX_RATE) * 1 yr)) / 12
+    #   monthly_frac = (1 - exp(-min(rate, FIRE_MAX_RATE) * 1 yr)) / 12   (legacy)
+    #   monthly_frac = 1 - exp(-min(rate, FIRE_MAX_RATE) / 12)            (SEASONAL_TRANSFORM)
     rate_capped = np.minimum(rate, FIRE_MAX_RATE)
-    annual_frac = 1.0 - np.exp(-rate_capped)
-    pred = (annual_frac / 12.0).astype(np.float32)
+    if SEASONAL_TRANSFORM:
+        pred = (1.0 - np.exp(-rate_capped / 12.0)).astype(np.float32)
+    else:
+        annual_frac = 1.0 - np.exp(-rate_capped)
+        pred = (annual_frac / 12.0).astype(np.float32)
 
     # Land-mean diagnostic
     pred_lm = float((pred * w3_land).sum() / (w3_land.sum() + 1e-12))
@@ -227,7 +235,9 @@ def main():
         coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
         attrs={"title": "ED-ModelC-final (ED-coupled-consistent retune)",
                "Conventions": "CF-1.7",
-               "transform": f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"})
+               "transform": (f"monthly_frac = 1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) / 12)"
+                             if SEASONAL_TRANSFORM else
+                             f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12")})
     ds = add_cf_bounds(ds)
 
     # Write
