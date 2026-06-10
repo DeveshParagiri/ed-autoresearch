@@ -3,6 +3,42 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-06-10, later) — workstream C STARTED: drivers are good, per-continent fits running <<<
+
+Started the per-continent work (C). Two findings + machinery + a running campaign. Canonical untouched.
+
+SCOUTING (committed cd17818, `scripts/diag_continent_headroom.py`): for each continent, compared Model C's
+current spatial r (spatial-k1) to the best a free regression of GFED5 on the EXISTING drivers+squares can
+reach (held-out). Result decides HOW to build C:
+  region          modelC_r  driver_ceiling  verdict
+  Africa            0.513      0.676         FORM headroom (build structure)
+  S.America         0.387      0.474         near driver ceiling (Amazon = magnitude/suppression, not pattern)
+  N.America         0.390      0.599         FORM headroom
+  Boreal Eurasia    0.202      0.542         FORM headroom (big)
+  Trop/SE Asia      0.096      0.465         FORM headroom (big)
+  Australia         0.415      0.765         FORM headroom (big)
+  Europe           -0.215      0.457         FORM headroom (model is ANTI-correlated!)
+=> The DRIVERS are good enough (they support r 0.46-0.77 everywhere); the GLOBAL formula is the
+bottleneck. Per-continent tuning has large headroom in 6 of 7 regions with the SAME drivers (no new data
+needed). Only the Amazon is near its driver ceiling. This validates C strongly.
+
+MACHINERY (committed f919c61): `optimize_modelC_coupled.py` now takes `REGION=Africa|S.America|N.America|
+Boreal|SEAsia|Australia|Europe` to restrict the spatial objective + magnitude band + FP masks to one
+continent. REGION="" => global (bit-identical). `scripts/assemble_continental.py` stitches per-continent
+params into ONE global prediction (each cell uses its continent's params; fallback = spatial-k1 elsewhere)
+-> the meeting's "one unified model". Piecewise/hard borders for now (smooth the seams later).
+
+RUNNING NOW (background -> logs/opt_continents.log): per-continent fits for Africa, Boreal, S.America
+(1200 trials each, ~1.5 hr total), each warm-started from spatial-k1, optimizing that region's spatial
+Taylor. Writes params.{africa,boreal,samerica}.json + TOPK dumps. WHEN DONE: run
+`SEASONAL_TRANSFORM=1 python scripts/assemble_continental.py` to stitch them, then score the assembled
+model with score_spatial (did the GLOBAL r/slope rise?) + official ILAMB. The test of C: does
+per-continent tuning lift the global correlation r above the ~0.5 wall (and the 1:1 slope above 0.50)?
+
+NEXT after this batch: if r rises, fit the remaining continents (N.America, SEAsia, Australia, Europe)
+and re-assemble; then smooth the continent seams toward the "unified model". Still pending throughout:
+the FUEL-SELECTIVE fire_amp upgrade (physical form) and the Lei coupling check before ANY promotion.
+
 ## >>> READ THIS FIRST (2026-06-10) — B scorer built, the 1:1 bar is an r-problem, A+B refit running <<<
 
 Started workstream B (new goodness-of-fit) + A (fire-physics). Both flag-gated, canonical untouched.

@@ -6,6 +6,18 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-10 (later) — Workstream C started: drivers are good, per-continent fits running
+
+Scouting (diag_continent_headroom.py): per-continent, compared Model C's spatial r to the best a free
+regression of GFED5 on the existing drivers can reach. The drivers support r 0.46-0.77 everywhere while
+Model C gets 0.10-0.51 -> the global formula, not missing drivers, is the bottleneck; large form headroom
+in 6 of 7 continents (Amazon is the only near-driver-ceiling case). Validates C.
+Machinery: optimizer REGION env restricts the fit to one continent; assemble_continental.py stitches
+per-continent params into one global prediction (each cell uses its continent's params). Launched fits
+for Africa, Boreal, S.America (1200 trials each, warm from spatial-k1, logs/opt_continents.log). When
+done: assemble + score to see if the global r/slope rises above the ~0.5 wall. Pending throughout:
+fuel-selective fire_amp form + Lei coupling check before any promotion.
+
 ## 2026-06-10 — Workstream B scorer built; the 1:1 bar is an r-problem; A+B refit running
 
 Started B (new goodness-of-fit) + A (fire-physics), both flag-gated, canonical untouched.
