@@ -76,6 +76,31 @@ def spatial_metrics(model_pm, gfed_pm, mask):
             "rmse": rmse, "taylor": float(taylor), "cell_max": float(m.max())}
 
 
+# Coarse continent boxes (lon_min, lon_max, lat_min, lat_max) for the "where is the
+# spatial pattern wrong" breakdown that motivates continent-specific models (C).
+REGIONS = {
+    "Africa":       (-20,  52, -36,  18),   # savanna core (the high-fire region)
+    "S.America":    (-82, -34, -56,  14),
+    "N.America":    (-168, -52, 14,  74),
+    "Boreal Eurasia": (40, 180, 48,  78),
+    "Trop/SE Asia": (60, 150, -11,  30),
+    "Australia":    (112, 154, -44, -10),
+    "Europe":       (-12,  40,  36,  72),
+}
+
+
+def region_mask(shape):
+    """Boolean (lat, lon) masks per REGION box, on a 0.5deg global grid."""
+    nlat, nlon = shape
+    lat = -89.75 + np.arange(nlat) * (180.0 / nlat)
+    lon = -179.75 + np.arange(nlon) * (360.0 / nlon)
+    LON, LAT = np.meshgrid(lon, lat)
+    out = {}
+    for name, (lo0, lo1, la0, la1) in REGIONS.items():
+        out[name] = (LON >= lo0) & (LON <= lo1) & (LAT >= la0) & (LAT <= la1)
+    return out
+
+
 def burning_masks(gfed_pm, land):
     """Two burning-cell masks: any fire (annual>0.1%) and active fire (annual>1%).
     Thresholds are on the ANNUAL fraction = 12 * monthly period-mean."""
@@ -116,7 +141,30 @@ def main(argv):
 
     print("Reading: slope = r*sigma is the per-cell 1:1 line slope. George's bar is "
           "slope -> 1 (band on the diagonal). taylor in [0,1] is the single scalar that "
-          "rewards BOTH alignment (r) and dynamic range (sigma); use it as the B objective.")
+          "rewards BOTH alignment (r) and dynamic range (sigma); use it as the B objective.\n")
+
+    # Regional breakdown: WHERE is the spatial pattern (r) wrong? This is the
+    # evidence for continent-specific models (workstream C). Active-fire mask.
+    active = burning_masks(gfed_pm, land)["GFED>1%/yr (active fire)"]
+    rmasks = region_mask(gfed_pm.shape)
+    for label, path in models:
+        mp = period_mean_fraction(path)
+        print(f"=== regional r/sigma/slope on active-fire cells: {label} ===")
+        print(f"{'region':16s} {'n':>6s} {'r':>6s} {'sigma':>6s} {'slope':>6s} {'magx':>6s}")
+        gw = spatial_metrics(mp, gfed_pm, active)
+        print(f"{'GLOBAL':16s} {gw['n']:6d} {gw['r']:6.3f} {gw['sigma']:6.3f} "
+              f"{gw['slope']:6.3f} {gw['magx']:6.2f}")
+        for rname, rm in rmasks.items():
+            mm = active & rm
+            if mm.sum() < 30:
+                continue
+            s = spatial_metrics(mp, gfed_pm, mm)
+            print(f"{rname:16s} {s['n']:6d} {s['r']:6.3f} {s['sigma']:6.3f} "
+                  f"{s['slope']:6.3f} {s['magx']:6.2f}")
+        print()
+    print("Reading: a region with HIGH r but low sigma just needs amplitude (A handles "
+          "it). A region with LOW r needs better structure there (the where, not the "
+          "how-much) -> the case for continent-specific fire models (workstream C).")
 
 
 if __name__ == "__main__":

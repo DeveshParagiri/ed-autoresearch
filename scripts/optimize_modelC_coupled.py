@@ -56,6 +56,14 @@ DT_YEARS      = 1.0
 # form lifts high-rate (dry-season) cells, raising the spatial std ratio sigma
 # toward 1 (the 1:1-plot fix). OFF by default -> canonical behavior unchanged.
 SEASONAL_TRANSFORM = os.environ.get("SEASONAL_TRANSFORM", "0") == "1"
+# RATE_AMP=1 adds `fire_amp` to the search space so the annual fire rate can exceed
+# 1.0 (savanna multi-burn). fire_C applies it only when the param is present, so the
+# canonical search space is unchanged when off. (Workstream A.)
+RATE_AMP      = os.environ.get("RATE_AMP", "0") == "1"
+# SPATIAL_OBJ=1 makes the FIRST NSGA-II objective the spatial-pattern Taylor skill on
+# burning cells (the meeting's criterion that weights the spatial pattern) instead of
+# ILAMB Overall. ILAMB stays tracked as a user_attr. Off by default. (Workstream B.)
+SPATIAL_OBJ   = os.environ.get("SPATIAL_OBJ", "0") == "1"
 N_TRIALS      = int(os.environ.get("N_TRIALS", 2500))
 MAG_PENALTY   = float(os.environ.get("MAG_PENALTY", 0.0))
 # Hard magnitude band: trials where mean is outside [1/MAG_BAND, MAG_BAND]x
@@ -263,6 +271,11 @@ LOG_PARAMS = {
     "trop_agb_crit":   (1e0,  3e1),
     "trop_k_veg":      (5e-1, 8e0),
 }
+# Workstream A: let the annual fire rate exceed 1.0 (savanna multi-burn). Searched
+# only when RATE_AMP=1; absent => fire_C leaves the rate <= 1 (canonical). Range
+# 1..6: the diag sweep showed the per-cell ceiling reaches GFED5's 0.104 near ~2.
+if RATE_AMP:
+    LOG_PARAMS["fire_amp"] = (1.0, 6.0)
 
 # Warm start from $WARM env var (path to a params.{tag}.json) if set,
 # otherwise from params.PRE-coupled.json (the original benchmark).
@@ -278,12 +291,34 @@ WARM_START = json.load(open(WARM_FILE))["params"]
 # Leave the warm-start point WITHOUT the tropical params so the smoke-test/warm
 # trial reproduces the canonical baseline exactly; Optuna samples trop_* for the
 # enqueued trial. (Old global k_veg/agb_crit are no longer in the search space.)
+# Seed fire_amp=1.0 (canonical, rate<=1) for the warm trial so the search opens at
+# the known baseline and grows the amplitude from there.
+if RATE_AMP:
+    WARM_START = {**WARM_START, "fire_amp": 1.0}
+WARM_START = {k: v for k, v in WARM_START.items() if k in LOG_PARAMS}
 
 
 GFED5_LM = float((obs * w3_land).sum() / (w3_land.sum() + 1e-12))
 
 
 USE_PHYSICAL = bool(int(os.environ.get("PHYSICAL", "0")))
+
+
+def spatial_taylor(pred):
+    """Workstream-B objective: pixel-level spatial-pattern Taylor skill on the
+    burning cells (GFED5 annual fraction > 0.1%), computed on the period-mean map.
+    Returns (taylor in [0,1], r, sigma). Rewards r->1 AND sigma->1, i.e. the
+    per-cell 1:1 band climbing onto the diagonal. Same form as score_spatial.py
+    but on the optimizer's internal 1deg grid for speed."""
+    pm = pred.mean(axis=0)
+    gm = obs.mean(axis=0)
+    mask = (land_mask > 0) & (gfed_annual > 0.001)
+    m = pm[mask].astype(np.float64); g = gm[mask].astype(np.float64)
+    ms, gs = m.std(), g.std()
+    r = float(((m - m.mean()) * (g - g.mean())).mean() / (ms * gs + 1e-30))
+    sigma = float(ms / (gs + 1e-30))
+    taylor = 4.0 * (1.0 + r) / (((sigma + 1.0 / (sigma + 1e-30)) ** 2) * 2.0)
+    return taylor, r, sigma
 
 
 def objective(trial):
@@ -303,6 +338,16 @@ def objective(trial):
         trial.set_user_attr("fp_score", fp_score)
         trial.set_user_attr("hot_score", hot_score)
         trial.set_user_attr("pred_lm_ratio", ratio)
+        # Workstream B: first objective is the spatial-pattern Taylor skill when
+        # SPATIAL_OBJ=1, else ILAMB Overall (canonical). Both tracked as user_attrs.
+        if SPATIAL_OBJ:
+            taylor, r_sp, sigma_sp = spatial_taylor(pred)
+            trial.set_user_attr("spatial_taylor", taylor)
+            trial.set_user_attr("spatial_r", r_sp)
+            trial.set_user_attr("spatial_sigma", sigma_sp)
+            primary = taylor
+        else:
+            primary = overall
         if MAG_BAND > 0:
             viol = max(ratio - MAG_BAND, (1.0 / MAG_BAND) - ratio, 0.0)
             if viol > 0.0:
@@ -312,7 +357,7 @@ def objective(trial):
                 # (A flat constant here gives zero selection pressure and the search
                 # degenerates to random when the warm start is outside the band.)
                 return (10.0 + viol, 10.0 + viol)
-        return (-overall, 1.0 - fp_score)
+        return (-primary, 1.0 - fp_score)
 
     if MAG_BAND > 0 and (ratio > MAG_BAND or ratio < 1.0 / MAG_BAND):
         return -(overall - 1.0)
@@ -401,8 +446,10 @@ def main():
                 front = st.best_trials
                 if front:
                     best_il = max(t.user_attrs.get("ilamb_overall", 0) for t in front)
+                    best_ty = max(t.user_attrs.get("spatial_taylor", 0) for t in front)
+                    extra = f"best_taylor={best_ty:.4f}  " if SPATIAL_OBJ else ""
                     print(f"  trial {len(st.trials):4d}/{N_TRIALS}  pareto_size={len(front)}  "
-                          f"best_ilamb={best_il:.4f}  ({elapsed:.1f} min)")
+                          f"{extra}best_ilamb={best_il:.4f}  ({elapsed:.1f} min)")
                 else:
                     print(f"  trial {len(st.trials):4d}/{N_TRIALS}  no_pareto  ({elapsed:.1f} min)")
             else:
@@ -422,7 +469,10 @@ def main():
                       if t.user_attrs.get("fp_score", 0) >= FP_MIN]
         if not candidates:
             candidates = study.best_trials
-        candidates.sort(key=lambda t: -t.user_attrs.get("ilamb_overall", 0))
+        # Rank by the objective we actually optimized: spatial Taylor under
+        # SPATIAL_OBJ, else ILAMB Overall. (Re-score the top-K officially regardless.)
+        rank_attr = "spatial_taylor" if SPATIAL_OBJ else "ilamb_overall"
+        candidates.sort(key=lambda t: -t.user_attrs.get(rank_attr, 0))
         chosen = candidates[0]
         print(f"\n[done] {len(study.trials)} trials in {elapsed:.1f} min")
         print(f"[pareto] {len(study.best_trials)} non-dominated trials, "
@@ -508,14 +558,21 @@ def main():
             manifest.append({
                 "rank": rank, "trial": t.number,
                 "internal_overall": round(ov, 4),
+                "spatial_taylor": round(float(t.user_attrs.get("spatial_taylor", 0)), 4),
+                "spatial_r":      round(float(t.user_attrs.get("spatial_r", 0)), 4),
+                "spatial_sigma":  round(float(t.user_attrs.get("spatial_sigma", 0)), 4),
                 "fp_score":      round(float(t.user_attrs.get("fp_score", 0)), 4),
                 "pred_lm_ratio": round(float(t.user_attrs.get("pred_lm_ratio", 0)), 4),
+                "fire_amp":      round(float(p.get("fire_amp", 1.0)), 3),
                 "params_json": pjpath.relative_to(REPO).as_posix(),
                 "model_dir":   mdir.relative_to(REPO).as_posix(),
             })
             print(f"  k{rank}: trial {t.number}  internal_overall={ov:.4f}  "
+                  f"taylor={float(t.user_attrs.get('spatial_taylor',0)):.4f}  "
+                  f"sigma={float(t.user_attrs.get('spatial_sigma',0)):.3f}  "
                   f"fp={float(t.user_attrs.get('fp_score',0)):.3f}  "
-                  f"ratio={float(t.user_attrs.get('pred_lm_ratio',0)):.2f}")
+                  f"ratio={float(t.user_attrs.get('pred_lm_ratio',0)):.2f}  "
+                  f"amp={float(p.get('fire_amp',1.0)):.2f}")
         (MODELS_DIR / f"topk.{tag}.json").write_text(json.dumps(manifest, indent=2))
         print(f"[FIX2] manifest -> {MODELS_DIR / f'topk.{tag}.json'}")
         print(f"[FIX2] re-score all candidates with official ILAMB (CLAUDE.md recipe; "
