@@ -172,6 +172,34 @@ QUIET_THRESH = float(os.environ.get("QUIET_THRESH", 0.001))
 gfed_quiet = (gfed_annual < QUIET_THRESH).astype(np.float64) * land_mask
 gfed_active = (gfed_annual >= QUIET_THRESH).astype(np.float64) * land_mask
 
+# Workstream C: optionally restrict the fit to ONE continent so it can be tuned to
+# that region's fire regime (per-continent models). REGION="" => global (unchanged).
+# The spatial objective, magnitude band, and false-positive score all restrict to
+# REGION_MASK; the resulting params describe that continent only.
+REGION = os.environ.get("REGION", "")
+_REGION_BOX = {
+    "Africa": (-20, 52, -36, 18), "S.America": (-82, -34, -56, 14),
+    "N.America": (-168, -52, 14, 74), "Boreal": (40, 180, 48, 78),
+    "SEAsia": (60, 150, -11, 30), "Australia": (112, 154, -44, -10),
+    "Europe": (-12, 40, 36, 72),
+}
+if REGION:
+    _lat = -89.5 + np.arange(180) * 1.0
+    _lon = -179.5 + np.arange(360) * 1.0
+    _LON, _LAT = np.meshgrid(_lon, _lat)
+    _b = _REGION_BOX[REGION]
+    REGION_MASK = ((_LON >= _b[0]) & (_LON <= _b[1]) &
+                   (_LAT >= _b[2]) & (_LAT <= _b[3]) & land_mask)
+    print(f"[opt] REGION={REGION}: fitting {int(REGION_MASK.sum())} land cells only")
+else:
+    REGION_MASK = land_mask.copy()
+# Magnitude weight that follows REGION (== w3_land when global)
+W3_OBJ = (w3 * REGION_MASK[None, :, :]).astype(np.float64)
+# Restrict the false-positive / hotspot masks to REGION too (idempotent when global,
+# since REGION_MASK == land_mask and these are already land-masked 0/1 fields).
+gfed_quiet = gfed_quiet * REGION_MASK
+gfed_active = gfed_active * REGION_MASK
+
 
 def physical_score(pred_monthly):
     """Penalize false positives. Returns lower = better fit.
@@ -293,12 +321,12 @@ WARM_START = json.load(open(WARM_FILE))["params"]
 # enqueued trial. (Old global k_veg/agb_crit are no longer in the search space.)
 # Seed fire_amp=1.0 (canonical, rate<=1) for the warm trial so the search opens at
 # the known baseline and grows the amplitude from there.
-if RATE_AMP:
+if RATE_AMP and "fire_amp" not in WARM_START:
     WARM_START = {**WARM_START, "fire_amp": 1.0}
 WARM_START = {k: v for k, v in WARM_START.items() if k in LOG_PARAMS}
 
 
-GFED5_LM = float((obs * w3_land).sum() / (w3_land.sum() + 1e-12))
+GFED5_LM = float((obs * W3_OBJ).sum() / (W3_OBJ.sum() + 1e-12))
 
 
 USE_PHYSICAL = bool(int(os.environ.get("PHYSICAL", "0")))
@@ -312,7 +340,7 @@ def spatial_taylor(pred):
     but on the optimizer's internal 1deg grid for speed."""
     pm = pred.mean(axis=0)
     gm = obs.mean(axis=0)
-    mask = (land_mask > 0) & (gfed_annual > 0.001)
+    mask = REGION_MASK & (gfed_annual > 0.001)
     m = pm[mask].astype(np.float64); g = gm[mask].astype(np.float64)
     ms, gs = m.std(), g.std()
     r = float(((m - m.mean()) * (g - g.mean())).mean() / (ms * gs + 1e-30))
@@ -326,7 +354,7 @@ def objective(trial):
          for name, (lo, hi) in LOG_PARAMS.items()}
     pred = predict(p)
     overall, _ = score_BA(pred)
-    pred_lm = float((pred * w3_land).sum() / (w3_land.sum() + 1e-12))
+    pred_lm = float((pred * W3_OBJ).sum() / (W3_OBJ.sum() + 1e-12))
     ratio = max(pred_lm, 1e-12) / GFED5_LM
 
     if SAMPLER == "nsga2":
