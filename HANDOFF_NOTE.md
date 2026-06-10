@@ -3,6 +3,54 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-06-10) — B scorer built, the 1:1 bar is an r-problem, A+B refit running <<<
+
+Started workstream B (new goodness-of-fit) + A (fire-physics). Both flag-gated, canonical untouched.
+The B scorer immediately produced the most important finding of the whole 1:1 thread.
+
+WHAT WAS BUILT (committed df4bc20, bfd1b4d):
+- `scripts/score_spatial.py` — workstream-B spatial-pattern scorer on the cells that ACTUALLY BURN
+  (GFED5>0). Metrics per cell: r (spatial correlation), sigma (std ratio), slope = r*sigma (the 1:1
+  line slope George wants -> 1), magx, Taylor skill (single scalar for the optimizer). `spatial_metrics()`
+  is importable. Includes a per-continent breakdown.
+- `scripts/diag_rate_amp.py` — sweep of the new `fire_amp` lever (A).
+- `reproduce_modelC.py` fire_C — optional `fire_amp` multiplier lets the annual fire rate exceed 1.0
+  (savanna multi-burn). Active only when `fire_amp` is in params; canonical bit-identical when absent.
+- `optimize_modelC_coupled.py` — `RATE_AMP=1` adds fire_amp to the search; `SPATIAL_OBJ=1` makes the
+  first NSGA-II objective the spatial Taylor skill (B) instead of ILAMB Overall. Both flag-gated.
+
+THE KEY FINDING — George's 1:1 bar is an r (correlation) problem, NOT just amplitude:
+- The per-cell 1:1 slope is ~0.35 (George wants 1.0). slope = r * sigma, and r is only ~0.48-0.50 on
+  active-fire cells. So even with a PERFECT sigma=1, the slope caps at ~0.5. Amplitude fixes (seasonal
+  transform, fire_amp) raise sigma (0.70->0.80 already) but CANNOT reach the diagonal until r improves.
+- The `fire_amp` sweep confirms A breaks the structural rate<=1 cap: the per-cell ceiling reaches GFED5's
+  0.104 at fire_amp~2, BUT a uniform lift overshoots sigma (1.7) and magnitude (2.1x). So A needs a
+  co-fitted reshape, and even then is bounded by r.
+
+THE REGIONAL BREAKDOWN — why r is low, and the case for workstream C (run `python scripts/score_spatial.py`):
+The single global formula does OPPOSITE, wrong things per continent (active-fire cells, tropfix2-k4):
+  - Africa (savanna core): r~0.5 (right pattern) but UNDER-burns (magx 0.67, sigma 0.5) -> A is the fix here.
+  - S.America (Amazon):     r~0.3, OVER-burns 3x (magx 2.7, sigma 2.5) -> needs SUPPRESSION; A makes it worse.
+  - Boreal Eurasia:         r~0.36, UNDER-burns 4x (magx 0.26, sigma 0.33) -> needs its own boreal regime.
+  - Trop/SE Asia, Australia: r~0.1-0.2 (near-zero pattern skill).
+  - Europe:                  r~0.00 (no skill at all).
+The regions need OPPOSITE fixes, so ONE global amplitude/criterion cannot win. This is the quantitative
+case for continent-specific fire models (workstream C). seasonal-k1 even HURT boreal/SE-Asia r
+(0.36->0.22, 0.20->0.11) because dry-season concentration misfires in monsoonal/boreal regimes.
+
+RUNNING NOW (background -> logs/opt_spatial.log): the A+B refit
+`SEASONAL_TRANSFORM=1 RATE_AMP=1 SPATIAL_OBJ=1 PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2
+ WARM=params.seasonal.k1.json TAG=spatial N_TRIALS=2500 TOPK=8`. Optimizes the spatial Taylor with
+fire_amp free, magnitude banded to 1.12x. EXPECTATION (set by the finding above): it will push sigma->1
+and the global slope toward ~r (~0.5), a real gain over 0.35, and validate the Taylor objective — but it
+will NOT reach slope=1 (that needs r, i.e. C). When it finishes: score the TOPK candidates with the
+B scorer + official ILAMB, read models/C/topk.spatial.json (now records spatial_taylor/r/sigma/fire_amp).
+
+NEXT (the fork for Richard): the evidence says the path to George's bar runs through workstream C
+(continent-specific structure to raise r), not more global tuning. The A+B refit banks the sigma/amplitude
+gain and the paper's criteria-comparison; C is the lever for the correlation. Confirm scope of C with
+George (near-term vs eventual) - see the open question in the meeting block below.
+
 ## >>> NEXT TO DO — Fire Meeting outcomes (2026-06-09) — Richard will action these later <<<
 
 These came out of the June-09 fire meeting (George + group). They RE-PRIORITIZE the work. None are

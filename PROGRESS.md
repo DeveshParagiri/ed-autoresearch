@@ -6,6 +6,26 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-10 — Workstream B scorer built; the 1:1 bar is an r-problem; A+B refit running
+
+Started B (new goodness-of-fit) + A (fire-physics), both flag-gated, canonical untouched.
+- score_spatial.py (B): spatial-pattern metrics on burning cells - r, sigma, slope=r*sigma (the 1:1
+  slope), Taylor skill, plus a per-continent breakdown. spatial_metrics() importable for the optimizer.
+- diag_rate_amp.py + fire_C `fire_amp` (A): lets the annual fire rate exceed 1.0 (savanna multi-burn).
+  Sweep: the per-cell ceiling reaches GFED5 0.104 at fire_amp~2 but a uniform lift overshoots sigma/mag.
+- optimizer: RATE_AMP=1 (search fire_amp) + SPATIAL_OBJ=1 (first NSGA objective = spatial Taylor).
+KEY FINDING: the per-cell 1:1 slope is ~0.35 (target 1.0); slope=r*sigma and r is only ~0.48-0.50, so
+amplitude fixes cap the slope at ~0.5. Reaching the diagonal REQUIRES improving the spatial correlation
+r (burning in the right cells), not just amplitude.
+REGIONAL BREAKDOWN (the case for workstream C): the global formula does opposite/wrong things per
+continent - Africa right-pattern but under-burns (fix=amplitude), Amazon over-burns 3x low-r
+(fix=suppression), boreal under-burns 4x (own regime), SE-Asia/Australia/Europe near-zero r. One global
+amplitude can't win. seasonal-k1 even hurt boreal/SE-Asia r.
+A+B refit launched (logs/opt_spatial.log, TAG=spatial, WARM=seasonal-k1, MAG_BAND=1.12). Expected to
+push sigma->1 and slope->~0.5 (up from 0.35) and validate the Taylor objective, but not reach slope=1
+(needs C). Score TOPK with score_spatial + official ILAMB when done; topk.spatial.json records
+spatial_taylor/r/sigma/fire_amp.
+
 ## 2026-06-09 — Fire meeting outcomes logged as next-to-do (Richard will action later)
 
 June-09 fire meeting (George + group) re-prioritized the work. Logged in full at the TOP of
