@@ -94,7 +94,17 @@ def fire_C(d, p):
         ratio = np.clip(d["agb"] / (p["trop_agb_crit"] + 1e-12), 0, None)
         canopy_mod = 1.0 / (1.0 + np.power(ratio, p["trop_k_veg"]))
         product = product * (trop * canopy_mod + (1.0 - trop))
-    return np.power(np.clip(product, 0, None), p["fire_exp"]).astype(np.float32)
+    rate = np.power(np.clip(product, 0, None), p["fire_exp"])
+    # Fire-frequency amplitude (optional; active only when `fire_amp` is in params).
+    # `product^fire_exp` is bounded by 1.0 because every factor is a [0,1] sigmoid,
+    # which hard-caps the annual fire rate at 1/yr and the per-cell burned-fraction
+    # band at ~0.05. Physically, fire-prone savanna re-burns more than once per year
+    # (fast-curing grass fuel), so the annual fire frequency can exceed 1. fire_amp
+    # (>1) lifts the ceiling so peak cells can reach GFED5's 0.104 (Cause-1 lever for
+    # George's 1:1 bar). Default (absent) = canonical, rate <= 1.
+    if "fire_amp" in p:
+        rate = rate * p["fire_amp"]
+    return rate.astype(np.float32)
 
 
 def load_drivers():
