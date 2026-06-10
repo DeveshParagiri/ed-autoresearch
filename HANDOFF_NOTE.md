@@ -38,18 +38,42 @@ The regions need OPPOSITE fixes, so ONE global amplitude/criterion cannot win. T
 case for continent-specific fire models (workstream C). seasonal-k1 even HURT boreal/SE-Asia r
 (0.36->0.22, 0.20->0.11) because dry-season concentration misfires in monsoonal/boreal regimes.
 
-RUNNING NOW (background -> logs/opt_spatial.log): the A+B refit
-`SEASONAL_TRANSFORM=1 RATE_AMP=1 SPATIAL_OBJ=1 PHYSICAL=1 MAG_BAND=1.12 FP_MIN=0.85 SAMPLER=nsga2
- WARM=params.seasonal.k1.json TAG=spatial N_TRIALS=2500 TOPK=8`. Optimizes the spatial Taylor with
-fire_amp free, magnitude banded to 1.12x. EXPECTATION (set by the finding above): it will push sigma->1
-and the global slope toward ~r (~0.5), a real gain over 0.35, and validate the Taylor objective — but it
-will NOT reach slope=1 (that needs r, i.e. C). When it finishes: score the TOPK candidates with the
-B scorer + official ILAMB, read models/C/topk.spatial.json (now records spatial_taylor/r/sigma/fire_amp).
+A+B REFIT DONE (logs/opt_spatial.log, 65 min). WINNER = **spatial-k1** (trial 2305, fire_amp=5.45,
+fire_exp=1.52). Official ILAMB single-model run (ilamb_out_topk_spatial/), apples-to-apples:
+  | model        | Spatial | Overall | magnitude |
+  | canonical k4 | 0.7617  | 0.6473  | 1.11x |
+  | seasonal-k1  | 0.7797  | 0.6495  | 1.11x |
+  | spatial-k1   | 0.7985  | 0.6605  | 0.94x |
+So official Overall 0.6473 -> **0.6605 (+0.0132)** and Spatial 0.7617 -> **0.7985 (+0.037)** -- the best
+official BA score yet, ABOVE CLM6's 0.6562 (it would be leaderboard #1 on burned area; frame as
+positioning, not "we beat them"). On George's 1:1 plot (B scorer, active-fire cells): the band climbed
+from slope 0.344 (canonical) -> 0.385 (seasonal) -> **0.496** (spatial-k1), sigma 0.70 -> **0.98**
+(solved), per-cell ceiling 0.039 -> **0.095** (now reaching GFED5's 0.104). Figure:
+`NEW MAPS/proto_seasonal/per_cell_scatter_spatial_k1.png` (3-panel progression). Candidates dumped to
+`ilamb/MODELS_TOPK_spatial/`, params `models/C/params.spatial.k{1..6}.json`, manifest `topk.spatial.json`.
 
-NEXT (the fork for Richard): the evidence says the path to George's bar runs through workstream C
-(continent-specific structure to raise r), not more global tuning. The A+B refit banks the sigma/amplitude
-gain and the paper's criteria-comparison; C is the lever for the correlation. Confirm scope of C with
-George (near-term vs eventual) - see the open question in the meeting block below.
+THE WALL CONFIRMED: r went 0.49 -> 0.505 only. All the slope gain came from sigma. slope=r*sigma so the
+band PLATEAUS at slope ~ r ~ 0.5. George's slope=1 is unreachable without raising the correlation r ->
+workstream C (continent-specific structure). The A+B refit banked the dynamic-range half of the problem
+and set a record official score; C is the only lever left for the correlation half.
+
+CAVEATS before any promotion (NOT promoted; canonical untouched):
+- fire_amp maxed at 5.45 (top of its 1..6 range): physically 5 fires/yr is too high; the optimizer is
+  just using the scalar to force sigma->1. The PRINCIPLED version is the FUEL-SELECTIVE fire_amp (step 3
+  of the agreed plan) — amplitude tied to grass-fuel curing so only genuine savanna multi-burns, not a
+  global scalar (which CLAUDE.md flags as metric-tuning). Do that before promoting spatial-k1's approach.
+- RMSE dipped 0.477 -> 0.498 (the higher amplitude enlarges per-cell errors in the over-burning regions,
+  e.g. Amazon) but the Spatial gain dominates Overall. A region-aware amplitude (C) would avoid this.
+- Coupling check with Lei still gates promotion (the transform + now the rate>1 must be reproducible in
+  coupled ED).
+
+NEXT (the fork for Richard): the path to George's bar runs through workstream C (continent-specific
+structure to raise r), not more global tuning. Two concrete sub-steps already scoped:
+  1. Upgrade fire_amp to the FUEL-SELECTIVE form (step 3) and re-fit — makes spatial-k1's gain defensible
+     and likely recovers the RMSE dip.
+  2. Begin C: per-continent fire structure to raise r (Africa amplitude, Amazon suppression, boreal
+     regime). The regional breakdown (run `python scripts/score_spatial.py`) is the blueprint. Confirm
+     scope with George (near-term vs eventual) — see the open question in the meeting block below.
 
 ## >>> NEXT TO DO — Fire Meeting outcomes (2026-06-09) — Richard will action these later <<<
 

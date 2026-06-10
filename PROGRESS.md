@@ -21,10 +21,16 @@ REGIONAL BREAKDOWN (the case for workstream C): the global formula does opposite
 continent - Africa right-pattern but under-burns (fix=amplitude), Amazon over-burns 3x low-r
 (fix=suppression), boreal under-burns 4x (own regime), SE-Asia/Australia/Europe near-zero r. One global
 amplitude can't win. seasonal-k1 even hurt boreal/SE-Asia r.
-A+B refit launched (logs/opt_spatial.log, TAG=spatial, WARM=seasonal-k1, MAG_BAND=1.12). Expected to
-push sigma->1 and slope->~0.5 (up from 0.35) and validate the Taylor objective, but not reach slope=1
-(needs C). Score TOPK with score_spatial + official ILAMB when done; topk.spatial.json records
-spatial_taylor/r/sigma/fire_amp.
+A+B REFIT DONE (65 min). Winner spatial-k1 (fire_amp=5.45). Official ILAMB single-model run:
+Overall 0.6473(canon) -> 0.6495(seasonal) -> 0.6605(spatial-k1), Spatial 0.7617 -> 0.7985 -- best
+official BA score yet, above CLM6's 0.6562 (positioning, not "we beat them"). On the 1:1 plot: band
+climbed slope 0.344 -> 0.496, sigma 0.70 -> 0.98 (solved), ceiling 0.039 -> 0.095 (reaches GFED5 0.104).
+Figure NEW MAPS/proto_seasonal/per_cell_scatter_spatial_k1.png. THE WALL: r only 0.49 -> 0.505, so
+slope=r*sigma plateaus at ~0.5; George's slope=1 needs r -> workstream C. Caveats (NOT promoted): fire_amp
+maxed at 5.45 (scalar overshoot, physically too high) so the fuel-selective form (step 3) is needed before
+promotion; RMSE dipped 0.477 -> 0.498 (amplitude enlarges Amazon over-burn errors); Lei coupling check
+still gates. Next: (1) fuel-selective fire_amp re-fit, (2) begin C using the regional breakdown as
+blueprint. Confirm C scope with George.
 
 ## 2026-06-09 — Fire meeting outcomes logged as next-to-do (Richard will action later)
 
