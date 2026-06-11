@@ -218,6 +218,22 @@ if REGION:
     print(f"[opt] REGION={REGION}: fitting {int(REGION_MASK.sum())} land cells only")
 else:
     REGION_MASK = land_mask.copy()
+
+# Held-out-CELLS validation (blocked spatial cross-validation): CELL_HOLDOUT="train"
+# fits on a checkerboard of 10x10-deg TILES, "test" on the complementary tiles. Blocked
+# (not per-cell) so neighbouring-cell spatial autocorrelation cannot leak the answer.
+# Folded into REGION_MASK so the objective/magnitude/FP all restrict to it. Default
+# (unset) => all cells (bit-identical). Validate by fitting CELL_HOLDOUT=train then
+# scoring spatial skill on the held-out test tiles.
+CELL_HOLDOUT = os.environ.get("CELL_HOLDOUT", "")
+if CELL_HOLDOUT:
+    _ti = (np.arange(180)[:, None] // 10)
+    _tj = (np.arange(360)[None, :] // 10)
+    _train_tiles = ((_ti + _tj) % 2 == 0)
+    CELL_MASK = _train_tiles if CELL_HOLDOUT == "train" else ~_train_tiles
+    REGION_MASK = REGION_MASK & CELL_MASK
+    print(f"[opt] CELL_HOLDOUT={CELL_HOLDOUT}: {int(REGION_MASK.sum())} cells after tile split")
+
 # Magnitude weight that follows REGION (== w3_land when global)
 W3_OBJ = (w3 * REGION_MASK[None, :, :]).astype(np.float64)
 # Restrict the false-positive / hotspot masks to REGION too (idempotent when global,
