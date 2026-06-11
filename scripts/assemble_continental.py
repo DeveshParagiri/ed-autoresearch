@@ -31,11 +31,11 @@ REGION_BOX = {
     "Europe": (-12, 40, 36, 72),
 }
 REGION_PARAMS = {                       # edit as per-continent fits complete
-    # Africa's regional fit UNDERPERFORMED the global spatial-k1 on its own region
-    # (r 0.469 -> 0.389): Africa's gap is pattern/r, not magnitude, so re-tuning the
-    # current form regionally does not help. Keep the global model there until a FORM
-    # change (new term) is tried. Boreal + S.America fits fixed their magnitude breaks.
-    # "Africa":    "params.africa.json",
+    # Africa: the FUEL-form fit (fuel-scaled amplitude) raised Africa r 0.469 -> 0.664
+    # (~the 0.676 driver ceiling) by adding the positive savanna-fuel signal the global
+    # GPP hump was missing. This is the FORM change that the plain regional re-tune
+    # (params.africa.json) could not achieve. Use it.
+    "Africa":    "params.africafuel.json",
     "Boreal":    "params.boreal.json",
     "S.America": "params.samerica.json",
 }
