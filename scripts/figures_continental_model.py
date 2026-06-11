@@ -77,7 +77,7 @@ gC_m = np.nan_to_num(ff_m.mean(0)) * SEC_YR * 1000.0                   # gC/m2/y
 gC_g = np.nan_to_num(ff_g.mean(0)) * SEC_YR * 1000.0
 fig, ax = plt.subplots(1, 3, figsize=(19, 4.6), subplot_kw={"projection": ccrs.Robinson()})
 fig.suptitle("Annual fire carbon flux (gC / m2 / yr), 2001-2016 — continental Model C vs GFED5  "
-             "(betas not yet retuned for this BA)", fontsize=13, y=1.04)
+             "(betas retuned for this BA: 3.42 vs 3.40 PgC/yr)", fontsize=13, y=1.04)
 draw_map(ax[0], gC_m, latf, lonf, "Model C continental", FIRE_CMAP, 0, 500, "gC/m2/yr")
 draw_map(ax[1], gC_g, latg, long_, "GFED5 (observed)", FIRE_CMAP, 0, 500, "gC/m2/yr")
 if gC_m.shape == gC_g.shape:
