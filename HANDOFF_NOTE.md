@@ -30,9 +30,13 @@ coupled run, but the STRUCTURE/PHYSICS transfer.
 HELD-OUT VALIDATION (is the result genuine or overfit?):
 - Held-out YEARS (fit 2001-2012, score unseen 2013-2016; FIT_Y0/FIT_YF; validate_holdout.py): active-fire
   r TRAIN 0.695 -> TEST 0.645 (drop only -0.05), slope 0.643->0.609. PASS - generalizes across years.
-- Held-out CELLS (blocked 10deg-tile spatial CV; CELL_HOLDOUT; validate_holdout_cells.py): RUNNING
-  (logs/opt_cellholdout.log). This is the stronger test of whether the per-continent params memorized the
-  map. Assemble with `ASSEMBLY=cell python scripts/assemble_continental.py` then `validate_holdout_cells.py`.
+- Held-out CELLS (blocked 10deg-tile spatial CV; CELL_HOLDOUT; validate_holdout_cells.py): active-fire
+  r TRAIN-tiles 0.700 -> TEST-tiles (unseen cells) 0.685 (drop only -0.015), taylor identical. PASS - the
+  per-continent params generalize to unseen cells, did NOT memorize the map. This is the STRONGER overfit
+  test and it passes cleanly. (Reproduce: `ASSEMBLY=cell python scripts/assemble_continental.py` then
+  `python scripts/validate_holdout_cells.py`.)
+BOTH validations pass (years drop -0.05, cells drop -0.015) -> the per-continent + fuel result is genuine
+structure, not overfitting, on both the time and space axes. The science is defensible.
 assemble_continental.py now takes ASSEMBLY=best|ho|cell (writes to MODELS_CONTINENTAL{,_HO,_CELL}).
 
 ## >>> READ THIS FIRST (2026-06-10, latest) — C DELIVERED: per-continent + fuel form break the pattern wall <<<

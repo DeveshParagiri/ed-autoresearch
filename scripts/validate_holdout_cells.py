@@ -39,10 +39,15 @@ def main(argv):
     models = argv[1:] or [
         "ilamb/MODELS_CONTINENTAL_CELL/ED-ModelC-continental-cell/burntArea.nc"]
     g = period_mean(GFED)
-    land = np.isfinite(xr.open_dataset(GFED)["burntArea"].values[0])
+    gd = xr.open_dataset(GFED)
+    land = np.isfinite(gd["burntArea"].values[0])
     active = land & ((g * 12.0) > 0.01)
-    # same 10x10-deg checkerboard tiles as the optimizer's CELL_HOLDOUT
-    ti = (np.arange(180)[:, None] // 10); tj = (np.arange(360)[None, :] // 10)
+    # same 10x10-deg checkerboard tiles as the optimizer's CELL_HOLDOUT, built from
+    # degrees so it matches at any grid resolution (optimizer used 1deg index//10 =
+    # floor((lat+89.5)/10); the 0.5deg ref grid maps a cell into the same 10-deg tile).
+    lat = gd["lat"].values; lon = gd["lon"].values
+    ti = np.floor((lat + 89.5) / 10.0).astype(int)[:, None]
+    tj = np.floor((lon + 179.5) / 10.0).astype(int)[None, :]
     train_tiles = ((ti + tj) % 2 == 0)
     m_train = active & train_tiles
     m_test = active & ~train_tiles

@@ -18,7 +18,9 @@ capped by fire_max_disturbance_rate (default 0.2, needs raising). Per-region bra
 update_fuel; raise fire_max; PATCH_FREQ=1; per-site region tagging. 2x coupled over-burn = GPP/biomass
 feedback -> recalibrate in coupled run, structure transfers.
 Held-out YEARS validation (fit 2001-2012, score unseen 2013-2016): active-fire r TRAIN 0.695 -> TEST
-0.645 (drop only -0.05). PASS, generalizes across years. Held-out CELLS (blocked tile CV) running.
+0.645 (drop -0.05). PASS. Held-out CELLS (blocked 10deg-tile spatial CV, fit train tiles, score unseen
+test tiles): r TRAIN 0.700 -> TEST 0.685 (drop only -0.015), taylor identical. PASS, stronger test.
+BOTH pass -> genuine structure, not overfitting, on time and space axes. Result is defensible.
 
 ## 2026-06-11 — Seasonal-aware re-fit: continental hits official Overall 0.6723 (best of all)
 
