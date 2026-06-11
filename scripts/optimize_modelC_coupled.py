@@ -138,6 +138,22 @@ def load_gfed5_1deg():
 drivers = load_coupled_drivers()                              # all 1-deg, 192 months
 obs     = load_gfed5_1deg()                                   # (192, 180, 360) monthly fraction
 
+# Held-out-years validation: FIT_Y0/FIT_YF restrict the FIT to a year window (the
+# data is 2001-2016). Default = full range (bit-identical). reproduce/assemble keep
+# the full period, so a model fit on e.g. 2001-2012 can be scored on unseen 2013-2016.
+FIT_Y0  = int(os.environ.get("FIT_Y0", 2001))
+FIT_YF  = int(os.environ.get("FIT_YF", 2016))
+N_YEARS = FIT_YF - FIT_Y0 + 1
+FIT_YEARS = list(range(FIT_Y0, FIT_YF + 1))
+if (FIT_Y0, FIT_YF) != (2001, 2016):
+    _m0 = (FIT_Y0 - 2001) * 12
+    _m1 = (FIT_YF - 2001 + 1) * 12
+    obs = obs[_m0:_m1]
+    for _k in list(drivers.keys()):
+        drivers[_k] = drivers[_k][_m0:_m1]
+    N_MONTHS = _m1 - _m0
+    print(f"[setup] HELD-OUT fit window {FIT_Y0}-{FIT_YF}  ({N_MONTHS} months, {N_YEARS} yr)")
+
 lat_1   = np.arange(-89.5, 90.0, 1.0).astype(np.float32)
 cos_lat = np.cos(np.deg2rad(lat_1)).astype(np.float32)
 w2      = np.broadcast_to(cos_lat[:, None], (180, 360)).astype(np.float64)
@@ -153,7 +169,7 @@ print(f"[setup] GFED5 land-mean monthly frac: {float((obs*w3_land).sum()/w3_land
 # ILAMB-aligned (Collier-2018) precomputes
 gfed_tm   = obs.mean(axis=0).astype(np.float64)
 gfed_std  = obs.std(axis=0).clip(1e-12).astype(np.float64)  # crms normaliser
-gfed_cyc  = obs.reshape(16, 12, 180, 360).mean(axis=0)
+gfed_cyc  = obs.reshape(N_YEARS, 12, 180, 360).mean(axis=0)
 gfed_peak_month = np.argmax(gfed_cyc, axis=0).astype(np.float32)
 # ILAMB ConfBurntArea uses mass_weighting=True: cos(lat) * ref_timeint
 mass_w      = (w2 * gfed_tm).astype(np.float64)
@@ -173,7 +189,7 @@ def ed_transform(rate_yr):
 
 # ── 4a. Per-cell unweighted physical objective (penalizes false positives) ───
 # Computed once: GFED5 annual map (sum of 12 monthly fractions)
-gfed_annual = obs.reshape(16, 12, 180, 360).sum(axis=1).mean(axis=0).astype(np.float64)
+gfed_annual = obs.reshape(N_YEARS, 12, 180, 360).sum(axis=1).mean(axis=0).astype(np.float64)
 # Three tiers: quiet (<0.001 annual frac) — should not burn
 # medium (0.001-0.01) — light fire
 # active (>0.01) — true hotspots
@@ -214,7 +230,7 @@ def physical_score(pred_monthly):
     """Penalize false positives. Returns lower = better fit.
     Returns score in [0,1] where 1 = perfect physical match.
     """
-    pred_annual = pred_monthly.reshape(16, 12, 180, 360).sum(axis=1).mean(axis=0).astype(np.float64)
+    pred_annual = pred_monthly.reshape(N_YEARS, 12, 180, 360).sum(axis=1).mean(axis=0).astype(np.float64)
     # False-positive amplitude: pred fire in cells GFED rarely fires
     fp = (pred_annual * gfed_quiet).sum() / (gfed_quiet.sum() + 1e-12)
     # True hotspot match: |pred - gfed| in active cells, normalized by gfed mean
@@ -241,7 +257,7 @@ def score_BA(pred_monthly):
     rmse_s = float((rmse_score_per_cell * mass_w).sum() / (mass_w.sum() + 1e-12))
 
     # Seasonal score: phase-shift of month-of-peak
-    pred_cyc = pred_monthly.reshape(16, 12, 180, 360).mean(axis=0)
+    pred_cyc = pred_monthly.reshape(N_YEARS, 12, 180, 360).mean(axis=0)
     pred_peak = np.argmax(pred_cyc, axis=0).astype(np.float32)
     shift = pred_peak - gfed_peak_month
     shift = np.where(shift >  6, shift - 12, shift)
@@ -367,7 +383,7 @@ def seasonal_score_region(pred):
     """Region-weighted seasonal-cycle score (same month-of-peak phase-shift form as
     score_BA, restricted to REGION_MASK burning cells). In [0,1]. Used to keep the
     per-continent fit from trading away seasonal timing for spatial pattern."""
-    pred_cyc = pred.reshape(16, 12, 180, 360).mean(axis=0)
+    pred_cyc = pred.reshape(N_YEARS, 12, 180, 360).mean(axis=0)
     pred_peak = np.argmax(pred_cyc, axis=0).astype(np.float32)
     shift = pred_peak - gfed_peak_month
     shift = np.where(shift > 6, shift - 12, shift)
@@ -444,7 +460,7 @@ def write_ba_nc(pred, path):
     FIX-2 top-K candidate dump so every candidate is encoded identically and can
     be re-scored with official ILAMB without surprises."""
     pred_hd = uncoarsen(np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32))
-    times = [cftime.DatetimeNoLeap(y, m, 15) for y in YEARS for m in range(1, 13)]
+    times = [cftime.DatetimeNoLeap(y, m, 15) for y in FIT_YEARS for m in range(1, 13)]
     lat   = np.arange(-89.75, 90.0, 0.5)
     lon   = np.arange(-179.75, 180.0, 0.5)
     ds = xr.Dataset(
