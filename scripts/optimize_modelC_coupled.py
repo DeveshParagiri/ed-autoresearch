@@ -69,6 +69,10 @@ FUEL_AMP      = os.environ.get("FUEL_AMP", "0") == "1"
 # burning cells (the meeting's criterion that weights the spatial pattern) instead of
 # ILAMB Overall. ILAMB stays tracked as a user_attr. Off by default. (Workstream B.)
 SPATIAL_OBJ   = os.environ.get("SPATIAL_OBJ", "0") == "1"
+# SEAS_W blends a region seasonal-cycle score into the SPATIAL_OBJ first objective:
+# primary = (1-SEAS_W)*spatial_taylor + SEAS_W*seasonal. 0 => pure spatial (the
+# per-continent fits traded seasonal away; SEAS_W>0 protects the seasonal cycle).
+SEAS_W        = float(os.environ.get("SEAS_W", 0.0))
 N_TRIALS      = int(os.environ.get("N_TRIALS", 2500))
 MAG_PENALTY   = float(os.environ.get("MAG_PENALTY", 0.0))
 # Hard magnitude band: trials where mean is outside [1/MAG_BAND, MAG_BAND]x
@@ -359,6 +363,20 @@ def spatial_taylor(pred):
     return taylor, r, sigma
 
 
+def seasonal_score_region(pred):
+    """Region-weighted seasonal-cycle score (same month-of-peak phase-shift form as
+    score_BA, restricted to REGION_MASK burning cells). In [0,1]. Used to keep the
+    per-continent fit from trading away seasonal timing for spatial pattern."""
+    pred_cyc = pred.reshape(16, 12, 180, 360).mean(axis=0)
+    pred_peak = np.argmax(pred_cyc, axis=0).astype(np.float32)
+    shift = pred_peak - gfed_peak_month
+    shift = np.where(shift > 6, shift - 12, shift)
+    shift = np.where(shift < -6, shift + 12, shift)
+    seas_per_cell = (1.0 + np.cos(np.abs(shift) / 12.0 * 2.0 * np.pi)) * 0.5
+    w = mass_w_burn * REGION_MASK
+    return float((seas_per_cell * w).sum() / (w.sum() + 1e-12))
+
+
 def objective(trial):
     p = {name: trial.suggest_float(name, lo, hi, log=True)
          for name, (lo, hi) in LOG_PARAMS.items()}
@@ -383,7 +401,12 @@ def objective(trial):
             trial.set_user_attr("spatial_taylor", taylor)
             trial.set_user_attr("spatial_r", r_sp)
             trial.set_user_attr("spatial_sigma", sigma_sp)
-            primary = taylor
+            if SEAS_W > 0:
+                seas_r = seasonal_score_region(pred)
+                trial.set_user_attr("spatial_seas", seas_r)
+                primary = (1.0 - SEAS_W) * taylor + SEAS_W * seas_r
+            else:
+                primary = taylor
         else:
             primary = overall
         if MAG_BAND > 0:
