@@ -6,6 +6,19 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-11 (later 2) — Continental figures + fFire: BA-vs-emissions tradeoff surfaced
+
+Built the full figure set for the continental model vs GFED5 (NEW MAPS/continental_model/: BA map, fFire
+map, global timeseries, regional seasonal cycle, 1:1 scatter; figures_continental_model.py). Retuned
+combustion betas for the continental BA (models/combustion-params-continental/betas.gfed5.json): fFire
+3.42 vs GFED5 3.40 PgC/yr (magnitude matched). Official ILAMB fFire: Bias 0.691 RMSE 0.506 Seas 0.778
+Spatial 0.686 Overall 0.6334. NOTE THE TRADEOFF: continental is a big BA win (0.6473->0.6723) but a ~0.02
+fFire REGRESSION (canonical k4 0.6534 -> 0.6334). Reason is real: emissions = BA x fuel; the continental
+model shifts fire to low-biomass savanna and cuts the Amazon over-burn, so it removes carbon GFED5
+attributes to higher-fuel forest fires. Magnitude + seasonal are fine; emissions SPATIAL pattern (0.686)
+is the weak point. Possible follow-up: a combustion/fuel formula that better recovers emissions in the
+regions where BA changed, or accept the BA win as primary (George's bar) with emissions secondary.
+
 ## 2026-06-11 (later) — ED-source coupling check + held-out validation
 
 Read Lei's ED source (ED_Source_Code/GlobalED) to check coupled consistency. VERDICT: our work is
