@@ -1,0 +1,80 @@
+[
+  {
+    "rank": 1,
+    "trial": 1264,
+    "internal_overall": 0.575,
+    "spatial_taylor": 0.8259,
+    "spatial_r": 0.6639,
+    "spatial_sigma": 0.9179,
+    "fp_score": 0.8504,
+    "pred_lm_ratio": 1.0372,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1461,
+    "internal_overall": 0.575,
+    "spatial_taylor": 0.8259,
+    "spatial_r": 0.6639,
+    "spatial_sigma": 0.9179,
+    "fp_score": 0.8504,
+    "pred_lm_ratio": 1.0372,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1428,
+    "internal_overall": 0.5615,
+    "spatial_taylor": 0.8251,
+    "spatial_r": 0.6517,
+    "spatial_sigma": 1.0318,
+    "fp_score": 0.8572,
+    "pred_lm_ratio": 1.1213,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 1492,
+    "internal_overall": 0.5681,
+    "spatial_taylor": 0.8224,
+    "spatial_r": 0.6451,
+    "spatial_sigma": 1.0132,
+    "fp_score": 0.8836,
+    "pred_lm_ratio": 1.0253,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 1320,
+    "internal_overall": 0.5703,
+    "spatial_taylor": 0.8206,
+    "spatial_r": 0.6501,
+    "spatial_sigma": 0.9289,
+    "fp_score": 0.8877,
+    "pred_lm_ratio": 0.9763,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k5"
+  },
+  {
+    "rank": 6,
+    "trial": 1258,
+    "internal_overall": 0.567,
+    "spatial_taylor": 0.8182,
+    "spatial_r": 0.6397,
+    "spatial_sigma": 0.9564,
+    "fp_score": 0.8913,
+    "pred_lm_ratio": 0.9868,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.africafuel.k6.json",
+    "model_dir": "ilamb/MODELS_TOPK_africafuel/ED-ModelC-africafuel-k6"
+  }
+]

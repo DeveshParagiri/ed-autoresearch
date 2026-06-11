@@ -38,6 +38,13 @@ REGION_PARAMS = {                       # edit as per-continent fits complete
     "Africa":    "params.africafuel.json",
     "Boreal":    "params.boreal.json",
     "S.America": "params.samerica.json",
+    "SEAsia":    "params.seasia.json",
+    "Europe":    "params.europe.json",
+    # N.America and Australia regional fits REGRESSED their r vs the global model
+    # (0.372->0.292, 0.396->0.315) - keep-best-per-region keeps the global spatial-k1
+    # there until a better fit (seasonal-aware objective / fuel form) is tried.
+    # "N.America": "params.namerica.json",
+    # "Australia": "params.australia.json",
 }
 FALLBACK = "params.spatial.k1.json"
 

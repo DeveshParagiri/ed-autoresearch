@@ -6,6 +6,20 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-10 (latest) — C DELIVERED: per-continent + Africa fuel form break the pattern wall
+
+Both tasks done. Africa FORM change is the breakthrough: residual diagnostic showed GFED fire rises with
+GPP in savanna (fuel-limited) but Model C was anti-correlated (the global GPP hump suppresses productive
+cells). Added a fuel-scaled amplitude (fuel_k, FUEL_AMP) = the physical fuel-selective rate>1 lever.
+Africa r 0.469 -> 0.664 (~the 0.676 driver ceiling). Fitted all 7 continents; best assembly (fuel-Africa
++ Boreal + Amazon + SEAsia + Europe; N.America & Australia kept global, their fits regressed). Per-cell
+1:1 active-fire: r 0.505 -> 0.695, slope 0.496 -> 0.647 (band ~2/3 up the diagonal vs canonical's 0.34).
+Official ILAMB: Spatial 0.7617 -> 0.8756, Bias 0.75 (best), RMSE 0.48, Overall 0.6645 - above CLM6 0.6562.
+Held back ONLY by Seasonal (0.82 -> 0.745) because the per-continent objective optimizes spatial only.
+NEXT: add seasonal to the per-continent objective + re-fit (should push Overall past 0.68); try fuel form
+on Australia/N.America; smooth seams; Lei coupling check still gates promotion. Figure:
+NEW MAPS/proto_seasonal/per_cell_scatter_continental.png.
+
 ## 2026-06-10 (later) — Workstream C started: drivers are good, per-continent fits running
 
 Scouting (diag_continent_headroom.py): per-continent, compared Model C's spatial r to the best a free

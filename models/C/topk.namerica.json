@@ -1,0 +1,80 @@
+[
+  {
+    "rank": 1,
+    "trial": 1032,
+    "internal_overall": 0.4517,
+    "spatial_taylor": 0.6644,
+    "spatial_r": 0.3925,
+    "spatial_sigma": 0.8048,
+    "fp_score": 0.9805,
+    "pred_lm_ratio": 0.9959,
+    "fire_amp": 1.278,
+    "params_json": "models/C/params.namerica.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 910,
+    "internal_overall": 0.5293,
+    "spatial_taylor": 0.617,
+    "spatial_r": 0.351,
+    "spatial_sigma": 1.3544,
+    "fp_score": 0.9881,
+    "pred_lm_ratio": 0.9599,
+    "fire_amp": 1.239,
+    "params_json": "models/C/params.namerica.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 974,
+    "internal_overall": 0.5293,
+    "spatial_taylor": 0.617,
+    "spatial_r": 0.351,
+    "spatial_sigma": 1.3544,
+    "fp_score": 0.9881,
+    "pred_lm_ratio": 0.9599,
+    "fire_amp": 1.239,
+    "params_json": "models/C/params.namerica.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 993,
+    "internal_overall": 0.4764,
+    "spatial_taylor": 0.6098,
+    "spatial_r": 0.2316,
+    "spatial_sigma": 1.1037,
+    "fp_score": 0.991,
+    "pred_lm_ratio": 1.0883,
+    "fire_amp": 4.245,
+    "params_json": "models/C/params.namerica.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 1098,
+    "internal_overall": 0.4689,
+    "spatial_taylor": 0.6006,
+    "spatial_r": 0.2054,
+    "spatial_sigma": 1.0605,
+    "fp_score": 0.991,
+    "pred_lm_ratio": 1.0606,
+    "fire_amp": 4.245,
+    "params_json": "models/C/params.namerica.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k5"
+  },
+  {
+    "rank": 6,
+    "trial": 1070,
+    "internal_overall": 0.4568,
+    "spatial_taylor": 0.5591,
+    "spatial_r": 0.1192,
+    "spatial_sigma": 1.0296,
+    "fp_score": 0.992,
+    "pred_lm_ratio": 0.8515,
+    "fire_amp": 1.048,
+    "params_json": "models/C/params.namerica.k6.json",
+    "model_dir": "ilamb/MODELS_TOPK_namerica/ED-ModelC-namerica-k6"
+  }
+]

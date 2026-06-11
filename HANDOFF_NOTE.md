@@ -3,6 +3,46 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-06-10, latest) — C DELIVERED: per-continent + fuel form break the pattern wall <<<
+
+Both tasks done: (1) all 7 continents fitted, (2) the Africa FORM change. The pattern wall (r~0.5) is
+broken. Canonical untouched, nothing promoted. The best model is the assembled continental in
+`ilamb/MODELS_CONTINENTAL/ED-ModelC-continental/burntArea.nc` (regenerate: `SEASONAL_TRANSFORM=1 python
+scripts/assemble_continental.py`).
+
+THE BREAKTHROUGH - Africa fuel form (`scripts/diag_africa_residual.py` -> `fire_C` FUEL_AMP):
+The Africa residual (GFED - Model C) is dominated by GPP/fuel: GFED fire RISES with GPP in savanna
+(fuel-limited) but Model C was ANTI-correlated (-0.29) because the global GPP hump suppresses productive
+cells. Added a fuel-scaled amplitude `rate *= 1 + fuel_k*GPP/(GPP+fuel_half)` (fuel capacity = period-mean
+GPP). Africa r 0.469 -> **0.664** (~the 0.676 driver ceiling). This is ALSO the physical (fuel-selective)
+form of the rate>1 lever, replacing the crude constant fire_amp. fuel_k=4.71.
+
+THE RESULT - best assembled continental (fuel-Africa + Boreal + S.America + SEAsia + Europe; N.America &
+Australia kept global because their fits regressed r - assembly keeps-best-per-region):
+  per-cell 1:1 (active-fire): r 0.505 -> **0.695**, sigma 0.93, slope 0.496 -> **0.647**, taylor 0.84.
+  official ILAMB: Bias 0.7514 (best), RMSE 0.4753, Seas **0.7450**, Spatial **0.8756** (was 0.7617
+  canonical!), Overall 0.6645.
+George's 1:1 band has climbed across the whole arc: canonical slope 0.34 -> spatial-k1 0.50 -> continental
+**0.65** (~2/3 up the diagonal); r 0.49 -> 0.70. Figure: NEW MAPS/proto_seasonal/per_cell_scatter_continental.png.
+
+THE ONE OPEN ISSUE (and the clear next step): Overall 0.6645 is held back ONLY by Seasonal (0.82 -> 0.745).
+The per-continent fits optimize SPATIAL Taylor only, so they trade away seasonal timing. FIX: add a
+seasonal-cycle term to the per-continent objective (SPATIAL_OBJ), then re-fit the continents. That should
+keep Spatial ~0.876 AND recover Seasonal ~0.82 -> Overall likely past 0.68 (vs canonical 0.6473, CLM6
+0.6562). This is the single highest-value next run.
+
+WHAT EACH CONTINENT NEEDED (the paper's per-continent story):
+- Africa: FORM change (fuel term) -> r 0.47->0.66. The pattern fix.
+- Boreal: magnitude (was burning 4% of GFED) -> fixed by regional params.
+- S.America/Amazon: magnitude (over-burned 2x) -> fixed (near its driver ceiling on r, can't do more).
+- SEAsia, Europe: regional params helped r a lot (Europe -0.15 -> +0.15).
+- N.America, Australia: regional fits regressed; kept global (try fuel form / seasonal-aware objective).
+
+REMAINING (in priority order): (1) seasonal-aware per-continent objective + re-fit (recovers Overall);
+(2) try the fuel form on the other savanna continents (Australia, N.America) which the constant-amp fits
+failed; (3) smooth the continent seams toward the single "unified model"; (4) FUEL form is the physical
+fire_amp, so the fuel-selective upgrade is effectively done; (5) Lei coupling check still gates promotion.
+
 ## >>> READ THIS FIRST (2026-06-10, later) — workstream C STARTED: drivers are good, per-continent fits running <<<
 
 Started the per-continent work (C). Two findings + machinery + a running campaign. Canonical untouched.
