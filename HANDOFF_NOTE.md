@@ -25,11 +25,19 @@ Australia kept global because their fits regressed r - assembly keeps-best-per-r
 George's 1:1 band has climbed across the whole arc: canonical slope 0.34 -> spatial-k1 0.50 -> continental
 **0.65** (~2/3 up the diagonal); r 0.49 -> 0.70. Figure: NEW MAPS/proto_seasonal/per_cell_scatter_continental.png.
 
-THE ONE OPEN ISSUE (and the clear next step): Overall 0.6645 is held back ONLY by Seasonal (0.82 -> 0.745).
-The per-continent fits optimize SPATIAL Taylor only, so they trade away seasonal timing. FIX: add a
-seasonal-cycle term to the per-continent objective (SPATIAL_OBJ), then re-fit the continents. That should
-keep Spatial ~0.876 AND recover Seasonal ~0.82 -> Overall likely past 0.68 (vs canonical 0.6473, CLM6
-0.6562). This is the single highest-value next run.
+SEASONAL-AWARE RE-FIT DONE (SEAS_W=0.35 blends a region seasonal score into the SPATIAL_OBJ objective).
+Re-fit Boreal/SEAsia/Europe (Africa+Amazon picker reverted to their warm = spatial-only, see below).
+Best model now = `ilamb/MODELS_CONTINENTAL/ED-ModelC-continental/burntArea.nc` (assemble_continental.py
+uses africafuel + borealseas + samerica + seasiaseas + europeseas). Official ILAMB:
+  Bias 0.7479  RMSE 0.4822  Seas **0.7748** (was 0.745)  Spatial **0.8747**  Overall **0.6723**.
+So Overall 0.6645 -> **0.6723** (best of ALL versions; canonical 0.6473, CLM6 0.6562) with Spatial held
+at 0.875 and magnitude 1.03x. The seasonal-aware blend works.
+
+STILL slightly short of full seasonal recovery (Seas 0.775 vs canonical 0.823) because the candidate
+PICKER ranked Africa+Amazon by pure spatial_taylor, so their seasonal-blend candidates were not chosen
+(picker reverted to the warm = spatial-only fit). FIXED in optimize_modelC_coupled.py (rank by the blend
+when SEAS_W>0; manifest now records spatial_seas). NEXT: re-run JUST Africa (FUEL_AMP) + S.America
+seasonal fits with the fixed picker, re-assemble -> should pull Seas toward 0.82 and Overall past 0.68.
 
 WHAT EACH CONTINENT NEEDED (the paper's per-continent story):
 - Africa: FORM change (fuel term) -> r 0.47->0.66. The pattern fix.

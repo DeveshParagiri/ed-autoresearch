@@ -6,6 +6,18 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-11 — Seasonal-aware re-fit: continental hits official Overall 0.6723 (best of all)
+
+Added SEAS_W (blends a region seasonal score into the per-continent SPATIAL_OBJ objective) to recover
+the seasonal cycle the spatial-only fits traded away. Re-fit Boreal/SEAsia/Europe seasonal-aware;
+re-assembled (africafuel + borealseas + samerica + seasiaseas + europeseas). Official ILAMB: Seas
+0.745 -> 0.7748, Spatial held 0.875, Overall 0.6645 -> 0.6723 (best of ALL versions; canonical 0.6473,
+CLM6 0.6562), magnitude 1.03x, 1:1 slope 0.65. Caveat: Africa+Amazon picker reverted to spatial-only
+(ranked by pure taylor) so seasonal not fully recovered (0.775 vs 0.823) - FIXED the picker (rank by the
+blend when SEAS_W>0; manifest records spatial_seas). NEXT: re-run Africa(FUEL_AMP)+Amazon seasonal fits
+with the fixed picker -> Overall past 0.68. Map: scripts/map_continental_vs_gfed.py (continental vs GFED5).
+Lei coupling check still gates promotion.
+
 ## 2026-06-10 (latest) — C DELIVERED: per-continent + Africa fuel form break the pattern wall
 
 Both tasks done. Africa FORM change is the breakthrough: residual diagnostic showed GFED fire rises with

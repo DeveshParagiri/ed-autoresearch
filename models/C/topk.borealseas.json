@@ -1,0 +1,41 @@
+[
+  {
+    "rank": 1,
+    "trial": 763,
+    "internal_overall": 0.5088,
+    "spatial_taylor": 0.6581,
+    "spatial_r": 0.317,
+    "spatial_sigma": 0.9765,
+    "fp_score": 0.9054,
+    "pred_lm_ratio": 0.9715,
+    "fire_amp": 5.448,
+    "params_json": "models/C/params.borealseas.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_borealseas/ED-ModelC-borealseas-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1192,
+    "internal_overall": 0.5088,
+    "spatial_taylor": 0.6581,
+    "spatial_r": 0.317,
+    "spatial_sigma": 0.9765,
+    "fp_score": 0.9054,
+    "pred_lm_ratio": 0.9715,
+    "fire_amp": 5.448,
+    "params_json": "models/C/params.borealseas.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_borealseas/ED-ModelC-borealseas-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 908,
+    "internal_overall": 0.5041,
+    "spatial_taylor": 0.6369,
+    "spatial_r": 0.2836,
+    "spatial_sigma": 1.091,
+    "fp_score": 0.9788,
+    "pred_lm_ratio": 0.7834,
+    "fire_amp": 5.448,
+    "params_json": "models/C/params.borealseas.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_borealseas/ED-ModelC-borealseas-k3"
+  }
+]

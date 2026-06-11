@@ -36,10 +36,10 @@ REGION_PARAMS = {                       # edit as per-continent fits complete
     # GPP hump was missing. This is the FORM change that the plain regional re-tune
     # (params.africa.json) could not achieve. Use it.
     "Africa":    "params.africafuel.json",
-    "Boreal":    "params.boreal.json",
+    "Boreal":    "params.borealseas.json",
     "S.America": "params.samerica.json",
-    "SEAsia":    "params.seasia.json",
-    "Europe":    "params.europe.json",
+    "SEAsia":    "params.seasiaseas.json",
+    "Europe":    "params.europeseas.json",
     # N.America and Australia regional fits REGRESSED their r vs the global model
     # (0.372->0.292, 0.396->0.315) - keep-best-per-region keeps the global spatial-k1
     # there until a better fit (seasonal-aware objective / fuel form) is tried.

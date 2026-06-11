@@ -530,10 +530,18 @@ def main():
                       if t.user_attrs.get("fp_score", 0) >= FP_MIN]
         if not candidates:
             candidates = study.best_trials
-        # Rank by the objective we actually optimized: spatial Taylor under
-        # SPATIAL_OBJ, else ILAMB Overall. (Re-score the top-K officially regardless.)
-        rank_attr = "spatial_taylor" if SPATIAL_OBJ else "ilamb_overall"
-        candidates.sort(key=lambda t: -t.user_attrs.get(rank_attr, 0))
+        # Rank by the objective we actually optimized. Under SPATIAL_OBJ with a
+        # seasonal blend (SEAS_W>0), rank by the SAME blend (taylor + seasonal) so the
+        # picker does not silently revert to the pure-spatial best; else spatial Taylor;
+        # else ILAMB Overall. (Re-score the top-K officially regardless.)
+        def rank_score(t):
+            if SPATIAL_OBJ and SEAS_W > 0:
+                return ((1.0 - SEAS_W) * t.user_attrs.get("spatial_taylor", 0)
+                        + SEAS_W * t.user_attrs.get("spatial_seas", 0))
+            if SPATIAL_OBJ:
+                return t.user_attrs.get("spatial_taylor", 0)
+            return t.user_attrs.get("ilamb_overall", 0)
+        candidates.sort(key=lambda t: -rank_score(t))
         chosen = candidates[0]
         print(f"\n[done] {len(study.trials)} trials in {elapsed:.1f} min")
         print(f"[pareto] {len(study.best_trials)} non-dominated trials, "
@@ -622,6 +630,7 @@ def main():
                 "spatial_taylor": round(float(t.user_attrs.get("spatial_taylor", 0)), 4),
                 "spatial_r":      round(float(t.user_attrs.get("spatial_r", 0)), 4),
                 "spatial_sigma":  round(float(t.user_attrs.get("spatial_sigma", 0)), 4),
+                "spatial_seas":   round(float(t.user_attrs.get("spatial_seas", 0)), 4),
                 "fp_score":      round(float(t.user_attrs.get("fp_score", 0)), 4),
                 "pred_lm_ratio": round(float(t.user_attrs.get("pred_lm_ratio", 0)), 4),
                 "fire_amp":      round(float(p.get("fire_amp", 1.0)), 3),
