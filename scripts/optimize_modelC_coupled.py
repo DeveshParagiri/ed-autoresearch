@@ -60,6 +60,11 @@ SEASONAL_TRANSFORM = os.environ.get("SEASONAL_TRANSFORM", "0") == "1"
 # 1.0 (savanna multi-burn). fire_C applies it only when the param is present, so the
 # canonical search space is unchanged when off. (Workstream A.)
 RATE_AMP      = os.environ.get("RATE_AMP", "0") == "1"
+# FUEL_AMP=1 adds the fuel-scaled amplitude (fuel_k, fuel_half) so the fire rate
+# grows with the cell's fuel capacity (period-mean GPP) - the physical form of the
+# rate>1 lever, and the missing positive-fuel term in savanna (Africa residual). Takes
+# precedence over RATE_AMP's constant fire_amp inside fire_C. (Workstream A physical + C.)
+FUEL_AMP      = os.environ.get("FUEL_AMP", "0") == "1"
 # SPATIAL_OBJ=1 makes the FIRST NSGA-II objective the spatial-pattern Taylor skill on
 # burning cells (the meeting's criterion that weights the spatial pattern) instead of
 # ILAMB Overall. ILAMB stays tracked as a user_attr. Off by default. (Workstream B.)
@@ -304,6 +309,11 @@ LOG_PARAMS = {
 # 1..6: the diag sweep showed the per-cell ceiling reaches GFED5's 0.104 near ~2.
 if RATE_AMP:
     LOG_PARAMS["fire_amp"] = (1.0, 6.0)
+# Fuel-scaled amplitude (physical rate>1 + the savanna fuel term). fuel_k is the gain
+# (amplitude up to 1+fuel_k), fuel_half the GPP half-saturation of the fuel response.
+if FUEL_AMP:
+    LOG_PARAMS["fuel_k"] = (1e-2, 6.0)
+    LOG_PARAMS["fuel_half"] = (1e-1, 1e2)
 
 # Warm start from $WARM env var (path to a params.{tag}.json) if set,
 # otherwise from params.PRE-coupled.json (the original benchmark).

@@ -95,14 +95,24 @@ def fire_C(d, p):
         canopy_mod = 1.0 / (1.0 + np.power(ratio, p["trop_k_veg"]))
         product = product * (trop * canopy_mod + (1.0 - trop))
     rate = np.power(np.clip(product, 0, None), p["fire_exp"])
-    # Fire-frequency amplitude (optional; active only when `fire_amp` is in params).
-    # `product^fire_exp` is bounded by 1.0 because every factor is a [0,1] sigmoid,
-    # which hard-caps the annual fire rate at 1/yr and the per-cell burned-fraction
-    # band at ~0.05. Physically, fire-prone savanna re-burns more than once per year
-    # (fast-curing grass fuel), so the annual fire frequency can exceed 1. fire_amp
-    # (>1) lifts the ceiling so peak cells can reach GFED5's 0.104 (Cause-1 lever for
-    # George's 1:1 bar). Default (absent) = canonical, rate <= 1.
-    if "fire_amp" in p:
+    # Fire-frequency amplitude (optional). `product^fire_exp` is bounded by 1.0
+    # because every factor is a [0,1] sigmoid, which hard-caps the annual fire rate
+    # at 1/yr and the per-cell band at ~0.05. Two forms let the rate exceed 1:
+    #   FUEL form (fuel_k present): amplitude scales with the cell's mean FUEL
+    #     CAPACITY (period-mean GPP). Productive grassy cells carry more fuel and
+    #     re-burn more, so rate grows with fuel. This is the PHYSICAL (fuel-selective)
+    #     amplitude AND it adds the positive fuel signal the global GPP hump gets
+    #     BACKWARDS in fuel-limited savanna (Africa residual diagnostic: GFED rises
+    #     with GPP, Model C falls). Uses fuel capacity (time-mean GPP), not the
+    #     current month, because grass grows in the wet season and burns once cured.
+    #   SCALAR form (fire_amp present): a constant multiplier (the earlier crude form;
+    #     kept for back-compat, but the FUEL form is preferred and takes precedence).
+    # Default (neither present) = canonical, rate <= 1.
+    if "fuel_k" in p:
+        gpp_cell = d["gpp_monthly"].mean(axis=0, keepdims=True)
+        fuel = gpp_cell / (gpp_cell + p.get("fuel_half", 1.0) + 1e-9)
+        rate = rate * (1.0 + p["fuel_k"] * fuel)
+    elif "fire_amp" in p:
         rate = rate * p["fire_amp"]
     return rate.astype(np.float32)
 
