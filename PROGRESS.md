@@ -6,6 +6,20 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-11 (later) — ED-source coupling check + held-out validation
+
+Read Lei's ED source (ED_Source_Code/GlobalED) to check coupled consistency. VERDICT: our work is
+fundamentally consistent with ED. ED's prognostic fire (fire.cc:216) is ignition_rate=fuel*fp1*
+(dryness/30000)^10 - fuel-linear, exactly our Africa fuel-amplitude fix (we rediscovered ED's mechanism).
+Burned area (patch.cc:718) = area*(1-exp(-rate*dt)) = our SEASONAL_TRANSFORM (the legacy /12 was less
+consistent); in monthly mode (PATCH_FREQ=1, Lei moving toward) it's 1-exp(-rate/12). rate>1 allowed,
+capped by fire_max_disturbance_rate (default 0.2, needs raising). Per-region branching already exists
+(fire.cc suppression by region, treefall by climate_zone). 4 ED changes for Lei: driver response into
+update_fuel; raise fire_max; PATCH_FREQ=1; per-site region tagging. 2x coupled over-burn = GPP/biomass
+feedback -> recalibrate in coupled run, structure transfers.
+Held-out YEARS validation (fit 2001-2012, score unseen 2013-2016): active-fire r TRAIN 0.695 -> TEST
+0.645 (drop only -0.05). PASS, generalizes across years. Held-out CELLS (blocked tile CV) running.
+
 ## 2026-06-11 — Seasonal-aware re-fit: continental hits official Overall 0.6723 (best of all)
 
 Added SEAS_W (blends a region seasonal score into the per-continent SPATIAL_OBJ objective) to recover

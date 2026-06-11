@@ -3,6 +3,38 @@
 Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-06-11) — ED-source coupling consistency CHECKED + held-out validation <<<
+
+Read the ED source (`ED_Source_Code/GlobalED`, Lei's code) to check whether our offline work can become
+coupled-canonical. VERDICT: fundamentally consistent, in places MORE consistent than our legacy form.
+Key files: fire.cc, disturbance.cc (line 33: disturbance_rate[1]=fire()), patch.cc:718/762 (area burned),
+mortality.cc, edmodels.h, ED_params.defaults.cfg.
+- ED prognostic fire (fire.cc update_fuel:216): `ignition_rate = fuel * fp1 * (dryness/30000)^10`. Fire
+  scales LINEARLY with fuel -> our Africa fuel-amplitude fix IS ED's native mechanism (we rediscovered it).
+- Burned area (patch.cc:718,762): `area*(1 - exp(-rate*deltat*PATCH_FREQ))`. ED uses the EXPONENTIAL
+  disturbance = our SEASONAL_TRANSFORM (1-exp), not the legacy /12. In ED monthly mode (PATCH_FREQ=1,
+  which Lei is moving toward per edmodels.h:134) it is 1-exp(-rate/12) per month -> exactly our transform.
+- Rate>1: ED's rate is NOT a product of [0,1] sigmoids; it is capped by `fire_max_disturbance_rate`
+  (default 0.2 in ED_params.defaults.cfg). So rate>1 is allowed structurally; the cap just needs RAISING
+  to reach GFED savanna levels (one config value).
+- Per-continent: ED already branches fire-suppression by region (AFRICA/SOUTH_AMERICA/EUROPE/... in
+  fire.cc) and treefall by climate_zone (disturbance.cc:36). Per-continent fire params fit the
+  architecture; a GLOBAL run needs per-SITE region/zone tagging (currently keys off one data->region).
+- All our drivers (dryness=D_bar, precip, temp, fuel/biomass, GPP) are ED state variables.
+4 CONCRETE ED CHANGES for Lei to adopt this: (1) put Model C's driver response (or the fuel amplitude +
+per-continent calibration) into update_fuel; (2) raise fire_max_disturbance_rate above 0.2; (3) run
+monthly patch dynamics PATCH_FREQ=1; (4) add per-site region/zone tagging for global runs. The 2x coupled
+over-burn Lei saw is the GPP/biomass FEEDBACK (fire->veg->fuel->fire), so params need RECALIBRATION in the
+coupled run, but the STRUCTURE/PHYSICS transfer.
+
+HELD-OUT VALIDATION (is the result genuine or overfit?):
+- Held-out YEARS (fit 2001-2012, score unseen 2013-2016; FIT_Y0/FIT_YF; validate_holdout.py): active-fire
+  r TRAIN 0.695 -> TEST 0.645 (drop only -0.05), slope 0.643->0.609. PASS - generalizes across years.
+- Held-out CELLS (blocked 10deg-tile spatial CV; CELL_HOLDOUT; validate_holdout_cells.py): RUNNING
+  (logs/opt_cellholdout.log). This is the stronger test of whether the per-continent params memorized the
+  map. Assemble with `ASSEMBLY=cell python scripts/assemble_continental.py` then `validate_holdout_cells.py`.
+assemble_continental.py now takes ASSEMBLY=best|ho|cell (writes to MODELS_CONTINENTAL{,_HO,_CELL}).
+
 ## >>> READ THIS FIRST (2026-06-10, latest) — C DELIVERED: per-continent + fuel form break the pattern wall <<<
 
 Both tasks done: (1) all 7 continents fitted, (2) the Africa FORM change. The pattern wall (r~0.5) is

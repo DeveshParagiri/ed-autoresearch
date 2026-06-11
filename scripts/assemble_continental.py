@@ -30,22 +30,25 @@ REGION_BOX = {
     "SEAsia": (60, 150, -11, 30), "Australia": (112, 154, -44, -10),
     "Europe": (-12, 40, 36, 72),
 }
-REGION_PARAMS = {                       # edit as per-continent fits complete
-    # Africa: the FUEL-form fit (fuel-scaled amplitude) raised Africa r 0.469 -> 0.664
-    # (~the 0.676 driver ceiling) by adding the positive savanna-fuel signal the global
-    # GPP hump was missing. This is the FORM change that the plain regional re-tune
-    # (params.africa.json) could not achieve. Use it.
-    "Africa":    "params.africafuel.json",
-    "Boreal":    "params.borealseas.json",
-    "S.America": "params.samerica.json",
-    "SEAsia":    "params.seasiaseas.json",
-    "Europe":    "params.europeseas.json",
-    # N.America and Australia regional fits REGRESSED their r vs the global model
-    # (0.372->0.292, 0.396->0.315) - keep-best-per-region keeps the global spatial-k1
-    # there until a better fit (seasonal-aware objective / fuel form) is tried.
-    # "N.America": "params.namerica.json",
-    # "Australia": "params.australia.json",
+# ASSEMBLY preset (env): "best" = the production continental model; "ho"/"cell" =
+# the held-out-years / held-out-cells train-fit variants (for validation only).
+# N.America and Australia are kept on the global fallback (their fits regressed r).
+ASSEMBLY = os.environ.get("ASSEMBLY", "best")
+_PRESETS = {
+    "best": ({"Africa": "params.africafuel.json", "Boreal": "params.borealseas.json",
+              "S.America": "params.samerica.json", "SEAsia": "params.seasiaseas.json",
+              "Europe": "params.europeseas.json"},
+             "ED-ModelC-continental"),
+    "ho":   ({"Africa": "params.africaho.json", "Boreal": "params.borealho.json",
+              "S.America": "params.samericaho.json", "SEAsia": "params.seasiaho.json",
+              "Europe": "params.europeho.json"},
+             "ED-ModelC-continental-ho"),
+    "cell": ({"Africa": "params.africacell.json", "Boreal": "params.borealcell.json",
+              "S.America": "params.samericacell.json", "SEAsia": "params.seasiacell.json",
+              "Europe": "params.europecell.json"},
+             "ED-ModelC-continental-cell"),
 }
+REGION_PARAMS, _OUT_NAME = _PRESETS[ASSEMBLY]
 FALLBACK = "params.spatial.k1.json"
 
 
@@ -102,7 +105,9 @@ tu = "days since 2001-01-01 00:00:00"
 enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
        "time": {"units": tu, "calendar": "noleap", "dtype": "float64"},
        "time_bounds": {"units": tu, "calendar": "noleap", "dtype": "float64"}}
-outdir = REPO / "ilamb/MODELS_CONTINENTAL/ED-ModelC-continental"
+_PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
+           "cell": "MODELS_CONTINENTAL_CELL"}[ASSEMBLY]
+outdir = REPO / "ilamb" / _PARENT / _OUT_NAME
 outdir.mkdir(parents=True, exist_ok=True)
 ds.to_netcdf(outdir / "burntArea.nc", encoding=enc, format="NETCDF4_CLASSIC")
 print(f"\n[write] {outdir / 'burntArea.nc'}")
