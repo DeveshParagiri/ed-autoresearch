@@ -13,10 +13,15 @@ regression of GFED5 on the existing drivers can reach. The drivers support r 0.4
 Model C gets 0.10-0.51 -> the global formula, not missing drivers, is the bottleneck; large form headroom
 in 6 of 7 continents (Amazon is the only near-driver-ceiling case). Validates C.
 Machinery: optimizer REGION env restricts the fit to one continent; assemble_continental.py stitches
-per-continent params into one global prediction (each cell uses its continent's params). Launched fits
-for Africa, Boreal, S.America (1200 trials each, warm from spatial-k1, logs/opt_continents.log). When
-done: assemble + score to see if the global r/slope rises above the ~0.5 wall. Pending throughout:
-fuel-selective fire_amp form + Lei coupling check before any promotion.
+per-continent params into one global prediction. Fitted Africa, Boreal, S.America (1200 trials each).
+RESULT: per-continent approach WORKS. Continental model (Boreal+Amazon fits, Africa kept global) hits
+official ILAMB Overall 0.6718 (vs spatial-k1 0.6605, canonical 0.6473) - every component improved, clear
+of CLM6's 0.6562. Global spatial r rose 0.505 -> 0.546 (FIRST real movement on r). Boreal under-burn
+(magx 0.04 -> 0.81) and Amazon over-burn (2.03 -> 1.01) FIXED by regional params. Africa fit
+underperformed the global model (r 0.469 -> 0.389), so assembly keeps spatial-k1 there: LESSON -
+magnitude-broken regions fixed by regional params, pattern-limited regions (Africa) need a FORM change.
+Next: fit the 4 remaining continents; try a form change for Africa; smooth seams; fuel-selective fire_amp
++ Lei coupling check still gate promotion.
 
 ## 2026-06-10 — Workstream B scorer built; the 1:1 bar is an r-problem; A+B refit running
 

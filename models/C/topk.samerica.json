@@ -1,0 +1,41 @@
+[
+  {
+    "rank": 1,
+    "trial": 991,
+    "internal_overall": 0.4707,
+    "spatial_taylor": 0.7501,
+    "spatial_r": 0.5129,
+    "spatial_sigma": 0.9126,
+    "fp_score": 0.9263,
+    "pred_lm_ratio": 1.183,
+    "fire_amp": 3.154,
+    "params_json": "models/C/params.samerica.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_samerica/ED-ModelC-samerica-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 876,
+    "internal_overall": 0.466,
+    "spatial_taylor": 0.7326,
+    "spatial_r": 0.4744,
+    "spatial_sigma": 1.0828,
+    "fp_score": 0.9702,
+    "pred_lm_ratio": 0.9181,
+    "fire_amp": 5.448,
+    "params_json": "models/C/params.samerica.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_samerica/ED-ModelC-samerica-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1106,
+    "internal_overall": 0.457,
+    "spatial_taylor": 0.7323,
+    "spatial_r": 0.5716,
+    "spatial_sigma": 0.7656,
+    "fp_score": 0.9723,
+    "pred_lm_ratio": 0.9825,
+    "fire_amp": 5.448,
+    "params_json": "models/C/params.samerica.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_samerica/ED-ModelC-samerica-k3"
+  }
+]

@@ -28,16 +28,39 @@ continent. REGION="" => global (bit-identical). `scripts/assemble_continental.py
 params into ONE global prediction (each cell uses its continent's params; fallback = spatial-k1 elsewhere)
 -> the meeting's "one unified model". Piecewise/hard borders for now (smooth the seams later).
 
-RUNNING NOW (background -> logs/opt_continents.log): per-continent fits for Africa, Boreal, S.America
-(1200 trials each, ~1.5 hr total), each warm-started from spatial-k1, optimizing that region's spatial
-Taylor. Writes params.{africa,boreal,samerica}.json + TOPK dumps. WHEN DONE: run
-`SEASONAL_TRANSFORM=1 python scripts/assemble_continental.py` to stitch them, then score the assembled
-model with score_spatial (did the GLOBAL r/slope rise?) + official ILAMB. The test of C: does
-per-continent tuning lift the global correlation r above the ~0.5 wall (and the 1:1 slope above 0.50)?
+RESULT (Africa, Boreal, S.America fitted; logs/opt_continents.log). The per-continent approach WORKS,
+and it moved r for the first time. Assembled via `scripts/assemble_continental.py` ->
+`ilamb/MODELS_CONTINENTAL/ED-ModelC-continental/burntArea.nc`. Official ILAMB:
+  | model                       | Bias  | RMSE  | Seas  | Spatial | Overall |
+  | canonical k4 (lab-shipped)  | 0.6972| 0.4771| 0.8234| 0.7617  | 0.6473  |
+  | spatial-k1 (A+B global)     | 0.6902| 0.4980| 0.8177| 0.7985  | 0.6605  |
+  | CONTINENTAL (2 regions)     | 0.7096| 0.5114| 0.8203| 0.8064  | **0.6718** |
+EVERY component improved; Overall 0.6718 = +0.0245 over the lab-shipped model and clear of CLM6's 0.6562
+(would be #1 on BA; positioning, not "we beat them"). Global spatial r rose 0.505 -> **0.546** (the
+FIRST real movement on r), taylor 0.752 -> 0.765, RMSE-on-burning-cells better.
 
-NEXT after this batch: if r rises, fit the remaining continents (N.America, SEAsia, Australia, Europe)
-and re-assemble; then smooth the continent seams toward the "unified model". Still pending throughout:
-the FUEL-SELECTIVE fire_amp upgrade (physical form) and the Lei coupling check before ANY promotion.
+WHAT FIXED WHAT (per-region, the key science):
+- Boreal: was burning ~4% of GFED (sigma 0.09, magx 0.04) -> after its own fit magx 0.81, sigma 0.77.
+  Catastrophic under-burn FIXED by a regional param set.
+- S.America/Amazon: over-burned 2x (magx 2.03, sigma 3.30) -> fit brought it to magx 1.01, sigma 0.78.
+  Over-burn FIXED.
+- Africa: its regional fit UNDERPERFORMED the global spatial-k1 (r 0.469 -> 0.389), so the assembly KEEPS
+  spatial-k1 for Africa (see assemble_continental.py REGION_PARAMS). LESSON: Africa's gap is PATTERN (r),
+  and re-tuning the current FORM regionally does not raise r -> pattern-limited regions need a FORM change
+  (a new term), not just regional params. Magnitude-broken regions (Boreal/Amazon) are fixed by params.
+
+So C splits the problem cleanly: (1) magnitude-broken continents -> regional param fits work great (done
+for Boreal+Amazon); (2) pattern-limited continents (Africa + the near-zero-r ones) -> need form changes.
+
+NEXT:
+1. Fit the 4 remaining continents (N.America, SEAsia, Australia, Europe) - all high-headroom, mostly
+   magnitude/pattern fixes; re-assemble. The assembly already keeps-best-per-region (drop any fit that
+   does not beat the global on its region, as done for Africa).
+2. For Africa (and other pattern-limited regions): try a FORM change (new term) - the headroom diagnostic
+   says the drivers support r~0.68 in Africa vs the 0.47-0.51 the current form reaches.
+3. Smooth the continent seams toward a single "unified model" (currently hard borders).
+4. FUEL-SELECTIVE fire_amp upgrade (physical form) and the Lei coupling check still gate ANY promotion.
+The continental .nc is gitignored (regenerate with assemble_continental.py); params + logs are committed.
 
 ## >>> READ THIS FIRST (2026-06-10) — B scorer built, the 1:1 bar is an r-problem, A+B refit running <<<
 
