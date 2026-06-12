@@ -87,10 +87,10 @@ plt.close(fig); print("wrote 02_ffire_map.png")
 
 # ---------- 03 global timeseries ----------
 area = cell_area_km2(lat, lon)
-ba_mha_m = (ba_m * area[None] / 1e4).sum((1, 2))                       # Mha per month
+ba_mha_m = (np.nan_to_num(ba_m) * area[None] / 1e4).sum((1, 2))        # Mha per month
 ba_mha_g = (np.nan_to_num(ba_g) * area[None] / 1e4).sum((1, 2))
 areaf = cell_area_km2(latf, lonf) * 1e6                                # m2
-ff_pg_m = (ff_m * areaf[None]).sum((1, 2)) * (SEC_YR / 12) / 1e12      # PgC per month
+ff_pg_m = (np.nan_to_num(ff_m) * areaf[None]).sum((1, 2)) * (SEC_YR / 12) / 1e12  # PgC per month
 ff_pg_g = (np.nan_to_num(ff_g) * (cell_area_km2(latg, long_) * 1e6)[None]).sum((1, 2)) * (SEC_YR / 12) / 1e12
 tmonths = np.arange(192) / 12.0 + 2001
 fig, ax = plt.subplots(2, 1, figsize=(13, 7), sharex=True)
