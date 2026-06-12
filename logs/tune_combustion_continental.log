@@ -1,0 +1,112 @@
+===== Africa =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=Africa, train 2001-2010) ...
+  active cells in objective: 7086
+  global-betas baseline on this mask: overall=0.5178 (b=0.753 r=0.266 s=0.680 sp=0.387)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 23.3 min
+Best #1444: overall=0.6354 (b=1.000 r=0.310 s=0.680 sp=0.512)
+  vs global-betas baseline 0.5178  (delta +0.1176)
+  params: {'beta_leaf': 0.02065330956173769, 'beta_fine': 0.050207055770413976, 'beta_coarse': 0.007067111190297189, 'beta_litter': 0.8350885618286968, 'D_REF': 110.5809745622207}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.Africa.json
+===== S.America =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=S.America, train 2001-2010) ...
+  active cells in objective: 6450
+  global-betas baseline on this mask: overall=0.5425 (b=0.749 r=0.349 s=0.731 sp=0.328)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 24.0 min
+Best #3380: overall=0.6701 (b=0.999 r=0.325 s=0.769 sp=0.604)
+  vs global-betas baseline 0.5425  (delta +0.1276)
+  params: {'beta_leaf': 0.5169386558659017, 'beta_fine': 0.559401484791287, 'beta_coarse': 0.9969113096311748, 'beta_litter': 0.06380305218022636, 'D_REF': 389.67873536734686}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.SAmerica.json
+===== N.America =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=N.America, train 2001-2010) ...
+  active cells in objective: 8507
+  global-betas baseline on this mask: overall=0.5457 (b=0.708 r=0.346 s=0.543 sp=0.622)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 25.3 min
+Best #2643: overall=0.6206 (b=0.999 r=0.323 s=0.542 sp=0.538)
+  vs global-betas baseline 0.5457  (delta +0.0749)
+  params: {'beta_leaf': 0.4967866442480248, 'beta_fine': 0.1691959951666713, 'beta_coarse': 0.5596430304068323, 'beta_litter': 0.6474049194619776, 'D_REF': 101.27493516473109}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.NAmerica.json
+===== Boreal =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=Boreal, train 2001-2010) ...
+  active cells in objective: 9742
+  global-betas baseline on this mask: overall=0.4077 (b=0.438 r=0.362 s=0.710 sp=0.136)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 25.2 min
+Best #1613: overall=0.5009 (b=0.606 r=0.349 s=0.710 sp=0.385)
+  vs global-betas baseline 0.4077  (delta +0.0932)
+  params: {'beta_leaf': 0.982634520810781, 'beta_fine': 0.9794643854997054, 'beta_coarse': 0.9984201678484, 'beta_litter': 0.9976691987018891, 'D_REF': 120.68388686942411}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.Boreal.json
+===== SEAsia =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=SEAsia, train 2001-2010) ...
+  active cells in objective: 4490
+  global-betas baseline on this mask: overall=0.5750 (b=0.775 r=0.332 s=0.704 sp=0.531)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 24.1 min
+Best #3627: overall=0.6609 (b=1.000 r=0.319 s=0.742 sp=0.586)
+  vs global-betas baseline 0.5750  (delta +0.0859)
+  params: {'beta_leaf': 0.2615694427233774, 'beta_fine': 0.852322661032441, 'beta_coarse': 0.9923646905215703, 'beta_litter': 0.005237025369372409, 'D_REF': 544.3621048112217}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.SEAsia.json
+===== Australia =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=Australia, train 2001-2010) ...
+  active cells in objective: 2918
+  global-betas baseline on this mask: overall=0.4184 (b=0.432 r=0.348 s=0.528 sp=0.423)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 23.9 min
+Best #444: overall=0.4662 (b=0.492 r=0.315 s=0.528 sp=0.655)
+  vs global-betas baseline 0.4184  (delta +0.0478)
+  params: {'beta_leaf': 0.36115120852288507, 'beta_fine': 0.37466640700398746, 'beta_coarse': 0.8038561923977812, 'beta_litter': 0.9994674708938036, 'D_REF': 102.17295491720658}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.Australia.json
+===== Europe =====
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-continental, region=Europe, train 2001-2010) ...
+  active cells in objective: 4057
+  global-betas baseline on this mask: overall=0.5197 (b=0.686 r=0.295 s=0.741 sp=0.416)
+
+TPE n_trials=4000 timeout=2.0h
+
+done, 4000 trials in 24.0 min
+Best #356: overall=0.5741 (b=1.000 r=0.222 s=0.741 sp=0.259)
+  vs global-betas baseline 0.5197  (delta +0.0544)
+  params: {'beta_leaf': 0.7660461264764972, 'beta_fine': 0.6990290896895752, 'beta_coarse': 0.9374392234924745, 'beta_litter': 0.9997251841319927, 'D_REF': 159.7404766400374}
+wrote /Volumes/RICHIE - T7/FIRE_OFFLINE/models/combustion-params-continental/betas.Europe.json

@@ -1,7 +1,40 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-06-11. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-06-12. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-06-12) — per-continent COMBUSTION closes the emissions regression <<<
+
+CHASED the BA-vs-emissions tradeoff (next-step #2). The continental BA win had cost ~0.02 on emissions
+(0.6534 -> 0.6334) because the single global beta set no longer mapped the savanna-shifted BA onto
+GFED5's fFire pattern. FIX: fit combustion betas (beta_{leaf,fine,coarse,litter} + D_REF) SEPARATELY per
+continent, same REGION machinery + keep-best-per-region as the BA work. Canonical untouched, not promoted.
+
+RESULT (official ILAMB, single run, GFED5 fFire):
+  | fFire model                          | Bias | RMSE  | Seas  | Spatial | Overall |
+  | canonical k4 (ED-ModelC-Hybrid)      |0.6914|0.5112 |0.8249 | 0.7282  | 0.6534  |
+  | continental + GLOBAL betas (-Hurtt)  |0.6913|0.5056 |0.7783 | 0.6861  | 0.6334  |
+  | continental + PER-CONTINENT betas    |0.6919|0.5088 |0.7942 |**0.7412**| **0.6490** |
+Emissions 0.6334 -> **0.6490 (+0.0156)**: spatial 0.686 -> 0.741 (now ABOVE canonical's 0.728), regression
+vs canonical shrunk from -0.020 to **-0.0044**. Magnitude 3.21 PgC/yr (GFED5 3.40). All 7 regions adopted
+(each beat global betas on its own box by +0.05..+0.13 overall). Remaining shortfall is the SEASONAL cycle
+(0.794 vs 0.825) - the same seasonal-vs-spatial frontier as BA, not a magnitude/pattern problem.
+SO THE TRADEOFF IS LARGELY RESOLVED: continental model is now BA 0.6723 (big win) AND emissions ~matched
+(0.6490 vs 0.6534), making it defensible to promote on BOTH axes.
+
+WHAT'S ON DISK (gitignored .nc, committed params/scripts):
+- `ilamb/MODELS_LEADERBOARD_FFIRE_GFED5/ED-ModelC-continental-percont/fFire.nc` - the new stitched fFire.
+- `models/combustion-params-continental/betas.{Africa,SAmerica,NAmerica,Boreal,SEAsia,Australia,Europe}.json`
+- `scripts/tune_combustion_continental.py` (REGION-restricted beta tuner),
+  `scripts/assemble_combustion_continental.py` (keep-best stitch + scoreable fFire).
+REGENERATE: `for R in Africa S.America N.America Boreal SEAsia Australia Europe; do REGION=$R python
+scripts/tune_combustion_continental.py; done` then `python scripts/assemble_combustion_continental.py`.
+SCORE: ILAMB build_dir MUST be on local APFS (e.g. /tmp), NOT the exFAT drive - macOS regenerates ._*
+AppleDouble files in the output dir mid-run and ILAMB's harvest step crashes reading them as NetCDF.
+
+NEXT (unchanged priority): #1 send Lei the email (LEI_EMAIL_DRAFT.md) - still gates promotion. The
+emissions tradeoff (#2) is now ANSWERED. Optional: chase the fFire seasonal cycle (0.794->~0.825) with a
+seasonal-aware combustion objective (analogue of SEAS_W on BA).
 
 ## >>> SESSION-END SUMMARY (2026-06-11) — read this, then the dated blocks below for detail <<<
 

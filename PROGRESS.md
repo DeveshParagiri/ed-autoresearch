@@ -4,6 +4,13 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+- 2026-06-12: Per-continent COMBUSTION betas close the continental emissions regression. Fit
+  beta_{leaf,fine,coarse,litter}+D_REF per continent (REGION-restricted, keep-best). Official fFire
+  0.6334 -> 0.6490 (spatial 0.686 -> 0.741, above canonical 0.728); vs canonical k4 0.6534 the gap is now
+  only -0.0044 (was -0.020). Magnitude 3.21 PgC/yr. Remaining shortfall = seasonal cycle (0.794 vs 0.825).
+  New: scripts/tune_combustion_continental.py, assemble_combustion_continental.py, betas.<region>.json,
+  MODELS_LEADERBOARD_FFIRE_GFED5/ED-ModelC-continental-percont/fFire.nc. Canonical untouched.
+
 ---
 
 ## 2026-06-11 (session end) — handoff to Mac mini
