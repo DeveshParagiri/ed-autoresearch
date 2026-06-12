@@ -6,6 +6,21 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
 
 ---
 
+## 2026-06-11 (session end) — handoff to Mac mini
+
+Session summary (full detail in the entries below + HANDOFF SESSION-END SUMMARY). Built the continental
+Model C (per-continent params + fuel-driven savanna term): official BA 0.6723 (best, >CLM6 0.6562),
+magnitude 1.03x, 1:1 slope 0.34->0.65, r 0.49->0.70. fFire 0.6334 (a ~0.02 regression vs canonical
+0.6534; BA-vs-emissions tradeoff). Both held-out validations PASS (years -0.05, cells -0.015) = genuine,
+not overfit. Read Lei's ED source: approach is consistent (the fuel fix IS ED's native fire mechanism),
+4 ED changes documented. Figures in NEW MAPS/continental_model/. NOTHING promoted; canonical untouched.
+NEXT: (1) send Lei the email (LEI_EMAIL_DRAFT.md) for coupled-side answers; (2) decide BA-vs-emissions
+tradeoff (accept BA win, or per-continent combustion to lift the 0.686 emissions spatial); (3) promotion
+is Richard's call, gated on the Lei coupling check. Resume on Mac via git pull (code+params+docs); .nc
+outputs + big data are gitignored, regenerate from committed params (assemble_continental.py ->
+compute_emissions.py -> figures_continental_model.py); Mac may be system-python-only (no optuna/ILAMB),
+so run the optimizer + official ILAMB on the edfire/Windows machine.
+
 ## 2026-06-11 (later 2) — Continental figures + fFire: BA-vs-emissions tradeoff surfaced
 
 Built the full figure set for the continental model vs GFED5 (NEW MAPS/continental_model/: BA map, fFire

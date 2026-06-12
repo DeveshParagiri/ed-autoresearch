@@ -1,7 +1,62 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-06-09. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-06-11. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> SESSION-END SUMMARY (2026-06-11) — read this, then the dated blocks below for detail <<<
+
+WHERE WE ARE. Built a NEW best model this session: the **continental Model C** (per-continent parameters
++ a fuel-driven savanna term). It is NOT promoted; canonical on disk is still tropfix2-k4, and the
+lab/Lei-shipped model is still PRE-tropfix2. The continental model lives at
+`ilamb/MODELS_CONTINENTAL/ED-ModelC-continental/burntArea.nc` (gitignored; regenerate with
+`SEASONAL_TRANSFORM=1 python scripts/assemble_continental.py`).
+
+THE RESULT (official ILAMB, single-model runs):
+- Burned area: **0.6723** (was canonical 0.6473; above CLM6 0.6562), magnitude **1.03x** GFED5, per-cell
+  1:1 slope **0.34 -> 0.65** (r 0.49 -> 0.70). This is the big win on George's 1:1 bar.
+- Fire emissions: **0.6334** (a ~0.02 REGRESSION vs canonical k4 0.6534), magnitude 3.42 vs 3.40 PgC/yr.
+  Tradeoff: emissions = BA x fuel, so moving fire to low-biomass savanna + cutting the Amazon over-burn
+  removes carbon GFED5 puts in higher-fuel forest fires. BA win, emissions secondary cost.
+- BOTH held-out validations PASS: years (fit 2001-2012, test 2013-2016) r drop -0.05; cells (blocked
+  10deg-tile CV) r drop -0.015. The result is genuine structure, not overfitting.
+
+HOW IT WAS BUILT (the arc, all flag-gated, canonical-safe):
+1. B (spatial scorer, score_spatial.py) showed the 1:1 bar is an r problem (slope=r*sigma, r~0.5 capped).
+2. A (fire_amp / then the physical FUEL_AMP fuel-scaled amplitude) let the rate exceed 1.
+3. Per-continent fits (REGION env) + the Africa FUEL form (diag_africa_residual.py found Model C had GPP
+   backwards in savanna) broke the r wall: Africa r 0.47 -> 0.66. assemble_continental.py stitches them.
+4. SEAS_W blended seasonal into the per-continent objective to recover the seasonal cycle.
+
+ED COUPLING CHECK (read Lei's ED_Source_Code/GlobalED): our approach is fundamentally CONSISTENT - the
+fuel fix IS ED's native fire (fuel*fp1*dryness^10), the transform matches ED's 1-exp disturbance, rate>1
+is allowed (cap fire_max_disturbance_rate=0.2 needs raising), per-region branching exists. 4 concrete ED
+changes documented for Lei (see the 2026-06-11 detail block). The 2x coupled over-burn Lei saw = GPP/
+biomass feedback -> recalibrate in coupled run, structure transfers.
+
+FIGURES: NEW MAPS/continental_model/ (BA map, fFire map, global timeseries, regional seasonal, 1:1
+scatter; gitignored, regenerate with `python scripts/figures_continental_model.py`). Continental betas at
+models/combustion-params-continental/betas.gfed5.json.
+
+WHAT'S NEXT (in priority order):
+1. **Send Lei the email** (draft saved in `LEI_EMAIL_DRAFT.md`) to get the coupled-side answers we need
+   (monthly fire timing / PATCH_FREQ, the fire_max cap, per-site region tagging, his coupled refit). This
+   gates promotion.
+2. **Decide the BA-vs-emissions tradeoff**: accept the BA win as primary (George's bar) with emissions
+   secondary, OR chase the emissions pattern - the combustion step uses one global beta set; a
+   per-continent / fuel-aware combustion (same idea that fixed BA) could lift the 0.686 emissions spatial
+   score. Optional follow-up.
+3. **Promotion decision** (Richard's call) - gated on the Lei coupling check. If promoting, back up
+   canonical first (CLAUDE.md table), swap params/BA/betas/fFire, update the canonical table + scores.
+4. Optional deeper BA: N.America + Australia still on the global model (their fits regressed); the seasonal
+   frontier in Africa/Amazon (can't gain seasonal without losing spatial with the current form).
+
+RESUMING ON A NEW MACHINE (Mac mini): `git pull` gets all code + params + docs. The .nc OUTPUTS and big
+data are gitignored - you need the driver dumps (global_baseline_*.nc), GFED5 refs, CRUJRA npy, and the
+ed-fire/edfire conda env present (Drive sync usually brings the data; recreate the env from
+environment.yml). NOTE per CLAUDE.md: a Mac with system-python-only has NO optuna/ILAMB - you can
+diagnose/emulate but must run the optimizer + official ILAMB on a machine with the env (Windows/edfire).
+Regenerate the continental model from committed params: assemble_continental.py -> compute_emissions.py
+(continental betas) -> figures_continental_model.py.
 
 ## >>> READ THIS FIRST (2026-06-11) — ED-source coupling consistency CHECKED + held-out validation <<<
 
