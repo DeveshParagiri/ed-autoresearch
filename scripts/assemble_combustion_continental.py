@@ -22,10 +22,19 @@ from compute_emissions import load_model_ba, load_agb_2001_2016, load_csoil_2001
     load_dbar_2001_2016, write_ffire, SEC_PER_MONTH
 from refit_modelA_multiobj import four_scores
 
+import os
 REPO = Path(__file__).resolve().parents[1]
 BA_MODEL = "ED-ModelC-continental"
 CDIR = REPO / "models" / "combustion-params-continental"
-OUT_NAME = "ED-ModelC-continental-percont"
+SEASDIR = REPO / "models" / "combustion-params-continental-seas"
+# CAND env: "overall" (default) picks per region the beta set with the highest TRUE
+# region overall across {global, original, seasonal}. "seas" FORCES the seasonal-aware
+# betas per region (keep-best only vs global) to test the seasonal lever's official effect.
+CAND = os.environ.get("CAND", "overall")
+CAND_DIRS = [CDIR, SEASDIR] if CAND == "overall" else [SEASDIR]
+OUT_NAME = os.environ.get("OUT_NAME",
+                          "ED-ModelC-continental-percont" if CAND == "overall"
+                          else "ED-ModelC-continental-percont-seas")
 REGIONS = ["Africa", "S.America", "N.America", "Boreal", "SEAsia", "Australia", "Europe"]
 
 
@@ -55,18 +64,22 @@ def overall_on(mask, betas, dref):
 adopted = {}
 for reg in REGIONS:
     tag = reg.replace(".", "")
-    f = CDIR / f"betas.{tag}.json"
-    if not f.exists():
-        print(f"[skip] {reg}: betas.{tag}.json not found")
-        continue
-    rb, rd = betas_of(json.load(open(f)))
     m = region_mask(lat_t, lon_t, reg)
-    o_reg, o_glob = overall_on(m, rb, rd), overall_on(m, gbetas, gdref)
-    if o_reg > o_glob + 1e-4:
-        adopted[reg] = (rb, rd)
-        print(f"[adopt] {reg}: regional {o_reg:.4f} > global {o_glob:.4f} (+{o_reg-o_glob:.4f})")
+    o_glob = overall_on(m, gbetas, gdref)
+    best = (o_glob, None, "global")   # (score, (betas,dref), label)
+    for cd in CAND_DIRS:
+        f = cd / f"betas.{tag}.json"
+        if not f.exists():
+            continue
+        rb, rd = betas_of(json.load(open(f)))
+        o = overall_on(m, rb, rd)
+        if o > best[0] + 1e-4:
+            best = (o, (rb, rd), cd.name)
+    if best[1] is None:
+        print(f"[keep-global] {reg}: global {o_glob:.4f} best")
     else:
-        print(f"[keep-global] {reg}: regional {o_reg:.4f} <= global {o_glob:.4f}")
+        adopted[reg] = best[1]
+        print(f"[adopt] {reg}: {best[2]} {best[0]:.4f} > global {o_glob:.4f} (+{best[0]-o_glob:.4f})")
 
 # --- build the stitched fFire on the full 0.5deg grid -----------------------------
 ba, lat, lon, times = load_model_ba(BA_MODEL)

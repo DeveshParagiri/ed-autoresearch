@@ -4,6 +4,14 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+- 2026-06-12 (later): Seasonal-aware combustion (SEAS_W on the beta objective) does NOT help - stopped
+  early at 6/7 regions. Structural: betas only rescale per-cell magnitude; fFire's month-to-month shape
+  is inherited from the BA seasonal cycle, which the combustion step does not touch. SEAS_W=0.4 fits move
+  seas negligibly (Africa 0.680->0.684, N.America/Boreal unchanged) and overall not at all. Emissions
+  seasonal gap is upstream in BA seasonality. Production emissions model stays ED-ModelC-continental-percont
+  (0.6490). 6/7 seas betas saved (Europe unfit); resume notes in HANDOFF. Also fixed continental figures
+  (NaN-over-ocean: model BA/fFire line was missing in 03_global_timeseries + 04_regional_seasonal).
+
 - 2026-06-12: Per-continent COMBUSTION betas close the continental emissions regression. Fit
   beta_{leaf,fine,coarse,litter}+D_REF per continent (REGION-restricted, keep-best). Official fFire
   0.6334 -> 0.6490 (spatial 0.686 -> 0.741, above canonical 0.728); vs canonical k4 0.6534 the gap is now

@@ -51,8 +51,12 @@ def main():
     ap.add_argument("--timeout-h", type=float, default=2.0)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default=str(REPO / "models" / "combustion-params-continental"))
+    ap.add_argument("--seas-w", type=float, default=float(os.environ.get("SEAS_W", 0.0)),
+                    help="Blend weight on the seasonal-cycle score: objective = "
+                         "(1-w)*overall + w*seas. 0 = pure overall (original).")
     args = ap.parse_args()
     region = args.region
+    seas_w = args.seas_w
     out_dir = Path(args.out); out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Loading inputs (BA={args.ba_model}, region={region or 'GLOBAL'}, train 2001-2010) ...")
@@ -89,7 +93,8 @@ def main():
         overall, (b, r, s, sp) = overall_of(betas, d_ref)
         for k, v in zip(("bias", "rmse", "seas", "spat", "overall"), (b, r, s, sp, overall)):
             trial.set_user_attr(k, v)
-        return float(1.0 - overall)
+        blended = (1.0 - seas_w) * overall + seas_w * s
+        return float(1.0 - blended)
 
     sampler = optuna.samplers.TPESampler(seed=args.seed, multivariate=True, group=True,
                                          n_startup_trials=200)

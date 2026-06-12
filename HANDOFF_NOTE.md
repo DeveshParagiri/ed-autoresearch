@@ -3,6 +3,31 @@
 Last updated: 2026-06-12. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-06-12, later) — seasonal-aware combustion does NOT help (stopped early) <<<
+
+Tried the SEAS_W lever on the COMBUSTION objective to recover the fFire seasonal gap (0.794 vs
+canonical 0.825). FINDING: it does not work, and the reason is structural, not tuning. Combustion is
+fFire = BA x (beta-weighted fuel) x dryness-gate; the betas are 4 per-pool scalars + D_REF that only
+rescale per-cell MAGNITUDE. The month-to-month SHAPE of fFire is inherited almost entirely from the BA
+seasonal cycle, which this step does not touch. Evidence from the SEAS_W=0.4 fits (vs the SEAS_W=0
+fits): Africa seas 0.680->0.684, S.America 0.769->0.780, N.America 0.542->0.542 (no change), Boreal
+0.710->0.710 (no change). The seasonal score barely moves and overall does not improve. So the emissions
+seasonal gap lives UPSTREAM in the burned-area seasonality, not in combustion. The real lever would be
+improving the continental-BA seasonal cycle (the BA-side SEAS_W work), which trades against the BA
+spatial win - a separate, bigger effort, not pursued now.
+
+STOPPED the run early (Richard's call) at 6/7 regions to continue on a different machine. The per-cont
+emissions result STANDS at official fFire 0.6490 (the block below) - the seasonal-aware run would not
+have beaten it (best case ~0.650, still under canonical 0.6534; keep-best assembler cannot regress it).
+
+STATE ON DISK: 6/7 seasonal betas in models/combustion-params-continental-seas/betas.{Africa,SAmerica,
+NAmerica,Boreal,SEAsia,Australia}.json (Europe NOT fitted - run was killed mid-Europe). To RESUME if
+ever wanted: `REGION=Europe SEAS_W=0.4 python scripts/tune_combustion_continental.py --out
+"$PWD/models/combustion-params-continental-seas"`, then `CAND=seas python scripts/
+assemble_combustion_continental.py` writes ED-ModelC-continental-percont-seas/fFire.nc to officially
+confirm the (expected null) seasonal effect. But the conclusion above already settles it - this is
+optional confirmation only. The PRODUCTION emissions model is still ED-ModelC-continental-percont (0.6490).
+
 ## >>> READ THIS FIRST (2026-06-12) — per-continent COMBUSTION closes the emissions regression <<<
 
 CHASED the BA-vs-emissions tradeoff (next-step #2). The continental BA win had cost ~0.02 on emissions
