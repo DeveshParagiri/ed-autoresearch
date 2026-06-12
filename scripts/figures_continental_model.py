@@ -107,7 +107,7 @@ plt.close(fig); print("wrote 03_global_timeseries.png")
 
 # ---------- 04 regional seasonal cycle ----------
 LON, LAT = np.meshgrid(lon, lat)
-cyc_m = ba_m.reshape(16, 12, *ba_m.shape[1:]).mean(0)                  # (12, lat, lon) monthly frac
+cyc_m = np.nan_to_num(ba_m).reshape(16, 12, *ba_m.shape[1:]).mean(0)   # (12, lat, lon) monthly frac
 cyc_g = np.nan_to_num(ba_g).reshape(16, 12, *ba_g.shape[1:]).mean(0)
 fig, axs = plt.subplots(2, 3, figsize=(15, 7.5))
 mon = np.arange(1, 13)
@@ -125,7 +125,7 @@ fig.tight_layout(); fig.savefig(OUT / "04_regional_seasonal.png", dpi=140, bbox_
 plt.close(fig); print("wrote 04_regional_seasonal.png")
 
 # ---------- 05 per-cell scatter ----------
-pm_m = ba_m.mean(0); pm_g = np.nan_to_num(ba_g).mean(0)
+pm_m = np.nan_to_num(ba_m).mean(0); pm_g = np.nan_to_num(ba_g).mean(0)
 mask = np.isfinite(pm_g) & ((pm_g * 12) > 0.01)
 mm, gg = pm_m[mask], pm_g[mask]
 r = np.corrcoef(mm, gg)[0, 1]; sigma = mm.std() / gg.std(); slope = r * sigma
