@@ -350,6 +350,12 @@ if RATE_AMP:
 if FUEL_AMP:
     LOG_PARAMS["fuel_k"] = (1e-2, 6.0)
     LOG_PARAMS["fuel_half"] = (1e-1, 1e2)
+# TROP_MASK=0 removes the tropical closed-canopy suppression params from the search,
+# reproducing Model C's pure 12-parameter (unmasked) form, i.e. the baseline that was
+# shipped to Lei. Default "1" leaves canonical behavior unchanged (trop params searched).
+if os.environ.get("TROP_MASK", "1") == "0":
+    LOG_PARAMS.pop("trop_agb_crit", None)
+    LOG_PARAMS.pop("trop_k_veg", None)
 
 # Warm start from $WARM env var (path to a params.{tag}.json) if set,
 # otherwise from params.PRE-coupled.json (the original benchmark).

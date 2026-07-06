@@ -107,7 +107,10 @@ enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
        "time_bounds": {"units": tu, "calendar": "noleap", "dtype": "float64"}}
 _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
            "cell": "MODELS_CONTINENTAL_CELL"}[ASSEMBLY]
-outdir = REPO / "ilamb" / _PARENT / _OUT_NAME
+# ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
+# folder without touching the existing MODELS_CONTINENTAL outputs.
+_OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")
+outdir = Path(_OUTDIR_ENV) if _OUTDIR_ENV else REPO / "ilamb" / _PARENT / _OUT_NAME
 outdir.mkdir(parents=True, exist_ok=True)
 ds.to_netcdf(outdir / "burntArea.nc", encoding=enc, format="NETCDF4_CLASSIC")
 print(f"\n[write] {outdir / 'burntArea.nc'}")
