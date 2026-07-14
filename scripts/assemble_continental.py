@@ -47,6 +47,15 @@ _PRESETS = {
               "S.America": "params.samericacell.json", "SEAsia": "params.seasiacell.json",
               "Europe": "params.europecell.json"},
              "ED-ModelC-continental-cell"),
+    # "clean" = the single-lever paper E: identical FORM changes to "best" but every
+    # region fit with the PURE-SPATIAL objective (SEAS_W=0), matching Model D's objective
+    # exactly. Only the 3 seasonal-blended regions differ from "best" (borealseas->boreal,
+    # seasiaseas->seasia, europeseas->europe); Africa/S.America were already pure-spatial.
+    # This makes the D->E step change the functional-form lever alone (objective held).
+    "clean": ({"Africa": "params.africafuel.json", "Boreal": "params.boreal.json",
+               "S.America": "params.samerica.json", "SEAsia": "params.seasia.json",
+               "Europe": "params.europe.json"},
+              "ED-ModelC-continental-clean"),
 }
 REGION_PARAMS, _OUT_NAME = _PRESETS[ASSEMBLY]
 FALLBACK = "params.spatial.k1.json"
@@ -106,7 +115,8 @@ enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
        "time": {"units": tu, "calendar": "noleap", "dtype": "float64"},
        "time_bounds": {"units": tu, "calendar": "noleap", "dtype": "float64"}}
 _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
-           "cell": "MODELS_CONTINENTAL_CELL"}[ASSEMBLY]
+           "cell": "MODELS_CONTINENTAL_CELL",
+           "clean": "MODELS_CONTINENTAL_CLEAN"}[ASSEMBLY]
 # ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
 # folder without touching the existing MODELS_CONTINENTAL outputs.
 _OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")
