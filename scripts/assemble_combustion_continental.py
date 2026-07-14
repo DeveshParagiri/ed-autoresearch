@@ -24,7 +24,7 @@ from refit_modelA_multiobj import four_scores
 
 import os
 REPO = Path(__file__).resolve().parents[1]
-BA_MODEL = "ED-ModelC-continental"
+BA_MODEL = os.environ.get("BA_MODEL", "ED-ModelC-continental")
 CDIR = REPO / "models" / "combustion-params-continental"
 SEASDIR = REPO / "models" / "combustion-params-continental-seas"
 # CAND env: "overall" (default) picks per region the beta set with the highest TRUE
