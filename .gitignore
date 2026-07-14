@@ -65,3 +65,6 @@ gfed5_emissions_nature.txt
 
 # tropfix2-k4 canonical bundle (deliverable; carried on Drive, regenerable via scripts/bundle_k4_figures.py)
 ED-ModelC-tropfix2-k4/
+
+# GMD manuscript working folder — Drive-only, never committed to GitHub
+paper_gmd/

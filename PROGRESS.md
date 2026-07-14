@@ -4,6 +4,17 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+- 2026-07-14: PAPER PHASE (drive-only, paper_gmd/ is gitignored). Drafting the GMD paper. Introduction
+  P1-P5 written, every citation verified against the FULL-TEXT PDF (16+ refs read; ledgers in
+  paper_gmd/references/P{1..5}/EVIDENCE.md). Methods 2.1 (setup: closed-form model; hybrid CRUJRA climate
+  + coupled-ED GPP drivers; GFED5 reference; ILAMB 2.7.3 scoring) and 2.2 (autoresearch loop, HONEST
+  two-layer framing: an AI agent proposes form/objective changes, optuna NSGA-II fits parameters;
+  held-out-year + blocked-tile validation) written. NEXT = Methods 2.3 (C->D->E ladder + Model C
+  equation). Model D verified legitimate (spatial objective on C's form; the params "objective" string is
+  a hardcoded label). Model names ED-stock/C/D/E are PLACEHOLDERS (real names TBD with advisor). Open:
+  CRUJRA version provenance (files say v3.5, no public v3.5), a few citations to fetch (optuna, NSGA-II,
+  CRUJRA), Fig 1 schematic, ED-vs-TRENDY-v14 positioning. RESUME from paper_gmd/STATUS.md + DRAFT.md.
+
 - 2026-06-12 (later): Seasonal-aware combustion (SEAS_W on the beta objective) does NOT help - stopped
   early at 6/7 regions. Structural: betas only rescale per-cell magnitude; fFire's month-to-month shape
   is inherited from the BA seasonal cycle, which the combustion step does not touch. SEAS_W=0.4 fits move

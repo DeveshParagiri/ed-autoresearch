@@ -1,7 +1,25 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-06-12. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-07-14. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-07-14) — PROJECT IS NOW DRAFTING THE GMD PAPER <<<
+
+The work has moved from model development to WRITING THE GMD PAPER ("Development and Optimization of a
+Global Fire Model using Autoresearch AI"). ALL paper work lives in `paper_gmd/`, which is GITIGNORED
+(drive-only, NOT on GitHub) — so `git log` will NOT show it.
+
+>>> TO RESUME: read `paper_gmd/STATUS.md` (the exact resume point) then `paper_gmd/DRAFT.md` (all prose). <<<
+
+Where we are (2026-07-14): Introduction P1-P5 DONE and fully verified; Methods 2.1 and 2.2 DONE. NEXT =
+Methods 2.3 (the C->D->E version ladder + Model C's governing equation). Every citation is verified
+against the full-text PDF (ledgers in `paper_gmd/references/P{1..5}/EVIDENCE.md`); Methods claims are
+verified against the code. The verified "what the method actually is" is in `paper_gmd/METHOD_FRAMING.md`.
+Model names ED-stock/C/D/E are PLACEHOLDERS (advisor wants real names, TBD). All open TODOs and the full
+file map are in `paper_gmd/STATUS.md`.
+
+The 2026-06-12 and earlier blocks below describe the pre-paper MODEL-DEVELOPMENT phase (still valid as
+background, but the paper phase above supersedes them for "what to do next").
 
 ## >>> READ THIS FIRST (2026-06-12, later) — seasonal-aware combustion does NOT help (stopped early) <<<
 
