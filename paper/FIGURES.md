@@ -1,14 +1,16 @@
-# Paper figures (Typst)
+# Paper figures
 
-Source: `paper.typ` → compile with `typst compile paper.typ paper-typst.pdf`
+These are the manuscript panels used by `paper.typ`. They come from the paper figure set (not from offline re-plot scripts).
 
-| File | Slot |
+| File | Slot in Typst PDF |
 |---|---|
-| `figures/fig1_autoresearch_loop.jpg` | Fig. 1 methods flowchart |
-| `figures/fig2_ba_maps.jpg` | Fig. 2 BA maps ladder |
-| `figures/fig3_scatter.jpg` | Fig. 3 per-cell scatter |
-| `figures/fig4_ffire.jpg` | Fig. 4 fFire maps |
-| `figures/extfig1_diff.jpg` | Diff maps (in main text as Fig. after maps) |
-| `figures/extfig2_seasonal.jpg` | Regional seasonal cycles |
+| `figures/fig1_autoresearch_loop.jpg` | Figure 1 |
+| `figures/fig2_ba_maps.jpg` | Figure 2 |
+| `figures/extfig1_diff.jpg` | Figure 3 |
+| `figures/fig3_scatter.jpg` | Figure 4 |
+| `figures/fig4_ffire.jpg` | Figure 5 |
+| `figures/extfig2_seasonal.jpg` | Figure 6 |
 
-Legacy PNG stand-ins (`fig_maps_ladder.png` etc.) are unused by Typst.
+```bash
+cd paper && typst compile paper.typ paper-typst.pdf
+```
