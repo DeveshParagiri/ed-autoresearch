@@ -1,0 +1,13 @@
+{
+  "name": "Model E (paper Table 1: continental + fuel-Africa, pre-seasonal)",
+  "fallback": "fallback.json",
+  "seasonal_transform": true,
+  "regions": {
+    "Africa": "africa.json",
+    "Boreal": "boreal.json",
+    "S.America": "samerica.json",
+    "SEAsia": "seasia.json",
+    "Europe": "europe.json"
+  },
+  "note": "N.America and Australia keep fallback. Pre-seasonal continent fits match paper Overall ~0.6646."
+}

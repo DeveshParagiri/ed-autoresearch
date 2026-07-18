@@ -15,7 +15,8 @@ from pathlib import Path
 import numpy as np, optuna, xarray as xr
 import sys
 sys.path.insert(0, "scripts")
-from refit_modelA_multiobj import four_scores
+from scores import four_scores
+from compute_emissions import resolve_ba_path
 
 REPO = Path(__file__).resolve().parents[1]
 SEC_PER_MONTH = (365.25 / 12) * 86400.0
@@ -24,7 +25,7 @@ FF_SCALE = 1e10  # scale fFire to avoid underflow in spatial correlation
 
 
 def load_inputs(model_name, years=(2001, 2010)):
-    ds_ba = xr.open_dataset(REPO / "ilamb" / "MODELS_LEADERBOARD" / model_name / "burntArea.nc")
+    ds_ba = xr.open_dataset(resolve_ba_path(model_name))
     yr_ba = np.array([t.year for t in ds_ba["time"].values])
     m_ba = (yr_ba >= years[0]) & (yr_ba <= years[1])
     ba = np.nan_to_num(ds_ba["burntArea"].values[m_ba].astype(np.float32))

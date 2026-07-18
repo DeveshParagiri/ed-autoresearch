@@ -33,10 +33,9 @@ GFED_NC = REPO / "ilamb_ref_official" / "DATA" / "burntArea" / "GFED5" / "burntA
 
 # Built-in comparison set: (label, path). Lei-shipped = the lab-official model.
 DEFAULT_MODELS = [
-    ("Lei-shipped (PRE-tropfix2)", REPO / "backups_PRE-tropfix2" / "burntArea.canonical.nc"),
-    ("tropfix2-k4 (repo canonical)", REPO / "ilamb" / "MODELS" / "ED-ModelC-final" / "burntArea.nc"),
-    ("seasonal-k1 (transform refit)",
-     REPO / "ilamb" / "MODELS_TOPK_seasonal" / "ED-ModelC-seasonal-k1" / "burntArea.nc"),
+    ("Model C", REPO / "ilamb" / "MODELS" / "paper" / "Model-C" / "burntArea.nc"),
+    ("Model D", REPO / "ilamb" / "MODELS" / "paper" / "Model-D" / "burntArea.nc"),
+    ("Model E", REPO / "ilamb" / "MODELS" / "paper" / "Model-E" / "burntArea.nc"),
 ]
 
 

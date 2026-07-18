@@ -19,9 +19,8 @@ Grid: optimizer works at 1-deg; the 0.5-deg dump and GFED5 ref are coarsened by
 a 2x2 mean.
 
 Output:
-  models/C/params.json                    (overwrite — becomes the new Model C)
+  models/work/params.json                 (re-fit workspace; paper set is models/paper/)
   ilamb/MODELS/ED-ModelC-final/burntArea.nc   (regenerated under new params)
-  models/C/params.PRE-coupled.json        (backup of previous params)
 """
 from __future__ import annotations
 import gc, json, os, sys, time, shutil
@@ -36,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen
 
 REPO         = Path(__file__).resolve().parents[1]
-MODELS_DIR   = REPO / "models" / "C"
+MODELS_DIR   = REPO / "models" / "work"  # re-fit outputs; paper params live in models/paper/
 DUMP_NC      = REPO / "global_baseline_modelC_inputs_1997-2016.nc"
 GFED5_NC     = REPO / "ilamb_ref_official" / "DATA" / "burntArea" / "GFED5" / "burntArea.nc"
 ILAMB_OUT_NC = REPO / "ilamb" / "MODELS" / "ED-ModelC-final" / "burntArea.nc"
@@ -351,15 +350,16 @@ if FUEL_AMP:
     LOG_PARAMS["fuel_k"] = (1e-2, 6.0)
     LOG_PARAMS["fuel_half"] = (1e-1, 1e2)
 
-# Warm start from $WARM env var (path to a params.{tag}.json) if set,
-# otherwise from params.PRE-coupled.json (the original benchmark).
+# Warm start: $WARM path under models/work, else paper Model C, else work params.
 WARM_ENV = os.environ.get("WARM", "")
 if WARM_ENV:
-    WARM_FILE = MODELS_DIR / WARM_ENV
-elif (MODELS_DIR / "params.PRE-coupled.json").exists():
-    WARM_FILE = MODELS_DIR / "params.PRE-coupled.json"
-else:
+    WARM_FILE = Path(WARM_ENV) if Path(WARM_ENV).is_file() else (MODELS_DIR / WARM_ENV)
+elif (REPO / "models" / "paper" / "C.json").exists():
+    WARM_FILE = REPO / "models" / "paper" / "C.json"
+elif (MODELS_DIR / "params.json").exists():
     WARM_FILE = MODELS_DIR / "params.json"
+else:
+    WARM_FILE = REPO / "models" / "paper" / "D.json"
 print(f"[opt] warm-start from {WARM_FILE.name}")
 WARM_START = json.load(open(WARM_FILE))["params"]
 # Leave the warm-start point WITHOUT the tropical params so the smoke-test/warm
@@ -501,10 +501,7 @@ def write_ba_nc(pred, path):
 
 
 def main():
-    backup = MODELS_DIR / "params.PRE-coupled.json"
-    if not backup.exists():
-        shutil.copy(MODELS_DIR / "params.json", backup)
-        print(f"[backup] {backup}")
+    # Re-fits write only under models/work/; paper params in models/paper/ stay put.
 
     # Smoke test the warm-start point first
     warm_pred = predict(WARM_START)

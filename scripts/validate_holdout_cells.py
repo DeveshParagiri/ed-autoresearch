@@ -37,7 +37,14 @@ def metrics(m_pm, g_pm, mask):
 
 def main(argv):
     models = argv[1:] or [
-        "ilamb/MODELS_CONTINENTAL_CELL/ED-ModelC-continental-cell/burntArea.nc"]
+        "ilamb/MODELS/paper/Model-E-cell/burntArea.nc",
+        "ilamb/MODELS_CONTINENTAL_CELL/ED-ModelC-continental-cell/burntArea.nc",
+    ]
+    # filter to existing paths when defaults are used
+    _defaults = models if argv[1:] else [
+        m for m in models if (REPO / m).is_file()
+    ] or models
+    models = _defaults
     g = period_mean(GFED)
     gd = xr.open_dataset(GFED)
     land = np.isfinite(gd["burntArea"].values[0])

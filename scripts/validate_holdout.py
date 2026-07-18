@@ -43,7 +43,10 @@ def metrics(model_pm, gfed_pm, mask):
 
 def main(argv):
     models = argv[1:] or [
-        "ilamb/MODELS_CONTINENTAL_HO/ED-ModelC-continental-ho/burntArea.nc"]
+        "ilamb/MODELS/paper/Model-E-ho/burntArea.nc",
+        "ilamb/MODELS_CONTINENTAL_HO/ED-ModelC-continental-ho/burntArea.nc",
+    ]
+    models = [m for m in models if (REPO / m).is_file()] or models
     # active-fire mask from full-period GFED5 (same cells for train and test)
     gfull = period_mean(GFED, 2001, 2016)
     land = np.isfinite(xr.open_dataset(GFED)["burntArea"].values[0])

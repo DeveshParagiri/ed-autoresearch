@@ -99,7 +99,7 @@ def main():
                     help="Also print per-month table at this grid cell")
     args = ap.parse_args()
 
-    params = json.load(open(REPO / "models" / "C" / "params.json"))["params"]
+    params = json.load(open(REPO / "models" / "paper" / "C.json"))["params"]
     print(f"Using params: {params}")
 
     print("Loading drivers ...")

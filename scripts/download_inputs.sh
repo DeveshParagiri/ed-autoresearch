@@ -4,7 +4,7 @@
 # Bundle contents (~5 GB):
 #   crujra/       dbar, p_ann, p_month, t_air  (.npy, 1deg, 192 months)
 #   trendy_v14/   EDv3_S3_gpp.nc (raw, full time range)
-#   gfed/         GFED4.1s_{2001..2016}.hdf5  (for rescale)
+#   gfed/4.1/     GFED4.1s_{2001..2016}.hdf5  (land mask; gfed/5/ for GFED5 monthly)
 #   outputs/      reference burntArea.nc + params.json
 #   CHECKSUMS.txt + README.txt
 #
@@ -86,18 +86,22 @@ if [ ! -d "$SRC" ]; then
   exit 2
 fi
 
-mkdir -p "$REPO/data/crujra" "$REPO/data/trendy_v14" "$REPO/data/gfed"
+mkdir -p "$REPO/data/crujra" "$REPO/data/trendy_v14" "$REPO/data/gfed/4.1" "$REPO/data/gfed/5"
 mkdir -p "$REPO/ilamb/MODELS/ED-ModelC-final"
 
 cp -v "$SRC"/crujra/*.npy          "$REPO/data/crujra/"
 cp -v "$SRC"/trendy_v14/*.nc       "$REPO/data/trendy_v14/"
-cp -v "$SRC"/gfed/*.hdf5           "$REPO/data/gfed/"
+cp -v "$SRC"/gfed/*.hdf5           "$REPO/data/gfed/4.1/" 2>/dev/null || true
+cp -v "$SRC"/gfed/GFED4.1s_*.hdf5  "$REPO/data/gfed/4.1/" 2>/dev/null || true
+cp -v "$SRC"/gfed/GFED5*.nc        "$REPO/data/gfed/5/" 2>/dev/null || true
 cp -v "$SRC"/outputs/burntArea.nc  "$REPO/ilamb/MODELS/ED-ModelC-final/"
 # Don't overwrite the repo's params.json with the bundle's — they should be the same.
 # But warn if they differ:
-if ! diff -q "$SRC/outputs/params.json" "$REPO/models/C/params.json" >/dev/null 2>&1; then
-  echo "WARNING: bundle params.json differs from repo's models/C/params.json"
-  echo "         Keeping the repo's version. Bundle's copy is at $SRC/outputs/params.json."
+if [ -f "$REPO/models/paper/C.json" ] && [ -f "$SRC/outputs/params.json" ]; then
+  if ! diff -q "$SRC/outputs/params.json" "$REPO/models/paper/C.json" >/dev/null 2>&1; then
+    echo "WARNING: bundle params.json differs from repo's models/paper/C.json"
+    echo "         Keeping the repo's version. Bundle's copy is at $SRC/outputs/params.json."
+  fi
 fi
 
 rm -rf "$TMP"

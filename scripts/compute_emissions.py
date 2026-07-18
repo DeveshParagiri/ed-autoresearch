@@ -65,8 +65,36 @@ def load_dbar_2001_2016():
     return np.repeat(np.repeat(dbar_1, 2, axis=-2), 2, axis=-1).astype(np.float32)
 
 
+def resolve_ba_path(model_name: str) -> Path:
+    """Find burntArea.nc for a model name across paper/legacy output dirs."""
+    name = model_name
+    aliases = {
+        "ED-ModelC-continental": ["Model-E", "ED-ModelC-continental"],
+        "Model-E": ["Model-E", "ED-ModelC-continental"],
+        "Model-C": ["Model-C", "ED-ModelC-final"],
+        "Model-D": ["Model-D", "ED-ModelC-spatial-k1"],
+    }
+    names = aliases.get(name, [name])
+    roots = [
+        REPO / "ilamb" / "MODELS" / "paper",
+        REPO / "ilamb" / "MODELS_CONTINENTAL",
+        REPO / "ilamb" / "MODELS_LEADERBOARD",
+        REPO / "ilamb" / "MODELS",
+        REPO / "ilamb" / "MODELS_TOPK_spatial",
+    ]
+    for n in names:
+        for root in roots:
+            p = root / n / "burntArea.nc"
+            if p.is_file():
+                return p
+    raise FileNotFoundError(
+        f"burntArea.nc not found for model={model_name!r}. "
+        "Run scripts/reproduce_paper.py first."
+    )
+
+
 def load_model_ba(model_name):
-    p = REPO / "ilamb" / "MODELS_LEADERBOARD" / model_name / "burntArea.nc"
+    p = resolve_ba_path(model_name)
     ds = xr.open_dataset(p)
     yr = np.array([t.year for t in ds["time"].values])
     m = (yr >= 2001) & (yr <= 2016)

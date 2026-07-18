@@ -1,67 +1,54 @@
-data/
-out/
-out_terms/
+# Local env / caches
 .venv/
 __pycache__/
 *.pyc
 .DS_Store
 ._*
 *.nc.tmp
+.claude/
+.python-version
 
-# Produced outputs (regenerable; users pull from Drive bundle or run reproduce)
-ilamb/MODELS/ED-ModelC-final/burntArea.nc
-ilamb/output*/
-
-# ILAMB reference data — fetched via ilamb-fetch
-ilamb/DATA/
-
-# Large binaries — carry these via Google Drive, NOT git
+# Large data (Drive / local only)
+data/
 *.nc
-*.pdf
+global_baseline_*.nc
+ilamb_ref_official/
+ilamb/DATA/
+ilamb/MODELS/
+ilamb/MODELS_*/
+ilamb/output*/
+ilamb_out*/
+out/
+out_*/
+out_terms/
+stageB_models/
+models/work/
+models/**/*.nc
+
+# Generated figures (re-run scripts/paper_figures.py)
+figures/paper/
+NEW MAPS/
+figures/*.png
+
+# Logs and one-off exports
+logs/
+email_attachments/
+from_lei/
+for_lei_*/
+*_extract.txt
+
+# Office / slides (not the paper draft PDF)
 *.pptx
 *.key
 *.gdoc
 *.bak
-global_baseline_*.nc
-ED_Source_Code/
-ilamb_ref_official/
-ilamb/MODELS/
-ilamb/MODELS_LEADERBOARD/
-ilamb/MODELS_LEADERBOARD_FFIRE/
-ilamb/MODELS_LEADERBOARD_FFIRE_GFED5/
-ilamb/_archive_modelC_variants/
-ilamb_out/
-ilamb_out_*/
-models_full/
-models/A/
-models/A-*/
-models/C-*/
-models/ED-Model*/
-models/CLASSIC/
-models/CLM6/
-models/CLM-FATES/
-models/ELM-FATES/
-models/E3SM/
-models/EDv3/
-models/JSBACH/
-models/SDGVM/
-models/VISIT/
-models/hurtt-betas-*/
-models/C/*.nc
-out_*/
-stageB_models/
-NEW MAPS/
-figures/
-email_attachments/
-from_lei/
-for_lei_*/
-"THE THESIS JOURNEY -REAL ONE/"
-"NEW DIRECTION - MEETING.gdoc"
-.claude/
-.strict_reported
-*_extract.txt
-essd-*.txt
-gfed5_emissions_nature.txt
 
-# tropfix2-k4 canonical bundle (deliverable; carried on Drive, regenerable via scripts/bundle_k4_figures.py)
-ED-ModelC-tropfix2-k4/
+# Keep paper draft PDF trackable if force-added; default ignore other PDFs
+*.pdf
+!paper/paper.pdf
+
+# Keep paper figures trackable
+!paper/figures/
+!paper/figures/**
+!paper/*.md
+!paper/*.csv

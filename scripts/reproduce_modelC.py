@@ -164,7 +164,11 @@ def load_gfed_1deg():
     out = np.zeros((N_MONTHS, 180, 360), dtype=np.float32)
     idx = 0
     for yr in YEARS:
-        with h5py.File(DATA / "gfed" / f"GFED4.1s_{yr}.hdf5", "r") as f:
+        # Prefer versioned layout data/gfed/4.1/; fall back to flat data/gfed/
+        gfed4 = DATA / "gfed" / "4.1" / f"GFED4.1s_{yr}.hdf5"
+        if not gfed4.is_file():
+            gfed4 = DATA / "gfed" / f"GFED4.1s_{yr}.hdf5"
+        with h5py.File(gfed4, "r") as f:
             for m in range(1, 13):
                 arr = f[f"burned_area/{m:02d}/burned_fraction"][:]
                 arr = arr[::-1, :]
@@ -195,9 +199,31 @@ def add_cf_bounds(ds):
     return ds
 
 
-def main():
-    params = json.load(open(MODELS / "C" / "params.json"))["params"]
-    print(f"Using params: {params}")
+def resolve_params_path(path: str | Path) -> Path:
+    p = Path(path)
+    if p.is_file():
+        return p
+    candidates = [
+        REPO / path,
+        MODELS / "paper" / path,
+        MODELS / "C" / path,
+        MODELS / "paper" / f"{path}.json",
+        MODELS / "C" / f"params.{path}.json",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    raise FileNotFoundError(f"params not found: {path}")
+
+
+def run(params_path: Path, out_dir: Path, seasonal_transform: bool | None = None,
+        title: str | None = None) -> Path:
+    """Compute burntArea.nc from params + hybrid drivers. Returns output path."""
+    use_seasonal = SEASONAL_TRANSFORM if seasonal_transform is None else seasonal_transform
+    blob = json.load(open(params_path))
+    params = blob["params"] if "params" in blob else blob
+    print(f"params: {params_path}")
+    print(f"seasonal_transform: {use_seasonal}")
 
     print("Loading drivers ...")
     d = load_drivers()
@@ -207,44 +233,36 @@ def main():
     cos_lat = np.cos(np.deg2rad(lat_1)).astype(np.float32)
     w3 = np.broadcast_to(cos_lat[None, :, None], (N_MONTHS, 180, 360))
 
-    # Land mask: cells where GFED has any fire at any time step
     land_mask = (obs > 0).any(axis=0)
     w3_land = w3 * land_mask[None, :, :]
     print(f"  land cells: {land_mask.sum()} / {land_mask.size}")
 
-    print("Computing fire_C ...")
+    print("Computing fire rate ...")
     with np.errstate(over="ignore", invalid="ignore"):
         rate = fire_C(d, params)
 
-    # Apply land mask
     rate = rate * land_mask[None, :, :]
     raw_lm = float((rate * w3_land).sum() / (w3_land.sum() + 1e-12))
     print(f"  raw rate land-mean (yr^-1): {raw_lm:.4g}  "
           f"max: {rate.max():.4g}  cap: {FIRE_MAX_RATE}")
 
-    # ED-coupled-consistent transform:
-    #   monthly_frac = (1 - exp(-min(rate, FIRE_MAX_RATE) * 1 yr)) / 12   (legacy)
-    #   monthly_frac = 1 - exp(-min(rate, FIRE_MAX_RATE) / 12)            (SEASONAL_TRANSFORM)
     rate_capped = np.minimum(rate, FIRE_MAX_RATE)
-    if SEASONAL_TRANSFORM:
+    if use_seasonal:
         pred = (1.0 - np.exp(-rate_capped / 12.0)).astype(np.float32)
+        tlabel = f"monthly_frac = 1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) / 12)"
     else:
         annual_frac = 1.0 - np.exp(-rate_capped)
         pred = (annual_frac / 12.0).astype(np.float32)
+        tlabel = f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12"
 
-    # Land-mean diagnostic
     pred_lm = float((pred * w3_land).sum() / (w3_land.sum() + 1e-12))
-    gfed_lm = float((obs  * w3_land).sum() / (w3_land.sum() + 1e-12))
-    print(f"  ED-transformed land-mean:   {pred_lm:.6g}  GFED:  {gfed_lm:.6g}  "
-          f"ratio: {pred_lm/gfed_lm:.3f}")
+    gfed_lm = float((obs * w3_land).sum() / (w3_land.sum() + 1e-12))
+    print(f"  transformed land-mean: {pred_lm:.6g}  GFED: {gfed_lm:.6g}  "
+          f"ratio: {pred_lm / gfed_lm:.3f}")
 
-    # NaN out non-land cells (matches GFED reference fill value)
     pred_masked = np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32)
-
-    # Un-coarsen 1 -> 0.5 deg
     pred_hd = uncoarsen(pred_masked)
 
-    # Build dataset
     times = [cftime.DatetimeNoLeap(y, m, 15) for y in YEARS for m in range(1, 13)]
     lat = np.arange(-89.75, 90.0, 0.5)
     lon = np.arange(-179.75, 180.0, 0.5)
@@ -253,17 +271,14 @@ def main():
                        {"units": "1", "standard_name": "burnt_area_fraction",
                         "long_name": "Burnt Area Fraction"})},
         coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
-        attrs={"title": "ED-ModelC-final (ED-coupled-consistent retune)",
+        attrs={"title": title or out_dir.name,
+               "params_file": str(params_path),
                "Conventions": "CF-1.7",
-               "transform": (f"monthly_frac = 1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) / 12)"
-                             if SEASONAL_TRANSFORM else
-                             f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12")})
+               "transform": tlabel})
     ds = add_cf_bounds(ds)
 
-    # Write
-    ILAMB_MODELS = REPO / "ilamb" / "MODELS" / "ED-ModelC-final"
-    ILAMB_MODELS.mkdir(parents=True, exist_ok=True)
-    dst = ILAMB_MODELS / "burntArea.nc"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dst = out_dir / "burntArea.nc"
     time_units = "days since 2001-01-01 00:00:00"
     enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
            "time": {"units": time_units, "calendar": "noleap", "dtype": "float64"},
@@ -271,7 +286,40 @@ def main():
     tmp = dst.with_suffix(".nc.tmp")
     ds.to_netcdf(tmp, encoding=enc, format="NETCDF4_CLASSIC")
     os.replace(tmp, dst)
-    print(f"wrote {dst} ({dst.stat().st_size/1e6:.1f} MB)")
+    print(f"wrote {dst} ({dst.stat().st_size / 1e6:.1f} MB)")
+    return dst
+
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="Regenerate burntArea.nc from params + drivers")
+    ap.add_argument("--params", default="models/paper/C.json",
+                    help="Params JSON (path or short name under models/paper or models/C)")
+    ap.add_argument("--out", default="ilamb/MODELS/paper/Model-C",
+                    help="Output directory for burntArea.nc")
+    ap.add_argument("--seasonal-transform", choices=["0", "1", "auto"], default="auto",
+                    help="1 = per-month 1-exp(-rate/12); 0 = legacy (1-exp(-rate))/12")
+    ap.add_argument("--title", default=None)
+    args = ap.parse_args()
+
+    params_path = resolve_params_path(args.params)
+    out_dir = Path(args.out)
+    if not out_dir.is_absolute():
+        out_dir = REPO / out_dir
+
+    seasonal = None
+    if args.seasonal_transform == "1":
+        seasonal = True
+    elif args.seasonal_transform == "0":
+        seasonal = False
+    else:
+        # Prefer metadata on the JSON when present
+        blob = json.load(open(params_path))
+        ed = blob.get("ed_consistency") or {}
+        if "seasonal_transform" in ed:
+            seasonal = bool(ed["seasonal_transform"])
+
+    run(params_path, out_dir, seasonal_transform=seasonal, title=args.title)
 
 
 if __name__ == "__main__":

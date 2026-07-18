@@ -8,7 +8,7 @@ coarse,litter} + D_REF SEPARATELY per continent, restricting the four_scores
 objective to that continent's box (cos-lat weighted, fire-active cells), exactly
 like optimize_modelC_coupled.py's REGION lever does for BA.
 
-Writes models/combustion-params-continental/betas.<region>.json. The assembler
+Writes models/combustion/continental/betas.<region>.json. The assembler
 (assemble_combustion_continental.py) stitches them into one fFire field and only
 keeps a region's betas if they beat the global betas on that region (keep-best).
 
@@ -22,7 +22,7 @@ import numpy as np, optuna
 import sys
 sys.path.insert(0, "scripts")
 from tune_combustion_params import load_inputs, fFire_from_betas, FF_SCALE
-from refit_modelA_multiobj import four_scores
+from scores import four_scores
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -45,12 +45,12 @@ def region_mask(lat, lon, region):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ba-model", default="ED-ModelC-continental")
+    ap.add_argument("--ba-model", default="Model-E")
     ap.add_argument("--region", default=os.environ.get("REGION", ""))
     ap.add_argument("--n-trials", type=int, default=int(os.environ.get("N_TRIALS", 4000)))
     ap.add_argument("--timeout-h", type=float, default=2.0)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--out", default=str(REPO / "models" / "combustion-params-continental"))
+    ap.add_argument("--out", default=str(REPO / "models" / "combustion" / "continental"))
     ap.add_argument("--seas-w", type=float, default=float(os.environ.get("SEAS_W", 0.0)),
                     help="Blend weight on the seasonal-cycle score: objective = "
                          "(1-w)*overall + w*seas. 0 = pure overall (original).")
@@ -75,7 +75,10 @@ def main():
         return (2 * b + 2 * r + s + sp) / 6.0, (b, r, s, sp)
 
     # Seed from the existing GLOBAL continental betas (warm start).
-    gp = json.load(open(REPO / "models" / "combustion-params-continental" / "betas.gfed5.json"))["best_params"]
+    seed_path = out_dir / "betas.gfed5.json"
+    if not seed_path.is_file():
+        seed_path = REPO / "models" / "combustion" / "continental" / "betas.gfed5.json"
+    gp = json.load(open(seed_path))["best_params"]
     seed_betas = {"leaf": gp["beta_leaf"], "fine": gp["beta_fine"],
                   "coarse": gp["beta_coarse"], "litter": gp["beta_litter"]}
     seed_overall, sc = overall_of(seed_betas, gp["D_REF"])

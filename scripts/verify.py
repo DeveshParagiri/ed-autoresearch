@@ -3,7 +3,7 @@
 Runs in 3 tiers:
     [EXISTS?] Is the file on disk?
     [HASH?]   Does its SHA256 match the pinned value?
-    [PIPELINE] (with --pipeline) Re-run reproduce_modelC.py end-to-end and
+    [PIPELINE] (with --pipeline) Re-run reproduce_paper.py / reproduce_modelC.py end-to-end and
                SHA256 the produced burntArea.nc.
 
 Exits 0 if every pinned file is present AND matches.
@@ -56,7 +56,7 @@ def sha256_file(p: Path, block=1024*1024):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pipeline", action="store_true",
-                    help="Also regenerate burntArea.nc via reproduce_modelC.py and check its hash.")
+                    help="Also regenerate burntArea.nc via reproduce_paper.py / reproduce_modelC.py and check its hash.")
     args = ap.parse_args()
 
     if not CHECKSUMS.exists():
@@ -116,12 +116,12 @@ def main():
         print()
         print("=== PIPELINE CHECK ===")
         r = subprocess.run(
-            [sys.executable, str(REPO / "scripts" / "reproduce_modelC.py")],
+            [sys.executable, str(REPO / "scripts" / "reproduce_paper.py / reproduce_modelC.py")],
             cwd=REPO, capture_output=True, text=True,
         )
         print(r.stdout[-500:] if r.stdout else "")
         if r.returncode != 0:
-            print("[FAIL] reproduce_modelC.py exited non-zero")
+            print("[FAIL] reproduce_paper.py / reproduce_modelC.py exited non-zero")
             print(r.stderr[-500:])
             sys.exit(3)
 
