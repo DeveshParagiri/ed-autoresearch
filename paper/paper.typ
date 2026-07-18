@@ -27,27 +27,26 @@
 
 #set par(
   justify: true,
-  leading: 0.65em,
+  leading: 0.7em,
   first-line-indent: 1.2em,
+  spacing: 0.7em,
 )
 
 #set heading(numbering: "1.1")
 #show heading.where(level: 1): it => {
   set text(size: 12pt, weight: "bold")
-  v(1.2em, weak: true)
-  it
-  v(0.6em, weak: true)
+  v(1.6em, weak: true)
+  block(below: 0.9em, it)
 }
 #show heading.where(level: 2): it => {
   set text(size: 11pt, weight: "bold")
-  v(1em, weak: true)
-  it
-  v(0.4em, weak: true)
+  v(1.2em, weak: true)
+  block(below: 0.7em, it)
 }
 
-#show figure: set block(breakable: false)
-#show figure.caption: set text(size: 9.5pt)
-#set figure(gap: 0.8em)
+#show figure: set block(breakable: false, spacing: 1.4em)
+#show figure.caption: set text(size: 9pt)
+#set figure(gap: 0.6em)
 #set math.equation(numbering: "(1)")
 
 // Title block
@@ -56,7 +55,7 @@
     Development and Optimization of a Global Fire Model\
     Using Autoresearch AI
   ]
-  #v(1em)
+  #v(1.1em)
   #text(size: 10.5pt)[
     Richard Owusu-Ansah#super[1],
     George Hurtt#super[1],
@@ -64,21 +63,24 @@
     Devesh Paragiri#super[1],
     Janna Chapman#super[1]
   ]
-  #v(0.5em)
+  #v(0.55em)
   #text(size: 9.5pt)[
     #super[1]Department of Geographical Sciences, University of Maryland, College Park, MD, USA
   ]
 ]
 
-#v(1.2em)
+#v(1.4em)
 
-// Abstract
-#par(first-line-indent: 0em)[
-  #text(weight: "bold")[Abstract.]
+// Abstract: centered label on its own line, then body
+#align(center)[
+  #text(size: 11pt, weight: "bold")[Abstract]
+]
+#v(0.55em)
+#par(first-line-indent: 0em, leading: 0.68em)[
   Fire returns a large flux of carbon to the atmosphere each year, yet the land models used to estimate the terrestrial carbon balance reproduce it poorly, the Ecosystem Demography model among them. We develop and optimize a fire submodule for this model with an automated, AI-assisted loop, which we call autoresearch, that changes the model one step at a time, either its functional form or the criterion by which it is scored, fits each version, and evaluates it against the fifth Global Fire Emissions Database using the official ILAMB benchmarking system. The loop produces a family of versions whose differences can be attributed to single causes. In the base version, Model C, a single global formula fit to an aggregate benchmark score reproduces the broad geography of fire but under-represents the intense regional burning where the model is weakest. Model D changes only the goodness-of-fit criterion and stays near this baseline, whereas Model E changes the functional form, raising the spatial distribution score from 0.79 to 0.88 and the peak burned fraction on the most fire-prone cells from Model D's 0.04 to 0.075 against the 0.10 observed, and bringing the total burned area to 816 million hectares per year, close to the 793 recorded by GFED5. The functional form, not the goodness-of-fit criterion, is therefore the binding constraint on burned-area skill. Held-out tests in time and space confirm the gain as genuine structure, and the burned area yields fire carbon emissions consistent with observations.
 ]
 
-#v(0.8em)
+#v(1.2em)
 
 = Introduction
 
@@ -107,8 +109,9 @@ Every version of the fire model is evaluated in the same way. The reference is t
 The fire model was developed and calibrated by an automated loop (@fig:loop). At each step the loop makes one change to the model, either to its functional form or to the criterion by which it is scored, fits the parameters of the resulting version, and evaluates that version against the GFED5 reference. We call this loop autoresearch. It combines two practices already established in Earth-system modelling, the automated calibration of model parameters and the automated exploration of model structure, and applies them together to a burned-area model. The change at each step is proposed by an AI agent from the diagnostics of the previous version, and the parameters of each version are fit by numerical optimization.
 
 #figure(
-  image("figures/fig1_autoresearch_loop.jpg", width: 100%),
+  image("figures/fig1_autoresearch_loop.jpg", width: 72%),
   caption: [The autoresearch loop used to develop and calibrate the fire model. The loop searches on two levels. At the outer level an AI agent proposes one change per step, either to the functional form or to the goodness-of-fit criterion, from the diagnostics of the previous version. At the inner level, for each proposed form, a numerical optimizer (optuna with NSGA-II) fits the parameters. Each version predicts burned area from the CRUJRA climate and GPP drivers and is scored against GFED5 under the selected criterion, aggregate or dynamic-range. Iterating produces the model versions C, D, and E, each differing from the one before by a single lever. The native ED-stock fire module (dashed) is the floor the loop improves on and is not one of its products. Model E is checked on held-out years and cells.],
+  placement: top,
 ) <fig:loop>
 
 The loop works on two levels. The functional form sets which mechanism terms enter the model and how they combine, and it is changed between steps by the AI agent, which proposes a new term or a new structure from the residual errors of the current version and keeps it only if it improves the fit. Within a fixed form, the parameters are fit by numerical optimization. We use a multi-objective evolutionary optimizer that samples the parameters on a logarithmic scale and does not reduce the problem to a single number. It trades off two objectives, the goodness-of-fit score and the rate of false-positive fire, and returns a set of non-dominated solutions, subject to a constraint that holds the global burned area within a set band of the observed total.
@@ -150,13 +153,14 @@ Model E holds the goodness-of-fit criterion of Model D and changes the functiona
 
 == Burned-area evaluation across model versions
 
+#v(0.6em)
 #figure(
   table(
     columns: (auto, auto, auto, auto, auto, auto, auto, auto),
     align: (left, right, right, right, right, right, right, right),
     stroke: none,
-    inset: (x: 0.35em, y: 0.35em),
-    table.hline(),
+    inset: (x: 0.5em, y: 0.48em),
+    table.hline(stroke: 0.8pt),
     table.header(
       [*Model*], [*BA*], [*×GFED5*], [*Bias*], [*RMSE*], [*Seas.*], [*Spat.*], [*Overall*],
     ),
@@ -166,23 +170,26 @@ Model E holds the goodness-of-fit criterion of Model D and changes the functiona
     [C], [1001.0], [1.26], [0.6977], [0.4754], [0.8246], [0.7691], [0.6485],
     [D], [1218.7], [1.54], [0.6951], [0.4662], [0.7914], [0.7864], [0.6411],
     [E], [815.6], [1.03], [0.7514], [0.4753], [0.7455], [0.8756], [0.6646],
-    table.hline(),
+    table.hline(stroke: 0.8pt),
   ),
   caption: [Global burned-area evaluation of the model versions against the GFED5 reference (2001–2016), using ILAMB. Total BA is in Mha yr#super[−1]. ILAMB scores range from 0 to 1, with higher values indicating closer agreement with GFED5.],
 ) <tab:scores>
+#v(0.4em)
 
 The Overall score rises steeply down the ladder, from 0.42 at the ED-stock floor to 0.66 at Model E, and the total annual burned area falls with it, from 2500 Mha per year at the floor to 816 Mha at Model E, or from 3.15 to 1.03 times the observed total of 793 Mha. The four component scores, however, do not all move in step, and no single version is best on every one. Model C has the strongest seasonal cycle, Model D the lowest root-mean-square error, and Model E the best bias and spatial distribution (@fig:maps), and the total burned area does not approach the observed amount steadily but rises further above it at Model D, to 1.54 times observed, before Model E brings it back. The aggregate Overall score therefore reflects the combined effect of these changes, and the contribution of each one is resolved only by comparing the versions in sequence.
 
 #figure(
-  image("figures/fig2_ba_maps.jpg", width: 100%),
+  image("figures/fig2_ba_maps.jpg", width: 72%),
   caption: [Mean annual burned-area fraction (% yr#super[−1]) over 2001–2016 for GFED5 (observed) and the four model versions, shown on a common colour scale.],
+  placement: top,
 ) <fig:maps>
 
 ED-stock places fire across the Sahara and the Arabian peninsula, where GFED5 records almost none and where there is little vegetation to carry it, so its over-prediction is fire in the wrong places. Models C and D burn diffusely across the Amazon basin, where GFED5 shows only scattered fire, and D burns more widely and more intensely than C, consistent with its higher total of 1.54 times observed. Model E removes most of the Amazon signal and concentrates burning into the African savanna belt and northern Australia, where GFED5 places most of the observed burning, and its differences against GFED5 are the smallest of the four versions. Those differences do not vanish, with fire over-predicted along the Sahel and across boreal Eurasia and under-predicted in the southern African savanna and northern Australia (@fig:diff), and because they are opposite in sign they largely offset within the global sum, so the closeness of the global total to the observed amount overstates how closely the map is reproduced.
 
 #figure(
-  image("figures/extfig1_diff.jpg", width: 100%),
+  image("figures/extfig1_diff.jpg", width: 72%),
   caption: [Difference in mean annual burned fraction between each model and GFED5 (model minus GFED5, percent per year) for Models ED-stock, C, D, and E, on a common diverging scale, 2001 to 2016. Red shows over-prediction and blue under-prediction.],
+  placement: top,
 ) <fig:diff>
 
 == Isolating the effects of functional form and goodness-of-fit criteria
@@ -192,8 +199,9 @@ Replacing the aggregate score with a criterion that rewards the spatial pattern 
 Changing the functional form instead, with the new criterion held fixed, produces a large improvement. From Model D to Model E, in which the formula is fit separately by continent and its fire rate is allowed to exceed one, the Overall score rises from 0.64 to 0.66, the spatial distribution score rises from 0.79 to 0.88, and the total burned area returns to near the observed magnitude, falling from 1.54 to 1.03 times the observed total. The per-cell relationship improves in step, the slope of modelled against observed burned fraction rising from 0.42 to 0.66 (@fig:scatter). Set against the marginal effect of the criterion change, this large effect of the form change indicates that, across this ladder, the functional form rather than the goodness-of-fit criterion is the binding constraint on burned-area skill. Because no version combines the new form with the original aggregate criterion, the comparison isolates the effect of each lever but does not establish that the new criterion was required for the form change to succeed.
 
 #figure(
-  image("figures/fig3_scatter.jpg", width: 95%),
+  image("figures/fig3_scatter.jpg", width: 65%),
   caption: [Per-grid-cell burned-area fraction of models C, D, and E versus GFED5 on active-fire cells (GFED5 annual $>$ 0.1%), 2001–2016. The dashed line is 1:1, and the solid line the fitted slope.],
+  placement: top,
 ) <fig:scatter>
 
 == Reproducing fire intensity and grid-cell dynamic range
@@ -208,34 +216,38 @@ The functional-form change lifts this limit. In Model E the standard-deviation r
 
 Fitting the formula separately for each continent gives Model E many more free parameters than the single global set used by the earlier versions, and this added flexibility could in principle reproduce the fitted data by capturing noise rather than genuine structure. Because this risk applies chiefly to Model E, it is evaluated on data withheld from the fit. In both tests the spatial correlation on the actively burning cells, near 0.70 on the fitted data, falls by only 0.05 on the withheld years and by 0.015 on the withheld cells (@tab:holdout). Model E therefore generalizes across both time and space, and its improvement reflects genuine structure rather than overfitting.
 
+#v(0.6em)
 #figure(
   table(
     columns: (auto, auto, auto, auto),
     align: (left, right, right, right),
     stroke: none,
-    inset: (x: 0.5em, y: 0.4em),
-    table.hline(),
+    inset: (x: 0.7em, y: 0.5em),
+    table.hline(stroke: 0.8pt),
     table.header([*Held-out test*], [*$r$, fit*], [*$r$, held-out*], [*Δ$r$*]),
     table.hline(stroke: 0.5pt),
     [Unseen years], [0.695], [0.645], [−0.050],
     [Unseen cells], [0.700], [0.685], [−0.015],
-    table.hline(),
+    table.hline(stroke: 0.8pt),
   ),
   caption: [Held-out validation of Model E. Spatial correlation $r$ on active-fire cells, on the data used to fit versus unseen held-out data ($Delta r =$ held-out $minus$ fit). Unseen years: model fit on 2001–2012 and tested on 2013–2016. Unseen cells: blocked 10° spatial cross-validation.],
 ) <tab:holdout>
+#v(0.4em)
 
 == Fire emissions
 
 Fire carbon emissions are the product of the area burned and the carbon released per unit of that area. The carbon released is the fuel present in each burning cell, held in the vegetation and litter pools, multiplied by the fraction of each pool that combustion consumes, a fraction that rises with dryness. These combustion fractions are calibrated against the GFED5 fire carbon product separately for each continent. The emissions of Model E total 3.15 Pg of carbon per year, close to the 3.4 Pg recorded by GFED5, and they score 0.64 against the benchmark, comparable to the model's burned-area score of 0.66. The emissions concentrate in the African savanna belt, the global emissions maximum, which Model E reproduces, while the boreal and South Asian sources are under-represented (@fig:ffire). The burned-area model therefore reproduces fire carbon emissions of realistic magnitude and of comparable skill to the burned area itself.
 
 #figure(
-  image("figures/fig4_ffire.jpg", width: 85%),
+  image("figures/fig4_ffire.jpg", width: 58%),
   caption: [Mean annual fire carbon emissions (g C m#super[−2] yr#super[−1]) for GFED5 and Model E, on a common colour scale, 2001 to 2016.],
+  placement: top,
 ) <fig:ffire>
 
 #figure(
-  image("figures/extfig2_seasonal.jpg", width: 100%),
+  image("figures/extfig2_seasonal.jpg", width: 70%),
   caption: [Seasonal cycle of burned area for six fire regions, GFED5 against Models C, D, and E. Each curve is the area-weighted mean monthly burned fraction, averaged over 2001 to 2016.],
+  placement: top,
 ) <fig:seasonal>
 
 = Discussion
