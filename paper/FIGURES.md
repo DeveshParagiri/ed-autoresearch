@@ -1,21 +1,14 @@
-# Paper figures
+# Paper figures (Typst)
 
-All under `paper/figures/`. Rebuild:
+Source: `paper.typ` → compile with `typst compile paper.typ paper-typst.pdf`
 
-```bash
-conda activate edfire
-python scripts/paper_figures.py
-# or full stack:
-python scripts/reproduce_paper.py --figures-only
-```
-
-| File | Content |
+| File | Slot |
 |---|---|
-| `fig_maps_ladder.png` | Annual BA: GFED5, ED-stock, C, D, E |
-| `fig_diff_ladder.png` | Model − GFED5 for C, D, E |
-| `fig_scatter.png` | Per-cell 1:1 on active-fire cells |
-| `fig_seasonal.png` | Regional seasonal cycles |
-| `fig_ilamb_scores.png` | Official ILAMB bars (last verify run) |
+| `figures/fig1_autoresearch_loop.jpg` | Fig. 1 methods flowchart |
+| `figures/fig2_ba_maps.jpg` | Fig. 2 BA maps ladder |
+| `figures/fig3_scatter.jpg` | Fig. 3 per-cell scatter |
+| `figures/fig4_ffire.jpg` | Fig. 4 fFire maps |
+| `figures/extfig1_diff.jpg` | Diff maps (in main text as Fig. after maps) |
+| `figures/extfig2_seasonal.jpg` | Regional seasonal cycles |
 
-Scores: `official_ilamb_scores.csv`  
-Verify: `bash scripts/verify_paper_ilamb.sh`
+Legacy PNG stand-ins (`fig_maps_ladder.png` etc.) are unused by Typst.
