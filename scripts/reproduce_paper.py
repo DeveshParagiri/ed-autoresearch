@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rebuild offline paper burned-area ladder (Models C, D, E) and optional fFire.
 
-Paper versions (see paper/paper.typ / paper-typst.pdf):
+Paper versions (see paper/paper.typ):
   Model C  global formula, aggregate ILAMB fit
   Model D  same form, spatial / active-fire objective
   Model E  per-continent params + fuel amplitude + seasonal transform

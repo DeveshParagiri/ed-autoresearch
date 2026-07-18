@@ -84,7 +84,7 @@ for model in ["ED-stock", "Model-C", "Model-D", "Model-E"]:
 res = pd.DataFrame(rows)
 print("\n=== Official ILAMB Overall (global, GFED5) ===")
 print(res.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-out = REPO / "paper" / "official_ilamb_scores.csv"
+out = REPO / "ilamb_out_paper_verify" / "official_scores_summary.csv"
 out.parent.mkdir(parents=True, exist_ok=True)
 res.to_csv(out, index=False)
 print(f"\nwrote {out}")
