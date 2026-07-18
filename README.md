@@ -33,4 +33,4 @@ python scripts/reproduce_paper.py
 bash scripts/verify_paper_ilamb.sh
 ```
 
-Draft and figures: [`paper/`](paper/). Fitted parameters: [`models/paper/`](models/paper/). Setup, data paths, scripts, and ED coupling: [`docs/`](docs/).
+Manuscript (Typst): [`paper/`](paper/). Fitted parameters: [`models/paper/`](models/paper/). Setup and scripts: [`docs/`](docs/).
