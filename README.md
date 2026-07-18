@@ -33,4 +33,4 @@ python scripts/reproduce_paper.py
 bash scripts/verify_paper_ilamb.sh
 ```
 
-Manuscript (Typst): [`paper/`](paper/). Fitted parameters: [`models/paper/`](models/paper/). Setup and scripts: [`docs/`](docs/).
+Manuscript (edit `paper/paper.md`, then `python paper/build.py` or `python paper/watch.py`): [`paper/`](paper/). Fitted parameters: [`models/paper/`](models/paper/). Setup and scripts: [`docs/`](docs/).
