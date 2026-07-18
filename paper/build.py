@@ -82,7 +82,7 @@ TEMPLATE_HEAD = r'''// Auto-generated from paper.md by build.py — do not edit 
   ]
   #v(0.6em)
   #text(size: 9.5pt)[
-    #super[1]{affiliation}
+    {affiliation}
   ]
 ]
 
@@ -395,7 +395,8 @@ def split_title_lines(title: str) -> str:
 def build_typst(meta: dict, body_typ: str) -> str:
     authors = meta.get("authors") or []
     authors_doc = ",\n    ".join(f'"{a}"' for a in authors)
-    author_line = ",\n    ".join(f"{a}#super[1]" for a in authors)
+    # Single shared affiliation: no numbered marks (only needed with multiple affiliations)
+    author_line = ",\n    ".join(authors)
     title = meta.get("title") or "Untitled"
     affiliation = meta.get("affiliation") or ""
     abstract = meta.get("abstract") or ""

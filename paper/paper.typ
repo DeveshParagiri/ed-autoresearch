@@ -56,15 +56,15 @@
   ]
   #v(1.2em)
   #text(size: 10.5pt)[
-    Richard Owusu-Ansah#super[1],
-    George Hurtt#super[1],
-    Lei Ma#super[1],
-    Devesh Paragiri#super[1],
-    Janna Chapman#super[1]
+    Richard Owusu-Ansah,
+    George Hurtt,
+    Lei Ma,
+    Devesh Paragiri,
+    Janna Chapman
   ]
   #v(0.6em)
   #text(size: 9.5pt)[
-    #super[1]Department of Geographical Sciences, University of Maryland, College Park, MD, USA
+    Department of Geographical Sciences, University of Maryland, College Park, MD, USA
   ]
 ]
 
