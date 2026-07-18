@@ -52,3 +52,6 @@ for_lei_*/
 !paper/figures/**
 !paper/*.md
 !paper/*.csv
+
+logs_paperD_refit.log
+ilamb/burntArea.cfg

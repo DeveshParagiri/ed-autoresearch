@@ -11,7 +11,6 @@ models/
   paper/                  # C.json, D.json, E/ continent params
   combustion/continental/ # per-continent fFire betas
   formula.md              # base formula notes
-patches/fire_modelC.cc    # ED C++ drop-in sketch
 scripts/                  # reproduce / score / fit (see scripts.md)
 ilamb/                    # ILAMB configs + scoreable NetCDF outputs
 data/                     # local drivers (gitignored)
