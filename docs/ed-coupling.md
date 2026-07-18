@@ -9,4 +9,4 @@ The offline model interprets its output as an annual fire disturbance rate, then
 3. Use monthly patch dynamics where that is intended (`PATCH_FREQ`).  
 4. For Model E’s continental branch, tag sites by region.
 
-Coupled GPP–fire feedback will require recalibration; the structure is meant to transfer. Sketch: `patches/fire_modelC.cc`.
+Coupled GPP–fire feedback will require recalibration; the structure is meant to transfer. No in-repo C++ patch is maintained; coupling is a separate ED-side port once offline params are frozen.
