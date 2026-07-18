@@ -7,8 +7,8 @@
 #
 # Stages BA under ilamb/MODELS/paper/, runs ilamb-run, writes:
 #   ilamb_out_paper_verify/scalar_database.csv
-#   paper/ILAMB_VERIFY.md
-#   paper/official_ilamb_scores.csv
+#   ilamb_out_paper_verify/PAPER_VERIFY.md
+#   ilamb_out_paper_verify/official_scores_summary.csv
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
@@ -89,8 +89,8 @@ out.parent.mkdir(parents=True, exist_ok=True)
 res.to_csv(out, index=False)
 print(f"\nwrote {out}")
 print("full database: ilamb_out_paper_verify/scalar_database.csv")
-print("narrative:     paper/ILAMB_VERIFY.md (regenerate by re-running this session analysis if needed)")
+print("narrative:     ilamb_out_paper_verify/PAPER_VERIFY.md (regenerate by re-running this session analysis if needed)")
 PY
 
 echo
-echo "Done. Official scores above. Compare to paper Table 1 in paper/ILAMB_VERIFY.md"
+echo "Done. Official scores above. Compare to paper Table 1 in ilamb_out_paper_verify/PAPER_VERIFY.md"

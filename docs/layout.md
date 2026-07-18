@@ -4,9 +4,10 @@
 README.md                 # paper-facing overview
 docs/                     # this folder
 paper/
-  paper.pdf               # working draft
-  figures/                # paper figure set
-  official_ilamb_scores.csv
+  paper.typ               # Typst manuscript
+  refs.bib
+  figures/                # paper figure panels
+  README.md               # how to compile
 models/
   paper/                  # C.json, D.json, E/ continent params
   combustion/continental/ # per-continent fFire betas
