@@ -1,22 +1,53 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-07-14. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-07-20. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
-## >>> READ THIS FIRST (2026-07-14) — PROJECT IS NOW DRAFTING THE GMD PAPER <<<
+## >>> READ THIS FIRST (2026-07-20) — FULL DRAFT + ALL FIGURES DONE; MODEL D PR SENT TO DEVESH <<<
 
-The work has moved from model development to WRITING THE GMD PAPER ("Development and Optimization of a
-Global Fire Model using Autoresearch AI"). ALL paper work lives in `paper_gmd/`, which is GITIGNORED
-(drive-only, NOT on GitHub) — so `git log` will NOT show it.
+The GMD paper ("Development and Optimization of a Global Fire Model using Autoresearch AI") has a
+COMPLETE draft (Abstract + Intro + Methods + Results + Discussion + Conclusions) and a COMPLETE figure
+set, all on the clean single-lever Model E. ALL paper work lives in `paper_gmd/` (GITIGNORED, drive-only,
+NOT on GitHub) — `git log` on the coupled-refit-gfed5 branch DOES show it (paper_gmd/ files are force-added
+there), but it never goes to the remote.
 
->>> TO RESUME: read `paper_gmd/STATUS.md` (the exact resume point) then `paper_gmd/DRAFT.md` (all prose). <<<
+>>> TO RESUME: read `paper_gmd/STATUS.md` (exact resume point) then `paper_gmd/DRAFT.md` (all prose). <<<
 
-Where we are (2026-07-14): Introduction P1-P5 DONE and fully verified; Methods 2.1 and 2.2 DONE. NEXT =
-Methods 2.3 (the C->D->E version ladder + Model C's governing equation). Every citation is verified
-against the full-text PDF (ledgers in `paper_gmd/references/P{1..5}/EVIDENCE.md`); Methods claims are
-verified against the code. The verified "what the method actually is" is in `paper_gmd/METHOD_FRAMING.md`.
-Model names ED-stock/C/D/E are PLACEHOLDERS (advisor wants real names, TBD). All open TODOs and the full
-file map are in `paper_gmd/STATUS.md`.
+### What is DONE (this stretch, through 2026-07-20)
+- FULL DRAFT complete and verified against the clean E (0.6646).
+- FIGURES complete + captioned + cited in the prose:
+  - Fig 1 autoresearch schematic (2.2) — rebuilt honest + compact near-square layout (figures/make_schematic.py).
+  - Fig 2 burned-area maps (3.1), Fig 3 per-cell scatter (3.2/3.3).
+  - Fig 4 fire-emissions maps (3.5) — PROMOTED from supplement to a MAIN figure; GFED5 vs E, stacked,
+    verified totals 3.40 / 3.15 PgC/yr (figures/make_fig_ffire_maps.py).
+  - Fig S1 difference maps (cited 3.1 P3); Fig S2 regional seasonal cycles (cited 4.3, figures/make_fig_seasonal.py).
+  - CUT: the threshold-sensitivity figure (robustness point carried by one sentence in 3.3;
+    threshold_sensitivity.py still prints the grounding table).
+- References consolidated in `paper_gmd/references/CITED_PAPERS/` + MANIFEST.md (21 cited PDFs). Zotero
+  workflow: drag the folder in -> "Retrieve Metadata for PDF"; add optuna/NSGA-II by DOI; Copernicus style.
+
+### MODEL D shared with Devesh (OUTWARD ACTION — on GitHub now)
+- Devesh cleaned up `origin/main` (github.com/DeveshParagiri/ed-autoresearch) into a `models/paper/`
+  layout (C.json, D.json, E/). His `D.json` was a WRONG placeholder (amp-enabled, 15 params, objective
+  "ILAMB Overall"); his own note flagged it as a stub awaiting the colleague file.
+- The real Model D = `models/C/params.paperD.k1.json` (12 params, C form, spatial objective, trial 1497,
+  spatial_taylor 0.7495, official ILAMB 0.6411). PR #1 opened replacing his D.json with a corrected
+  version (objective field fixed off the hardcoded-label bug):
+  https://github.com/DeveshParagiri/ed-autoresearch/pull/1  (branch modelD-paper-params).
+  AWAITING Devesh's review/merge. Our coupled-refit-gfed5 branch was NOT pushed; paper_gmd never left the drive.
+- E needs NOTHING — Devesh already has all E region params in `models/paper/E/`.
+- GH AUTH GOTCHA: two accounts are logged in; the DEFAULT active one (RichardOwusuAnsah-Apps) has NO
+  write access (403). Use `gh auth switch --user RichardOwusu-Ansah` before pushing to this repo.
+
+### NEXT / OPEN (all decisions, nothing blocking)
+- Real model names (ED-stock/C/D/E placeholders) — advisor decision; baked into Abstract too, so a rename
+  is a find-replace across DRAFT.md.
+- CRUJRA: no public v3.5 exists; Harris et al. 2020 + Kobayashi et al. 2015 (the 2 MISSING refs) are
+  blocked on the data preparer (Lei / fire_autoresearch). Confirm version before citing.
+- Sync the finished DRAFT.md sections into the Google Doc (the live paper the group reads).
+- Devesh's email: he set up a `paper/` dir that live-renders `paper.md` (his in-repo paper, distinct from
+  our drive-only paper_gmd/) — worth looking at with Claude Code. Zoom Monday to discuss.
+- Verified-citation standard is UNCHANGED (full-text PDF, exact quote+page). Do not drop it.
 
 The 2026-06-12 and earlier blocks below describe the pre-paper MODEL-DEVELOPMENT phase (still valid as
 background, but the paper phase above supersedes them for "what to do next").

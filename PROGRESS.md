@@ -4,6 +4,18 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-07-20 — full draft + figures done; Model D PR to Devesh
+- Paper: FULL draft complete, all figures captioned + cited. Fig 4 (emissions maps) promoted to a MAIN
+  figure; Fig 1 schematic rebuilt (honest, compact); Fig S1 (diff maps) + S2 (seasonal cycles) in
+  supplement. Threshold-sensitivity figure CUT. References consolidated in references/CITED_PAPERS/ + MANIFEST.
+- Model D reproduction: opened PR #1 on Devesh's repo (github.com/DeveshParagiri/ed-autoresearch),
+  replacing his placeholder models/paper/D.json with the real paper D (from params.paperD.k1.json,
+  12-param C form + spatial objective, trial 1497, official ILAMB 0.6411; fixed the hardcoded-objective
+  label). Branch modelD-paper-params, awaiting his merge. E already reproducible on his main. Cleaned
+  macOS ._ junk that was corrupting git's pack index. gh: must switch to RichardOwusu-Ansah to push.
+- Next: real model names, CRUJRA version + 2 missing refs (Lei), sync DRAFT.md -> Google Doc, Devesh's
+  paper/ render setup + Zoom Monday.
+
 - 2026-07-14: PAPER PHASE (drive-only, paper_gmd/ is gitignored). Drafting the GMD paper. Introduction
   P1-P5 written, every citation verified against the FULL-TEXT PDF (16+ refs read; ledgers in
   paper_gmd/references/P{1..5}/EVIDENCE.md). Methods 2.1 (setup: closed-form model; hybrid CRUJRA climate
