@@ -1,5 +1,5 @@
 {
-  "model": "Model C (coupled-consistent retune; drivers + GPP from Lei's ED dump; GFED5 target)",
+  "model": "Model D (paper ladder; Model C form, spatial/active-fire objective; GFED5 target)",
   "drivers_source": "global_baseline_modelC_inputs_1997-2016.nc",
   "reference": "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
   "mechanisms": [
@@ -8,51 +8,53 @@
     "t_air_ign"
   ],
   "n_mechanisms": 3,
-  "n_params": 15,
-  "objective": "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
+  "n_params": 12,
+  "objective": "Spatial Taylor skill (r x sigma) on active-fire cells (GFED5 annual burned fraction > 0.1%), pure spatial (SEAS_W=0); multi-objective NSGA-II traded against false-positive rate. Form identical to Model C. NOTE the topk ranking by spatial_taylor (not internal overall) is the authoritative record of the objective; the plain 'objective' string emitted by the optimizer into per-trial params is a hardcoded label and does not record the run objective.",
   "ed_consistency": {
-    "interpretation": "Model C output is an annual fire rate (yr^-1)",
+    "interpretation": "output is an annual fire rate (yr^-1)",
     "fire_max_rate": 5.0,
-    "seasonal_transform": true,
-    "transform": "burnt_monthly_frac = 1 - exp(-min(rate, fire_max) / 12)"
+    "seasonal_transform": false,
+    "transform": "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12"
+  },
+  "spatial_objective": {
+    "spatial_taylor": 0.7495,
+    "spatial_r": 0.5163,
+    "spatial_sigma": 0.8981,
+    "spatial_seas": 0.0
   },
   "scores_internal": {
-    "bias": 0.6696193849214899,
-    "rmse": 0.38180600391443853,
-    "seas": 0.8231707569976772,
-    "spatial": 0.7853839575654074,
-    "overall": 0.6083572214626903
+    "bias": 0.6750726533299939,
+    "rmse": 0.36358274054967593,
+    "seas": 0.7945176331488109,
+    "spatial": 0.7572996350426627,
+    "overall": 0.5908110805241639
   },
-  "warm_start_internal": {
-    "bias": 0.6738707411506173,
-    "rmse": 0.3798541214036581,
-    "seas": 0.821231805115973,
-    "spatial": 0.7622170041566272,
-    "overall": 0.6034055586461068
+  "official_ilamb_overall_paper": 0.6411,
+  "reproduce": {
+    "fit": "SPATIAL_OBJ=1 SEAS_W=0 SAMPLER=nsga2 SEED=42 WARM=params.nsga2.json TAG=paperD python scripts/optimize_modelC_coupled.py",
+    "warm_start": "C.json (= params.nsga2.json)",
+    "adopted": "pareto rank 1 = trial 1497 of 2000",
+    "burned_area": "feed these params through scripts/reproduce_modelC.py (which reads Model C form) to regenerate burntArea.nc"
   },
-  "n_trials": 2500,
-  "runtime_min": 65.45,
   "params": {
-    "k1": 0.028401063201780267,
-    "D_low": 16.00237013173313,
-    "k2": 0.00033271381912662167,
-    "D_high": 2427.054417940131,
-    "fire_exp": 1.5191397119156032,
-    "P_half": 157.80309954142965,
-    "pre_dampen_half": 8.259599205585761,
-    "gpp_af": 0.03522602097143089,
-    "gpp_b": 0.00012118589392553798,
-    "gpp_d": 12.338826503601998,
-    "ign_k": 3.965503094323014,
-    "ign_c": 22.126836566118193,
-    "trop_agb_crit": 5.526463318565575,
-    "trop_k_veg": 2.724170387400844,
-    "fire_amp": 5.44779717154213
+    "k1": 0.014344484793173472,
+    "D_low": 12.492307509390828,
+    "k2": 0.018890961174687686,
+    "D_high": 80760.9304904705,
+    "fire_exp": 2.4685680709443356,
+    "P_half": 51.41531903173455,
+    "pre_dampen_half": 719.4083432823455,
+    "gpp_af": 0.505788295333708,
+    "gpp_b": 0.0024605285374226047,
+    "gpp_d": 13.076473382928533,
+    "ign_k": 8.761971101023693,
+    "ign_c": 19.19168994439752
   },
   "pareto_rank": 1,
-  "trial_number": 2305,
-  "fp_score": 0.9695498529602601,
-  "pred_lm_ratio": 0.936527616648814,
-  "paper_status": "provisional",
-  "paper_note": "Placeholder until colleague Table-1 D params arrive, or models/work/params.paperD.json is promoted after official ILAMB. Pure paper D = same keys as C (no fire_amp/fuel_k), spatial objective only."
+  "trial_number": 1497,
+  "n_trials": 2000,
+  "fp_score": 0.8365681394732793,
+  "pred_lm_ratio": 1.5369912151148781,
+  "paper_status": "final (paper Model D)",
+  "paper_note": "Replaces the earlier amp-enabled placeholder. Pure Model-D form (same keys as C, no fire_amp/fuel_k/tropical terms), spatial objective only. Warm-started from C.json. Official ILAMB Overall 0.6411 (paper Table 1)."
 }
