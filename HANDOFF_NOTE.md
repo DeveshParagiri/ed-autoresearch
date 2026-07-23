@@ -1,7 +1,80 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-07-20. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-07-23. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-07-23) — LEI COUPLING THREAD: coupling-ready model BUILT, reply DRAFTED not sent <<<
+
+>>> FULL TECHNICAL RECORD IS IN `COUPLED_REFIT_FINDINGS.md` (repo root). Read that + this block. <<<
+
+### The situation
+Lei (lma6@umd.edu, thread "Model E code question") asked for TWO things before Model E goes into
+coupled ED for the GCB/TRENDY run (due Aug 31):
+1. Use ED's own `D_bar` from the dump, so ED has ONE dryness definition, not two.
+2. Drop the per-continent regional blocking (blocky seams propagate into coupled veg/carbon).
+
+### What was built (nothing promoted to canonical; paper Model E untouched)
+- `DUMP_CLIMATE=1` mode in `scripts/optimize_modelC_coupled.py` (default OFF = canonical unchanged):
+  climate from the dump instead of CRUJRA, widened dryness ranges (ED D_bar hits ~4.8e6 vs CRUJRA ~7e4).
+  Also added env `FIRE_EXP_LO/HI` to bound the fire_exp concentrator.
+- SINGLE-GLOBAL dump fits (`params.coupledE*.json`, `params.coupledE_fx*.json`): score WELL on ILAMB
+  (0.6523-0.6532) but are REGIONALLY BROKEN — boreal 2 Mha vs GFED5 50, S.America 196 vs 65. The good
+  global total is compensating error. Constraining fire_exp did NOT fix it.
+- DIAGNOSIS (`scripts/diag_coupledE.py`): (a) fire_exp~7 crushes marginal (boreal) cells and
+  over-concentrates savanna; (b) STRUCTURAL — cerrado and African savanna have near-identical drivers
+  (base_product 0.56 vs 0.53) but 6x different GFED5 fire, so ONE global form cannot separate them.
+  => a single global equation is OUT for a carbon budget.
+- SOLUTION (Option 3): keep per-continent params but BLEND THEM SMOOTHLY (Gaussian on log params,
+  SIGMA=4 deg) so there are no hard seams. Proven on CRUJRA first (0.6649 -> 0.6641, ~free).
+- PRODUCTION BUILD: 7 continental fits on dump climate (`params.coupledE_{af,bor,sam,sea,eur,nam,aus}.json`)
+  + global-dump fallback, smooth-blended by `scripts/assemble_smooth_coupledE.py`.
+  Output: `ilamb/MODELS_SMOOTH_COUPLED/ED-ModelC-smooth/burntArea.nc`.
+  **ILAMB Overall 0.6426, every region 0.88-1.38x GFED5, global 1.05x, boreal 63 vs 50.**
+
+### The key scientific finding (paper's thesis, confirmed on ED's drivers)
+ILAMB Overall ranks the regionally BROKEN single-global model (0.6532) ABOVE the regionally faithful
+smooth model (0.6426). The aggregate metric does NOT reward regional fidelity and can prefer a
+physically worse model. For a carbon budget the regional fluxes are what matter.
+
+### Known limitation we raised OURSELVES (do not drop this)
+The smooth model's params are still keyed to GEOGRAPHY (lat/lon boxes), so they do NOT migrate when
+the vegetation does. Over a long TRENDY run with land-use change + prognostic vegetation, a cell that
+converts forest->pasture keeps its old region's params. Smoothing fixes the artifacts, not this.
+REAL FIX = key params to VEGETATION STATE (PFT fractions / tree cover / AGB) instead of lat/lon. That
+also solves the cerrado-vs-Africa discrimination. Precedent exists: the tropical suppression term
+already keys off AGB.
+
+### >>> IMMEDIATE NEXT STEP <<<
+A reply to Lei is DRAFTED IN GMAIL (thread "Model E code question", reply to Lei's 2026-07-22 22:26
+message) but NOT SENT. Before sending:
+- ATTACH `coupling_ready_maps.png` manually (Gmail API cannot attach; the draft text references it).
+- DELETE the older stale unsent draft on that thread if still there.
+The draft asks Lei TWO questions that gate all further work:
+  Q1. Is the objection the HARD SEAMS, or ANY spatial parameter variation at all?
+      (seams -> smooth model is the answer; any variation -> we must choose between a regionally
+       wrong model and a regionally right one, needs a conversation)
+  Q2. Can the fire submodule see VEGETATION STATE at runtime inside ED (PFT fractions / tree cover /
+      AGB per patch)? If yes, the vegetation-keyed build is tractable and is the right next model.
+Files to hand Lei when asked: the 7 param JSONs + `assemble_smooth_coupledE.py` + the BA nc.
+Recommendation was to commit those to Devesh's repo rather than email loose files (NOT done, needs
+Richard's approval — outward action).
+
+### ENVIRONMENT GOTCHAS LEARNED 2026-07-23 (important)
+- THIS Mac DOES have the full stack in `ed-fire`: optuna 4.8, cmaes, ilamb-run, cartopy, scipy,
+  python-pptx. CLAUDE.md's "home Mac = system python only, no conda/ILAMB" is STALE for this machine.
+- T7 drive throws recurring EPERM ("Operation not permitted") on file I/O and silently ROLLED BACK
+  .md edits once. FIX = eject + replug the drive. ALWAYS `sync` after writing, and re-verify edits.
+- Long background jobs get KILLED after ~20 min. Run continental refits ONE region per job.
+- ILAMB `build_dir` MUST be on local APFS (scratchpad), never the exFAT T7, or the harvest step
+  crashes on regenerated `._*` AppleDouble files. Clean `._*` from model dirs before every run.
+
+### ALSO DONE 2026-07-23 (unrelated to Lei)
+- CPA Section II.C schematic BUILT -> `cpa/framework_goals.png` (generator `cpa/make_framework.py`),
+  caption written into `cpa/CPA_OwusuAnsah.md`. **CPA Section II is now COMPLETE** pending Richard's
+  read. Next CPA targets: Section VI (annotated bib) or Section VII (dissertation idea paper).
+  See `cpa/STATUS.md`.
+- Advisor talking-aid deck for the C/D/E ladder -> `ModelCDE_advisor_deck.pptx`
+  (generator `scripts/build_ladder_deck.py`), 11 slides, speaker notes carry the plain-language script.
 
 ## >>> READ THIS FIRST (2026-07-20) — FULL DRAFT + ALL FIGURES DONE; MODEL D PR SENT TO DEVESH <<<
 

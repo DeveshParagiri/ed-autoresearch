@@ -83,22 +83,39 @@ SAMPLER       = os.environ.get("SAMPLER", "tpe")  # tpe | cmaes
 TAG           = os.environ.get("TAG", "")
 
 
+# DUMP_CLIMATE=1 pulls D_bar/T_air/P_ann/P_month from Lei's ED dump (ED's internal
+# climate) instead of CRUJRA. This is the COUPLING-READY mode: ED then has a single
+# dryness definition (its own D_bar), so the offline fit is consistent with the
+# coupled run. Costs offline GFED5 skill vs CRUJRA (ED's D_bar is a derived
+# diagnostic), which is why the paper's Model E used CRUJRA. Default off = unchanged.
+DUMP_CLIMATE = os.environ.get("DUMP_CLIMATE", "0") == "1"
+
+
 # ── 1. Hybrid driver loader: CRUJRA climate + coupled GPP ─────────────────
 def load_coupled_drivers():
-    print(f"[setup] CRUJRA climate from data/crujra/, GPP from {DUMP_NC.name} ...")
-    cru = REPO / "data" / "crujra"
-    d = {
-        "dbar":    np.load(cru / "dbar_monthly.npy").astype(np.float32),
-        "p_ann":   np.load(cru / "p_ann_monthly.npy").astype(np.float32),
-        "p_month": np.load(cru / "p_month_monthly.npy").astype(np.float32),
-        "t_air":   np.load(cru / "t_air_monthly.npy").astype(np.float32),
-    }
-
     ds = xr.open_dataset(DUMP_NC)
     sl = slice(DUMP_SLICE_START, DUMP_SLICE_STOP)
 
     def grab(name):
         return np.nan_to_num(ds[name].isel(time=sl).values.astype(np.float32), nan=0.0)
+
+    if DUMP_CLIMATE:
+        print(f"[setup] COUPLING-READY: climate (D_bar/T_air/P_*) + GPP all from {DUMP_NC.name} ...")
+        d = {
+            "dbar":    coarsen(grab("D_bar")),
+            "p_ann":   coarsen(grab("P_ann")),
+            "p_month": coarsen(grab("P_month")),
+            "t_air":   coarsen(grab("T_air")),
+        }
+    else:
+        print(f"[setup] CRUJRA climate from data/crujra/, GPP from {DUMP_NC.name} ...")
+        cru = REPO / "data" / "crujra"
+        d = {
+            "dbar":    np.load(cru / "dbar_monthly.npy").astype(np.float32),
+            "p_ann":   np.load(cru / "p_ann_monthly.npy").astype(np.float32),
+            "p_month": np.load(cru / "p_month_monthly.npy").astype(np.float32),
+            "t_air":   np.load(cru / "t_air_monthly.npy").astype(np.float32),
+        }
 
     gpp_n = np.clip(grab("GPP_month_ntrl"), 0, None)
     gpp_s = np.clip(grab("GPP_month_scnd"), 0, None)
@@ -340,6 +357,20 @@ LOG_PARAMS = {
     "trop_agb_crit":   (1e0,  3e1),
     "trop_k_veg":      (5e-1, 8e0),
 }
+# DUMP_CLIMATE: ED's internal D_bar spans ~0..5e6 (median ~700) vs CRUJRA's ~0..7e4,
+# so the onset/suppression thresholds need a wider range to sit inside the dump's
+# dryness distribution (otherwise D_high clips below the data and suppresses nothing).
+if DUMP_CLIMATE:
+    LOG_PARAMS["D_low"]  = (1e0, 1e6)
+    LOG_PARAMS["D_high"] = (1e1, 1e7)
+
+# FIRE_EXP_LO/HI bound the fire_exp concentrator (diagnostic: fire_exp~7 raises the
+# [0,1] product to a power that crushes boreal cells and over-concentrates savanna,
+# the source of the k2 compensating error). Default (1,10) = unchanged; set
+# FIRE_EXP_HI=2.5 to force a graded, physically-tame response.
+LOG_PARAMS["fire_exp"] = (float(os.environ.get("FIRE_EXP_LO", 1.0)),
+                          float(os.environ.get("FIRE_EXP_HI", 10.0)))
+
 # Workstream A: let the annual fire rate exceed 1.0 (savanna multi-burn). Searched
 # only when RATE_AMP=1; absent => fire_C leaves the rate <= 1 (canonical). Range
 # 1..6: the diag sweep showed the per-cell ceiling reaches GFED5's 0.104 near ~2.

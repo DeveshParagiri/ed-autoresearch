@@ -4,6 +4,33 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-07-23 — Lei coupling refit: single-global fails regionally, SMOOTH regional model built
+
+Lei asked for (1) ED's own D_bar from the dump so ED has one dryness definition, and (2) no
+per-continent blocking. Built `DUMP_CLIMATE=1` in the optimizer (default off) plus env-bounded
+`FIRE_EXP_LO/HI`. Findings, full record in `COUPLED_REFIT_FINDINGS.md`:
+- A SINGLE GLOBAL equation on ED's variables scores well (ILAMB 0.6532) but is regionally BROKEN:
+  boreal 2 Mha vs GFED5 50, S.America 196 vs 65. The good global total is compensating error.
+  Capping fire_exp did not fix it. Diagnosed (`diag_coupledE.py`) to fire_exp~7 crushing marginal
+  cells PLUS the structural fact that cerrado and African savanna have near-identical drivers but
+  6x different GFED5 fire, so one global form cannot separate them.
+- SOLUTION: keep regional params, blend them SMOOTHLY (Gaussian on log params, SIGMA=4) so there are
+  no hard seams. Proven free on CRUJRA (0.6649 -> 0.6641), then rebuilt properly on dump climate with
+  7 continental fits + global fallback (`assemble_smooth_coupledE.py`).
+  RESULT: ILAMB 0.6426, every region within 0.88-1.38x GFED5, global 1.05x, boreal 63 vs 50.
+- KEY FINDING (the paper's thesis on ED's drivers): ILAMB Overall ranks the regionally broken model
+  ABOVE the regionally faithful one. The aggregate metric does not reward regional fidelity.
+- LIMITATION we raised ourselves: params still keyed to geography, so they do not migrate with the
+  vegetation in a prognostic run. Real fix = key params to vegetation state (PFT / tree cover / AGB),
+  which would also solve the cerrado-vs-Africa discrimination.
+- Reply to Lei DRAFTED IN GMAIL, NOT SENT. Needs `coupling_ready_maps.png` attached manually. Asks
+  Lei (a) hard seams or any spatial variation, (b) can the fire submodule see vegetation state at
+  runtime in ED. Both gate the next build. Nothing promoted to canonical; paper Model E untouched.
+- Gotchas: T7 EPERM glitch rolled back .md edits once (eject+replug, always `sync`); long background
+  jobs get killed ~20 min so run one region per job; ILAMB build_dir must be local APFS.
+- Also: CPA Section II.C schematic built (`cpa/framework_goals.png`) so CPA Section II is COMPLETE;
+  C/D/E advisor deck built (`ModelCDE_advisor_deck.pptx`).
+
 ## 2026-07-20 — full draft + figures done; Model D PR to Devesh
 - Paper: FULL draft complete, all figures captioned + cited. Fig 4 (emissions maps) promoted to a MAIN
   figure; Fig 1 schematic rebuilt (honest, compact); Fig S1 (diff maps) + S2 (seasonal cycles) in
