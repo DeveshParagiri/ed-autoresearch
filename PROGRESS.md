@@ -4,6 +4,22 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-07-24 — Advisor meeting digest + human/GDP suppression term (DONE)
+- Read the 07/23 George meeting (`paper_gmd/meeting with advisor on 07_23_2026.pdf`). Main directions:
+  paper thesis = "how much can optimization improve a global fire model" (before/after ILAMB); go
+  biome/PFT-specific (= vegetation-state keying, solves cerrado-vs-Africa AND Lei's migration issue);
+  bolt on a socioeconomic (not latitudinal) human term; next physics = wind/topography/humans; only
+  forward-runnable long-series forcings (land use, pop, GDP) go in the coupled carbon budget; rebuild
+  outline topic-sentence-first; fix the schematic; meet weekly x3.
+- Executed his explicit assignment: fire vs GDP-per-capita per country. Raw slope -0.92/decade (r -0.55,
+  164 countries). Climate-controlled partial slope -0.70/decade (r -0.47, p 4e-10) — wealth keeps 76%
+  after removing climate, so the signal is real, not just "poor = savanna".
+- Bolted a GDP multiplier onto the single-global dump model, scored official ILAMB:
+  Overall 0.6547 -> 0.6603 (+0.0056), ALL in the Spatial score (0.805 -> 0.821), Seasonal flat. Mild term
+  (gamma ~0.15-0.3) preferred. Amplifies poor Africa, suppresses Amazon/N.America over-burn; cannot fix boreal.
+- Full record: `GDP_HUMAN_TERM_FINDINGS.md`. Figure: `gdp_term_figure.png`. Scripts: `fire_vs_gdp_country.py`,
+  `fire_vs_gdp_partial.py`, `add_gdp_term.py`, `fig_gdp_term.py`.
+
 ## 2026-07-23 — Lei coupling refit: single-global fails regionally, SMOOTH regional model built
 
 Lei asked for (1) ED's own D_bar from the dump so ED has one dryness definition, and (2) no

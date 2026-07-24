@@ -3,6 +3,49 @@
 Last updated: 2026-07-23. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
 
+## >>> READ THIS FIRST (2026-07-24) — ADVISOR MEETING (George, 07/23) + HUMAN/GDP TERM DONE <<<
+
+>>> FULL TECHNICAL RECORD IS IN `GDP_HUMAN_TERM_FINDINGS.md` (repo root). Meeting notes/transcript:
+`paper_gmd/meeting with advisor on 07_23_2026.pdf`. <<<
+
+### The meeting (main directions George gave)
+1. **Paper thesis** = "how much can sophisticated OPTIMIZATION improve a global fire model?" The headline
+   metric is the improvement of the UNOPTIMIZED expert baseline vs the optimized model (before/after ILAMB).
+2. **Biome/PFT-specific, not continent-specific.** Understand the PHYSICAL reason regional models work
+   (= our structural indistinguishability finding). Then generalize to PFT-specific / seasonal. This is the
+   same as keying params to VEGETATION STATE (solves cerrado-vs-Africa AND Lei's prognostic-migration issue).
+3. **Human term — the explicit assignment:** "go pull GDP + population + fire frequency for every country,
+   build the fire-vs-GDP plot", fit a functional form, bolt on MULTIPLICATIVELY. Make it socioeconomic, NOT
+   latitude-dependent. => DONE this session (see below).
+4. **More physics = next steps:** wind, topography (fires burn uphill), landscape fragmentation, humans.
+5. **Coupling tiers:** only forward-runnable + long-time-series forcings go in the global carbon budget
+   (land use, population, GDP qualify; roads / remote sensing do NOT — paper-only exploration). Remote
+   sensing's real value = vegetation STRUCTURE, not biomass.
+6. **Writing:** rebuild the outline as TOPIC-SENTENCE-only (one point per paragraph); then bullets, then prose.
+7. **Schematic diagram** must be fixed (box-type consistency, ED vs non-ED drivers, optimization loop +
+   implementation/coupling loop, stack of candidate models) and "make its way to the ED model".
+8. **Logistics:** meet WEEKLY for the next 3 weeks. George sending his doc + a commented parallel version.
+
+### What was BUILT this session (2026-07-24) — the GDP human-suppression term
+- `scripts/fire_vs_gdp_country.py` -> raw plot: fire falls with wealth, slope -0.92/decade, r -0.55 (164 countries).
+- `scripts/fire_vs_gdp_partial.py` -> CLIMATE-CONTROLLED: partial wealth slope -0.70/decade, r -0.47, p 4e-10.
+  Wealth keeps 76% of the raw slope after removing climate => the socioeconomic signal is REAL, not a
+  savanna-climate artifact. (This is the answer to George's obvious first objection.)
+- `scripts/add_gdp_term.py` -> bolted a GDP multiplier onto the single-global dump model (params.coupledE.k2),
+  magnitude pinned, scored on official ILAMB: **Overall 0.6547 -> 0.6603 (+0.0056), ALL in the Spatial score
+  (0.805 -> 0.821), Seasonal untouched.** Model prefers a MILD term (gamma ~0.15-0.3); over-suppresses past 0.3.
+- `scripts/fig_gdp_term.py` -> `gdp_term_figure.png` (4-panel advisor figure: driver, multiplier, dBA map, score-vs-gamma).
+- Data: World Bank GDP/pop CSVs (JSON API blocked here, CSV download endpoint works), Natural Earth 50m polygons.
+  Gridded GDP driver cached at `data_human/gdp_pcap_grid_1deg.npy` (forward-runnable => satisfies Lei's coupling rule).
+
+### IMMEDIATE NEXT (pick up here)
+- Show George `gdp_term_figure.png` + the +0.0056 result. It IS the "add physics improves the model" story,
+  and the gain is in the SPATIAL term (the paper's whole thesis).
+- Then, in priority order: (a) JOINT re-fit gamma with all params in `optimize_modelC_coupled.py` (not bolt-on);
+  (b) per-biome split of the wealth term (George's 2nd sketch); (c) stack onto Model E / the smooth coupling model;
+  (d) rebuild the paper outline topic-sentence-first.
+- Lei thread below is still open (reply drafted, not sent). GDP term ALSO advances it (forward-runnable human forcing).
+
 ## >>> READ THIS FIRST (2026-07-23) — LEI COUPLING THREAD: coupling-ready model BUILT, reply DRAFTED not sent <<<
 
 >>> FULL TECHNICAL RECORD IS IN `COUPLED_REFIT_FINDINGS.md` (repo root). Read that + this block. <<<

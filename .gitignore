@@ -68,3 +68,9 @@ ED-ModelC-tropfix2-k4/
 
 # GMD manuscript working folder — Drive-only, never committed to GitHub
 paper_gmd/
+
+# Comprehensive Portfolio (PhD candidacy doc) — Drive-only, never committed to GitHub
+cpa/
+
+# GDP-term figure cache (regenerable from add_gdp_term.py)
+data_human/gdp_term_fields.npz
