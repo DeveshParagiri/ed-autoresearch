@@ -101,9 +101,45 @@ wealth correction the model needs is gentler. The data picks a mild human term.
 - Data: `data_human/fire_vs_gdp_country.csv`, `fire_vs_gdp_partial.csv`, `gdp_pcap_grid_1deg.npy`.
 - Scored BA (gitignored, regenerable): `ilamb/MODELS_GDP/ED-ModelC-{base,gdp,gdp30,gdp50,gdp70}/`.
 
+## Step 4 — JOINT re-fit (2026-07-24): gamma fit WITH all params
+Added `GDP_TERM=1` to `optimize_modelC_coupled.py` (fits `gdp_gamma` jointly, applied
+as a rate multiplier in `predict()`). Two matched TPE runs from the k2 warm start,
+`DUMP_CLIMATE=1 SEASONAL_TRANSFORM=1 FUEL_AMP=1 MAG_BAND=1.3`, 1200 trials each:
+`params.coupledE_gdp.json` (with) and `params.coupledE_nogdp.json` (control).
+
+Official ILAMB (GFED5 burned area):
+
+| model | Overall | Bias | RMSE(2x) | Seasonal | Spatial |
+|---|---|---|---|---|---|
+| k2 base (no human) | 0.6547 | 0.6952 | 0.4863 | 0.8004 | 0.8054 |
+| bolt-on GDP g=0.15 | 0.6603 | 0.7020 | 0.4888 | 0.8004 | 0.8213 |
+| refit, no GDP (control) | 0.6567 | 0.7093 | 0.4903 | 0.7882 | 0.8055 |
+| **refit + GDP (joint)** | **0.6695** | 0.7418 | 0.5065 | 0.7744 | 0.8183 |
+
+**+0.0148 over base to 0.6695** (above paper Model E 0.6646 and the BA leaderboard
+top CLM6 0.6562, on coupling-ready dump climate). CLEAN ISOLATION: extra optimization
+alone (control) buys +0.0020; the GDP term buys +0.0128 on top. The joint fit dropped
+**fire_exp 7.09 -> 2.15** (retired the boreal-crushing concentration hack) and set
+**gdp_gamma = 1.36**, i.e. the human term SUBSTITUTES for the ad-hoc concentration.
+
+BUT regional check (Mha/yr vs GFED5) shows the aggregate gain hides a new problem:
+
+| | Africa | S.Amer | N.Amer | Boreal | Europe | India+SEA | GLOBAL |
+|---|---|---|---|---|---|---|---|
+| GFED5 | 496 | 65 | 22 | 50 | 17 | 68 | 793 |
+| k2 base | 393 | 153 | 39 | 4 | 16 | 93 | 766 |
+| refit+GDP | 517 | 71 | 18 | 29 | 20 | **222** | 932 |
+
+Fixes Africa (1.04x), the Amazon (1.09x), N.America (0.82x), lifts boreal (4->29), but
+a single GLOBAL gdp_gamma=1.36 OVER-AMPLIFIES poor monsoon Asia (India+SEA 3.3x) and
+pushes global to 1.18x. Same compensating-error lesson: one global wealth coefficient
+cannot serve both African savanna (needs amplification) and poor monsoon Asia (must
+not be amplified) — the cerrado-vs-Africa indistinguishability, now in the human term.
+=> NOT coupling-ready as-is. The fix is a BIOME/REGION-specific gdp_gamma (George's
+biome-specific direction, landing on the human predictor).
+
 ## NOT DONE / NEXT
-- Joint re-fit: let the optimizer fit gamma WITH all params (not bolt-on to a frozen
-  base) — usually finds a bit more. Add `gdp_gamma` to `optimize_modelC_coupled.py`.
+- Regional/biome gdp_gamma so Africa amplifies without blowing up Asia (in progress).
 - Per-biome split (George's 2nd sketch): fit the wealth term separately in savanna vs
   forest, check the human effect changes by vegetation type.
 - Stack onto Model E / the smooth coupling model, not just the single-global base.

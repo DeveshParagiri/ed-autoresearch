@@ -90,6 +90,14 @@ TAG           = os.environ.get("TAG", "")
 # diagnostic), which is why the paper's Model E used CRUJRA. Default off = unchanged.
 DUMP_CLIMATE = os.environ.get("DUMP_CLIMATE", "0") == "1"
 
+# GDP_TERM=1 adds a physical human-suppression multiplier keyed to GDP per capita
+# (George 2026-07-23). M(cell) = clip(10^(gdp_gamma*(w0 - log10 GDPpc)), Mlo, Mhi):
+# amplifies fire where poor, ~1 at median wealth, suppresses where wealthy. gdp_gamma
+# is FIT jointly with all other params (unlike the frozen-base bolt-on in add_gdp_term.py).
+# Applied to the fire RATE in predict(). Forward-runnable (World Bank series back to
+# 1960) so it is coupling-legal. Default off = unchanged. See GDP_HUMAN_TERM_FINDINGS.md.
+GDP_TERM = os.environ.get("GDP_TERM", "0") == "1"
+
 
 # ── 1. Hybrid driver loader: CRUJRA climate + coupled GPP ─────────────────
 def load_coupled_drivers():
@@ -181,6 +189,21 @@ w2_burn   = (w2 * land_mask).astype(np.float64)
 w3_land   = (w3 * land_mask[None, :, :]).astype(np.float64)
 print(f"[setup] land cells (GFED5 burnable): {int(land_mask.sum())} / {land_mask.size} "
       f"({100*land_mask.mean():.1f}%)")
+
+# GDP human-suppression multiplier field (1deg), fit strength gdp_gamma applied in predict()
+if GDP_TERM:
+    _gdp   = np.load(REPO / "data_human" / "gdp_pcap_grid_1deg.npy").astype(np.float64)  # 180x360, US$/cap
+    _gw    = np.log10(np.clip(_gdp, 50.0, None))
+    _ghave = np.isfinite(_gdp) & (_gdp > 0)
+    _gmask = _ghave & land_mask
+    _gw0   = float(np.median(_gw[_gmask])) if _gmask.any() else float(np.median(_gw[_ghave]))
+    _GMLO  = float(os.environ.get("GDP_MLO", 0.15))
+    _GMHI  = float(os.environ.get("GDP_MHI", 6.0))
+    def gdp_mult(gamma):
+        M = np.power(10.0, gamma * (_gw0 - _gw)); M[~_ghave] = 1.0
+        return np.clip(M, _GMLO, _GMHI).astype(np.float64)
+    print(f"[gdp] GDP_TERM ON: pivot ${10**_gw0:,.0f}/cap, "
+          f"coverage {100*_gmask.mean():.0f}% of grid, clip [{_GMLO},{_GMHI}]x")
 print(f"[setup] GFED5 land-mean monthly frac: {float((obs*w3_land).sum()/w3_land.sum()):.4g}")
 
 # ILAMB-aligned (Collier-2018) precomputes
@@ -328,8 +351,10 @@ def score_BA(pred_monthly):
 
 def predict(params):
     with np.errstate(over="ignore", invalid="ignore"):
-        rate = fire_C(drivers, params)
+        rate = fire_C(drivers, {k: v for k, v in params.items() if k != "gdp_gamma"})
     rate = rate * land_mask[None, :, :]
+    if GDP_TERM and "gdp_gamma" in params:
+        rate = rate * gdp_mult(params["gdp_gamma"])[None, :, :]
     return ed_transform(rate)
 
 
@@ -371,6 +396,13 @@ if DUMP_CLIMATE:
 LOG_PARAMS["fire_exp"] = (float(os.environ.get("FIRE_EXP_LO", 1.0)),
                           float(os.environ.get("FIRE_EXP_HI", 10.0)))
 
+# GDP_TERM: fit the human-suppression strength jointly. Log-sampled so the search
+# concentrates on the small values the data prefers (gamma ~0.15-0.3); the low end
+# (1e-3) is effectively "no term", so the optimizer can turn it off if it does not help.
+if GDP_TERM:
+    LOG_PARAMS["gdp_gamma"] = (float(os.environ.get("GDP_GAMMA_LO", 1e-3)),
+                               float(os.environ.get("GDP_GAMMA_HI", 2.0)))
+
 # Workstream A: let the annual fire rate exceed 1.0 (savanna multi-burn). Searched
 # only when RATE_AMP=1; absent => fire_C leaves the rate <= 1 (canonical). Range
 # 1..6: the diag sweep showed the per-cell ceiling reaches GFED5's 0.104 near ~2.
@@ -406,6 +438,10 @@ WARM_START = json.load(open(WARM_FILE))["params"]
 # the known baseline and grows the amplitude from there.
 if RATE_AMP and "fire_amp" not in WARM_START:
     WARM_START = {**WARM_START, "fire_amp": 1.0}
+# Seed gdp_gamma at ~0 (1e-3, effectively no term) so the warm/smoke trial reproduces
+# the base model, then the search grows the human term from there.
+if GDP_TERM and "gdp_gamma" not in WARM_START:
+    WARM_START = {**WARM_START, "gdp_gamma": 1e-3}
 WARM_START = {k: v for k, v in WARM_START.items() if k in LOG_PARAMS}
 
 
