@@ -172,6 +172,29 @@ satisfies Lei simultaneously (dump climate, no seams, forward-runnable GDP, regi
 faithful). Weak spot: boreal 0.52x (fuel-limited + GDP suppresses wealthy boreal).
 Fitted gamma saved to `data_human/gdp_regional_gamma.json`.
 
+## Step 6 — Population factor TESTED, does NOT help (2026-07-24)
+`scripts/fire_vs_pop_partial.py`. Population density (people/km2, the ignition axis) as
+a country term, with George's collinearity caution built in (nested regression + F-test):
+
+| model | R2 |
+|---|---|
+| climate+veg | 0.480 |
+| +GDP | 0.595 |
+| +pop(hump) | 0.482 |
+| +GDP+pop | 0.596 |
+
+Population adds NOTHING beyond climate (dR2=+0.002, F=0.3, p=0.74) or beyond climate+GDP
+(dR2=0.000, F=0.1, p=0.93). r(GDP, popdens) = -0.05 -> UNCORRELATED, so it is not
+redundancy with GDP; national-average population density simply carries no country-level
+burned-fraction signal. DECISION: no population term (would add noise). Caveat: this is
+NATIONAL-AVERAGE density; the literature's humped pop-fire effect is grid-cell/local and
+averaging washes it out, so a gridded/local pop field is a separate untested question.
+Fig `fire_vs_pop_partial.png`, table `data_human/fire_vs_pop_country.csv`.
+
+Remaining Tier-1 (coupling-legal) human factor George named and NOT yet tested: LAND USE
+(cropland/pasture, LUH2, already a TRENDY forcing) -- likelier to help than population
+because land use changes fire directly.
+
 ## NOT DONE / NEXT
 - Boreal still low (0.52x): fuel-limited base + GDP suppresses wealthy boreal. Needs a
   base-model fuel fix, not a human term. Could protect it with a per-region RMSE weight.
