@@ -142,6 +142,8 @@ dump's `GPP_month_*` before the production run.
 
 ## 8. Deliverable files (the "latest coupled-consistent model")
 - BA output (scored 0.6783): `ilamb/MODELS_GDP_REGIONAL/ED-ModelC-gdpreg/burntArea.nc`
+  VALIDATED: rebuilding the BA by reading the two NetCDFs from disk reproduces ILAMB
+  Overall 0.6783 exactly (`scripts/check_ed_gdp_netcdfs.py`) -- the files encode the fit.
 - Base params: `models/C/params.coupledE_gdp.json`
 - Regional gamma + constants: `data_human/gdp_regional_gamma.json`
 - **ED input NetCDFs (0.5deg, drop-in):** `data_human/coupling_inputs/gdp_pcap.nc`,
