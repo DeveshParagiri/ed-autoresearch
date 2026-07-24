@@ -38,13 +38,24 @@ This note is the "where are we, what's next" narrative.
 - Data: World Bank GDP/pop CSVs (JSON API blocked here, CSV download endpoint works), Natural Earth 50m polygons.
   Gridded GDP driver cached at `data_human/gdp_pcap_grid_1deg.npy` (forward-runnable => satisfies Lei's coupling rule).
 
+### WHERE IT ENDED (all committed + pushed to origin/coupled-refit-gfed5)
+- GDP term evolved: bolt-on (0.6603) -> JOINT refit (0.6695, retired the fire_exp=7 hack, gamma=1.36 but
+  over-burned Asia) -> REGIONAL/biome gamma (**0.6783, BEST MODEL**, coupling-ready, regionally faithful,
+  no seams). `scripts/add_gdp_regional.py`, gamma in `data_human/gdp_regional_gamma.json`,
+  BA in `ilamb/MODELS_GDP_REGIONAL/ED-ModelC-gdpreg/`. Beats paper E (0.6646) and CLM6 (0.6562) on dump climate.
+- HUMAN-FACTOR SURVEY COMPLETE: GDP = only forcing with independent skill (in model). Population tested,
+  no signal (p=0.93). Land use tested, real but redundant with GDP + the land-use-weighted GPP (p=0.13).
+  Roads/remote-sensing = no long time series (paper-only). All in `GDP_HUMAN_TERM_FINDINGS.md` Steps 1-7.
+- Optimizer now has `GDP_TERM=1` (fits gdp_gamma jointly). `SEASONAL_TRANSFORM=1` is REQUIRED to reproduce
+  the coupledE family (the bolt-on/assemble use 1-exp(-rate/12)).
+
 ### IMMEDIATE NEXT (pick up here)
-- Show George `gdp_term_figure.png` + the +0.0056 result. It IS the "add physics improves the model" story,
-  and the gain is in the SPATIAL term (the paper's whole thesis).
-- Then, in priority order: (a) JOINT re-fit gamma with all params in `optimize_modelC_coupled.py` (not bolt-on);
-  (b) per-biome split of the wealth term (George's 2nd sketch); (c) stack onto Model E / the smooth coupling model;
-  (d) rebuild the paper outline topic-sentence-first.
-- Lei thread below is still open (reply drafted, not sent). GDP term ALSO advances it (forward-runnable human forcing).
+- (a) Refresh the advisor figure for the weekly George meeting: biome-gamma map (hot Africa, cold Asia) +
+  the C->D->E->GDP->regional score ladder. Highest value (meeting is the near deadline).
+- (b) fFire/combustion retune on the new 0.6783 BA, then package the regional model as the coupling handoff to Lei.
+- (c) Rebuild the paper outline topic-sentence-first (George's writing ask).
+- Boreal is the one weak region (0.52x): fuel-limited, GDP suppresses wealthy boreal -- needs a base fuel fix, not a human term.
+- Lei thread below still open (reply drafted, not sent). The regional model IS the coupling deliverable (dump climate, no seams, forward-runnable).
 
 ## >>> READ THIS FIRST (2026-07-23) — LEI COUPLING THREAD: coupling-ready model BUILT, reply DRAFTED not sent <<<
 
