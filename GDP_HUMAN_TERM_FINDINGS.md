@@ -191,9 +191,34 @@ NATIONAL-AVERAGE density; the literature's humped pop-fire effect is grid-cell/l
 averaging washes it out, so a gridded/local pop field is a separate untested question.
 Fig `fire_vs_pop_partial.png`, table `data_human/fire_vs_pop_country.csv`.
 
-Remaining Tier-1 (coupling-legal) human factor George named and NOT yet tested: LAND USE
-(cropland/pasture, LUH2, already a TRENDY forcing) -- likelier to help than population
-because land use changes fire directly.
+## Step 7 — Land use TESTED, real but redundant with GDP (2026-07-24)
+`scripts/fire_vs_landuse_partial.py`. Land use = ED's LUH2 tiles in the dump
+(area_frac_{ntrl,scnd,past}), coupling-legal. Block = {pasture, pasture^2, secondary}:
+
+| model | R2 |
+|---|---|
+| climate+veg | 0.483 |
+| +GDP | 0.596 |
+| +landuse | 0.517 |
+| +GDP+landuse | 0.610 |
+
+Beyond CLIMATE: dR2=+0.034, F=3.6, p=0.014 (SIGNIFICANT -- unlike population, land use
+carries a real pro-fire signal). Beyond CLIMATE+GDP: dR2=+0.015, F=1.9, p=0.13 (NOT
+significant). r(GDP, pasture)=-0.18: poor countries have more pasture, so GDP already
+proxies much of it. SECOND redundancy: the model's GPP driver is the area-weighted sum
+over the ntrl/scnd/past tiles, so the fire model already ingests land use via GPP.
+DECISION: no separate land-use term (p=0.13 + GPP double-counting). Fig
+`fire_vs_landuse_partial.png`, table `data_human/fire_vs_landuse_country.csv`.
+
+## HUMAN-FACTOR SURVEY COMPLETE
+| factor | beyond climate+GDP | in model |
+|---|---|---|
+| GDP (economics) | -- (it is the reference) | YES: biome gamma, ILAMB 0.6783 |
+| Land use (LUH2) | p=0.13, redundant w/ GDP + GPP | no |
+| Population (ignition) | p=0.93, no signal | no |
+| Roads / remote sensing | no long time series | Tier-2, paper-only |
+GDP is the only human forcing with independent skill. The others were tested and
+rejected with statistics (the rigor George asked for).
 
 ## NOT DONE / NEXT
 - Boreal still low (0.52x): fuel-limited base + GDP suppresses wealthy boreal. Needs a
