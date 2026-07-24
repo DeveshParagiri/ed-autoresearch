@@ -138,8 +138,46 @@ not be amplified) — the cerrado-vs-Africa indistinguishability, now in the hum
 => NOT coupling-ready as-is. The fix is a BIOME/REGION-specific gdp_gamma (George's
 biome-specific direction, landing on the human predictor).
 
+## Step 5 — REGIONAL (biome) gdp_gamma (2026-07-24): coupling-ready, best score
+`scripts/add_gdp_regional.py`: gdp_gamma varies by region, SMOOTH-blended (Gaussian
+SIGMA=4, no hard seams), fit by coordinate descent to minimize global area-weighted
+RMSE with the global magnitude PINNED to GFED5. Base = the joint refit params
+(`params.coupledE_gdp.json`, scalar gamma stripped). Fitted gamma:
+
+    Africa 1.60   Europe 0.70   N.America 0.60   Boreal 0.50
+    S.America 0.30   SEAsia 0.10   Australia 0.00   elsewhere 0.00
+
+i.e. strong amplification in poor African savanna, ~none in poor monsoon Asia -- the
+biome discrimination a single global coefficient could not make.
+
+Official ILAMB (GFED5 burned area):
+
+| model | Overall | Bias | RMSE(2x) | Seasonal | Spatial |
+|---|---|---|---|---|---|
+| scalar global gamma | 0.6695 | 0.7418 | 0.5065 | 0.7744 | 0.8183 |
+| **REGIONAL gamma** | **0.6783** | 0.7531 | 0.5120 | 0.7745 | 0.8400 |
+
+**0.6783, +0.0088 over the scalar, and NOT compensating error** -- every region within
+0.52-1.14x of GFED5, India+SEA fixed (222 -> 58, 0.85x), global magnitude 1.0x. Best
+model to date, above paper Model E (0.6646) and CLM6 (0.6562), on coupling-ready dump
+climate with no seams. Regional Mha:
+
+| | Africa | S.Amer | N.Amer | Boreal | Europe | India+SEA | GLOBAL |
+|---|---|---|---|---|---|---|---|
+| GFED5 | 496 | 65 | 22 | 50 | 17 | 68 | 793 |
+| regional | 567 | 54 | 25 | 26 | 17 | 58 | 793 |
+
+This is George's biome-specific direction realized on the human predictor, and it
+satisfies Lei simultaneously (dump climate, no seams, forward-runnable GDP, regionally
+faithful). Weak spot: boreal 0.52x (fuel-limited + GDP suppresses wealthy boreal).
+Fitted gamma saved to `data_human/gdp_regional_gamma.json`.
+
 ## NOT DONE / NEXT
-- Regional/biome gdp_gamma so Africa amplifies without blowing up Asia (in progress).
+- Boreal still low (0.52x): fuel-limited base + GDP suppresses wealthy boreal. Needs a
+  base-model fuel fix, not a human term. Could protect it with a per-region RMSE weight.
+- Combustion/fFire retune on the new BA, and a proper coupling handoff of this model to Lei.
+- Consider keying gamma to a continuous vegetation/biome variable (true PFT) rather than
+  region boxes -- the fully migration-safe form for prognostic runs.
 - Per-biome split (George's 2nd sketch): fit the wealth term separately in savanna vs
   forest, check the human effect changes by vegetation type.
 - Stack onto Model E / the smooth coupling model, not just the single-global base.
