@@ -160,7 +160,9 @@ def main():
     area_lat = (R**2) * dlon * (np.sin(np.deg2rad(lat + 0.25)) - np.sin(np.deg2rad(lat - 0.25)))
     area_2d = np.broadcast_to(np.abs(area_lat)[:, None], (len(lat), len(lon))).astype(np.float64)
     total_PgC_per_yr = float((ba_clean * c_combust * area_2d[None, :, :]).sum()) / 1e12 / 16
-    print(f"  global total ≈ {total_PgC_per_yr:.2f} PgC/yr (GFED ref ~ 2.0 PgC/yr)")
+    print(f"  global total ≈ {total_PgC_per_yr:.2f} PgC/yr "
+          f"(GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, "
+          f"NOT the literature ~2 -- match the reference, not 2.0)")
 
     out_dir = REPO / "ilamb" / "MODELS_LEADERBOARD_FFIRE_GFED5" / (args.model + args.out_suffix)
     out_p = out_dir / "fFire.nc"

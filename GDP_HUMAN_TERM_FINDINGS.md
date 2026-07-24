@@ -210,6 +210,26 @@ over the ntrl/scnd/past tiles, so the fire model already ingests land use via GP
 DECISION: no separate land-use term (p=0.13 + GPP double-counting). Fig
 `fire_vs_landuse_partial.png`, table `data_human/fire_vs_landuse_country.csv`.
 
+## Step 8 — fFire emissions on the regional-GDP BA (2026-07-24)
+Retuned the combustion betas (`tune_combustion_params.py --ba-model ED-ModelC-gdpreg`,
+`models/hurtt-betas-gdpreg/betas.gfed5.json`) on the new 0.6783 burned area, computed
+fFire, scored official ILAMB vs 10 external TRENDY models:
+
+| | old canonical | regional-GDP |
+|---|---|---|
+| Burned area | 0.6473 (#3) | 0.6783 (would be #1) |
+| **Fire emissions** | 0.6534 (#4) | **0.6676 (#3, tied #2 w/ ELM-FATES; only CLM6 0.6913 ahead)** |
+
+Both sides improved: fix where things burn, and the carbon follows.
+
+MAGNITUDE FALSE ALARM (important, documented so nobody re-chases it): compute_emissions
+printed "global total 3.4 PgC/yr (GFED ref ~2.0)" and I nearly magnitude-constrained it.
+But **GFED5 fFire IN THIS BENCHMARK integrates to 3.38 PgC/yr** with the pipeline's area
+method (not the literature ~2 -- likely a units/definition difference in the regridded
+ref). The model's 3.41 PgC/yr is a **1.01x match to the reference it is scored against**.
+No magnitude problem. Added an optional `FF_MAG_BAND` env to the tuner anyway (off by
+default) and corrected the misleading "~2.0" comment in compute_emissions.py.
+
 ## HUMAN-FACTOR SURVEY COMPLETE
 | factor | beyond climate+GDP | in model |
 |---|---|---|

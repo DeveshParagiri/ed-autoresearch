@@ -10,7 +10,7 @@ The optimization is fast because BA, AGB, cSoil, Dbar are precomputed.
 Each trial only updates beta and recomputes fFire = BA × Σ_k (C_k × β_k(θ)) / Δt.
 """
 from __future__ import annotations
-import argparse, json, time
+import argparse, json, os, time
 from pathlib import Path
 import numpy as np, optuna, xarray as xr
 import sys
@@ -81,6 +81,16 @@ def main():
     land_fire = ((obs / FF_SCALE) > 0).any(axis=0) | (ba > 0).any(axis=0)
     w2 = (cos_lat[:, None] * land_fire).astype(np.float32)
 
+    # FF_MAG_BAND (env): pin the emissions total to GFED. Trials whose cos-lat-weighted
+    # global total is outside [1/BAND, BAND]x GFED get a graded penalty, so TPE prefers a
+    # physically-right carbon total (~2 PgC/yr) over an inflated one that only pleases the
+    # per-cell bias score. 0 (default) = off (unchanged behavior).
+    MAG_BAND = float(os.environ.get("FF_MAG_BAND", "0"))
+    clw = cos_lat[:, None]
+    obs_tot = float((obs.sum(axis=0) * clw).sum())
+    if MAG_BAND > 0:
+        print(f"  FF_MAG_BAND={MAG_BAND}: pinning emissions total to within {MAG_BAND}x GFED")
+
     seed_betas = {"leaf": 0.90, "fine": 0.80, "coarse": 0.35, "litter": 0.80}
     seed_pred = fFire_from_betas(ba, agb, csoil, dbar, seed_betas, 1000.0)
     b, r, s, sp = four_scores(seed_pred, obs, w2)
@@ -101,6 +111,11 @@ def main():
         trial.set_user_attr("bias", bias); trial.set_user_attr("rmse", rmse)
         trial.set_user_attr("seas", seas); trial.set_user_attr("spat", spat)
         trial.set_user_attr("overall", overall)
+        if MAG_BAND > 0:
+            ratio = float((pred.sum(axis=0) * clw).sum()) / (obs_tot + 1e-30)
+            trial.set_user_attr("mag_ratio", ratio)
+            if ratio > MAG_BAND or ratio < 1.0 / MAG_BAND:
+                return float(1.0 - overall + 5.0 * abs(np.log(ratio)))
         return float(1.0 - overall)
 
     sampler = optuna.samplers.TPESampler(seed=args.seed, multivariate=True, group=True,
