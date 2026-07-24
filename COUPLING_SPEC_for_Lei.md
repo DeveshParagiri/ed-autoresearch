@@ -73,11 +73,20 @@ ED already loads a `[12][360][720]` NetCDF field indexed by `[globY_][globX_]`
 (`gfed_bf`, declared `edmodels.h:675`, loaded in `load_GFED` `read_site_data.cc:1602-1632`,
 used `fire.cc:45`). Add two fields the same way:
 
-- `data->gdp_pcap[360][720]`  — GDP per capita (current US$), a NetCDF on the 0.5deg
-  grid. Static (present-day) for the historical run; **time-varying for forward runs**
-  (SSP scenarios provide gridded GDP per capita to 2100, so switch files by
-  `mechanism_year` exactly like GFED at `read_site_data.cc:1581`).
-- `data->gdp_gamma[360][720]` — the smooth per-region suppression strength (static map).
+- `data->gdp_pcap[360][720]`  — GDP per capita (current US$). **FILE PROVIDED:**
+  `data_human/coupling_inputs/gdp_pcap.nc` (var `gdp_pcap`). Static (present-day) for the
+  historical run; **time-varying for forward runs** (SSP scenarios provide gridded GDP
+  per capita to 2100, so switch files by `mechanism_year` exactly like GFED at
+  `read_site_data.cc:1581`).
+- `data->gdp_gamma[360][720]` — smooth per-region suppression strength. **FILE PROVIDED:**
+  `data_human/coupling_inputs/gdp_gamma.nc` (var `gdp_gamma`).
+
+Both are 0.5deg, **lat ASCENDING -89.75..89.75, lon -179.75..179.75** (ED's own dump
+grid), with lat/lon coordinate variables so orientation is self-describing. Sanity:
+`gdp_gamma` is 1.60 over Congo, 1.21 over the Sahel (amplify poor African savanna) and
+0.10 over India (do NOT amplify poor monsoon Asia). ONE THING TO CONFIRM: if ED's
+`globY_`=0 is at +90 rather than -90, flip both arrays in latitude (the coord vars tell
+you) -- nothing else changes.
 
 Loader stub (mirror `load_GFED`):
 ```c
@@ -135,7 +144,8 @@ dump's `GPP_month_*` before the production run.
 - BA output (scored 0.6783): `ilamb/MODELS_GDP_REGIONAL/ED-ModelC-gdpreg/burntArea.nc`
 - Base params: `models/C/params.coupledE_gdp.json`
 - Regional gamma + constants: `data_human/gdp_regional_gamma.json`
-- Gridded GDP driver (1deg npy now; NetCDF 0.5deg on request): `data_human/gdp_pcap_grid_1deg.npy`
+- **ED input NetCDFs (0.5deg, drop-in):** `data_human/coupling_inputs/gdp_pcap.nc`,
+  `data_human/coupling_inputs/gdp_gamma.nc` (built by `scripts/make_ed_gdp_netcdfs.py`)
 - Build + reproduce: `scripts/add_gdp_regional.py`, `scripts/optimize_modelC_coupled.py`
   (`GDP_TERM=1`), `scripts/reproduce_modelC.py`
 - Full method + all human-factor tests: `GDP_HUMAN_TERM_FINDINGS.md`
