@@ -250,3 +250,39 @@ rejected with statistics (the rigor George asked for).
   forest, check the human effect changes by vegetation type.
 - Stack onto Model E / the smooth coupling model, not just the single-global base.
 - Nothing promoted to canonical; this is an additive-term experiment.
+
+## Step 9 — temperate-grassland (steppe) gap + grass-curing term (2026-07-25)
+GFED burns the Kazakh/C-Asian steppe at 9.3%/yr; the model captured only 0.26x. Diagnosis
+(`diag_steppe_terms.py`): NOT temperature (ign flat 0.96) and NOT the GDP term (steppe GDP
+~$7.5k sits at the pivot, M=1.04; `test_steppe_gamma.py`: gamma 0.5->0 moves steppe 6.2->6.1).
+It is the FUEL coupling -- the model ties fire to GPP (calibrated on high-GPP African savanna),
+so low-productivity grass is under-fired; fire_exp amplifies it.
+
+FIX: a grass-CURING pathway (`proto_curing.py`, wired into `optimize_modelC_coupled.py` as
+`CURING=1`): cured fine grass burns efficiently regardless of productivity. Identify grassland
+by PRECIP (not GPP -- the steppe's low GPP is what we must not penalize), gate out forest (AGB)
+and desert (precip) and wet (dryness), boost where fuel is fine/sparse (inverse-GPP). Additive
+to the rate. Physically fixes the steppe (2->11) and Australia (11->45).
+
+KEY FINDING (third demonstration of the paper's thesis): curing vs aggregate ILAMB, gammas
+fixed, `sweep_regcure.py`:
+
+| cure_k | steppe | Australia | Africa | ILAMB |
+|---|---|---|---|---|
+| 0.00 | 2 | 11 | 612 (1.23x) | 0.6902 |
+| 0.10 | 8.5 | 36 | 593 | 0.6708 |
+| 0.20 | 10 | 42 | 588 | 0.6576 |
+| 0.35 | 11 | 45 | 585 | 0.6490 |
+
+Every increment of curing that improves regional fidelity LOWERS aggregate ILAMB,
+monotonically. ILAMB scores the compensating-error model (cure_k=0: Africa 1.23x, steppe
+dead) HIGHEST. The optimizer, maximizing aggregate ILAMB, chose a weak cure_k=0.045
+(`params.coupledE_cure.json`, joint fit 0.6769) that barely moved the steppe -- because the
+aggregate metric gives no credit for small regions.
+
+DECISION (two models, two purposes):
+- Paper / ILAMB leaderboard: the regional-GDP model (0.6783), balanced and honest.
+- Coupled run (regional carbon must be right): moderate curing cure_k~0.10-0.15 (steppe/
+  Australia much better, ILAMB ~0.68), a documented and defensible cost.
+Scripts: `diag_steppe_terms.py`, `test_steppe_gamma.py`, `proto_curing.py`,
+`assemble_regional_cure.py`, `sweep_regcure.py`, `map_gdpreg_ba*.py`.

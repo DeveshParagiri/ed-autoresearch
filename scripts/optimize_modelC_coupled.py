@@ -33,7 +33,7 @@ import optuna
 import xarray as xr
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen
+from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen, sig
 
 REPO         = Path(__file__).resolve().parents[1]
 MODELS_DIR   = REPO / "models" / "C"
@@ -97,6 +97,16 @@ DUMP_CLIMATE = os.environ.get("DUMP_CLIMATE", "0") == "1"
 # Applied to the fire RATE in predict(). Forward-runnable (World Bank series back to
 # 1960) so it is coupling-legal. Default off = unchanged. See GDP_HUMAN_TERM_FINDINGS.md.
 GDP_TERM = os.environ.get("GDP_TERM", "0") == "1"
+
+# CURING=1 adds a grass-curing fire pathway so temperate/dry grasslands (Kazakh steppe,
+# Australia) burn without the high-GPP requirement the tropical-savanna-tuned model
+# imposes. Cured fine grass burns efficiently per unit fuel, so the term is gated to
+# grassland by PRECIP (not GPP -- the steppe's low GPP is what we must not penalize),
+# gated out of forest by AGB and out of deserts by precip, dryness-modulated (cured_sat),
+# and boosted where fuel is fine/sparse (inverse GPP). Additive to the fire rate. Four fit
+# params: cure_k, cure_p_min, cure_gpp_ref, cure_agb_crit. Default off. See proto_curing.py.
+CURING = os.environ.get("CURING", "0") == "1"
+_CURE_KEYS = ("cure_k", "cure_p_min", "cure_gpp_ref", "cure_agb_crit")
 
 
 # ── 1. Hybrid driver loader: CRUJRA climate + coupled GPP ─────────────────
@@ -204,6 +214,19 @@ if GDP_TERM:
         return np.clip(M, _GMLO, _GMHI).astype(np.float64)
     print(f"[gdp] GDP_TERM ON: pivot ${10**_gw0:,.0f}/cap, "
           f"coverage {100*_gmask.mean():.0f}% of grid, clip [{_GMLO},{_GMHI}]x")
+
+# Grass-curing pathway precomputes (fields independent of the fit params)
+if CURING:
+    _p_ann_cell = drivers["p_ann"].mean(0, keepdims=True).astype(np.float64)    # (1,180,360)
+    _gpp_cell   = drivers["gpp_monthly"].mean(0, keepdims=True).astype(np.float64)
+    _agb_cell   = drivers["agb"].mean(0, keepdims=True).astype(np.float64)
+    _cured_sat  = sig(drivers["dbar"], 0.001, 3000.0).astype(np.float64)         # (192,...) dry -> cured
+    def curing_term(p):
+        grass_zone = 1.0 / (1.0 + np.exp(-0.02 * (_p_ann_cell - p["cure_p_min"])))          # rain -> grass, not desert
+        grass_gate = 1.0 / (1.0 + np.power(np.clip(_agb_cell / p["cure_agb_crit"], 0, None), 3.0))  # not forest
+        inv_gpp    = 1.0 / (1.0 + _gpp_cell / (p["cure_gpp_ref"] + 1e-9))                    # fine sparse grass burns more
+        return (p["cure_k"] * grass_zone * grass_gate * inv_gpp * _cured_sat).astype(np.float64)
+    print("[curing] CURING ON: grass-curing pathway (precip-gated, forest/desert-gated, inverse-GPP)")
 print(f"[setup] GFED5 land-mean monthly frac: {float((obs*w3_land).sum()/w3_land.sum()):.4g}")
 
 # ILAMB-aligned (Collier-2018) precomputes
@@ -350,8 +373,11 @@ def score_BA(pred_monthly):
 
 
 def predict(params):
+    fc = {k: v for k, v in params.items() if k != "gdp_gamma" and k not in _CURE_KEYS}
     with np.errstate(over="ignore", invalid="ignore"):
-        rate = fire_C(drivers, {k: v for k, v in params.items() if k != "gdp_gamma"})
+        rate = fire_C(drivers, fc)
+    if CURING and "cure_k" in params:                 # additive grass-curing pathway
+        rate = rate + curing_term(params)
     rate = rate * land_mask[None, :, :]
     if GDP_TERM and "gdp_gamma" in params:
         rate = rate * gdp_mult(params["gdp_gamma"])[None, :, :]
@@ -403,6 +429,13 @@ if GDP_TERM:
     LOG_PARAMS["gdp_gamma"] = (float(os.environ.get("GDP_GAMMA_LO", 1e-3)),
                                float(os.environ.get("GDP_GAMMA_HI", 2.0)))
 
+# CURING: four grass-curing params fit jointly. cure_k log-sampled (low end = term off).
+if CURING:
+    LOG_PARAMS["cure_k"]        = (1e-3, 3.0)      # curing strength
+    LOG_PARAMS["cure_p_min"]    = (80.0, 400.0)    # precip (mm) above which grass exists (not desert)
+    LOG_PARAMS["cure_gpp_ref"]  = (0.05, 2.0)      # inverse-GPP reference (fine-fuel boost)
+    LOG_PARAMS["cure_agb_crit"] = (1.0, 8.0)       # AGB above which it's forest (curing off)
+
 # Workstream A: let the annual fire rate exceed 1.0 (savanna multi-burn). Searched
 # only when RATE_AMP=1; absent => fire_C leaves the rate <= 1 (canonical). Range
 # 1..6: the diag sweep showed the per-cell ceiling reaches GFED5's 0.104 near ~2.
@@ -442,6 +475,9 @@ if RATE_AMP and "fire_amp" not in WARM_START:
 # the base model, then the search grows the human term from there.
 if GDP_TERM and "gdp_gamma" not in WARM_START:
     WARM_START = {**WARM_START, "gdp_gamma": 1e-3}
+# Seed curing OFF (cure_k~0) so the warm/smoke trial reproduces the base model, then grow it.
+if CURING and "cure_k" not in WARM_START:
+    WARM_START = {**WARM_START, "cure_k": 1e-3, "cure_p_min": 180.0, "cure_gpp_ref": 0.3, "cure_agb_crit": 2.5}
 WARM_START = {k: v for k, v in WARM_START.items() if k in LOG_PARAMS}
 
 
