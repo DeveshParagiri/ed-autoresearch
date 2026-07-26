@@ -32,13 +32,13 @@ def mapax(i,m,lat,lon,title):
     d=gC(m); im=ax.pcolormesh(lon,lat,np.where(d>0.1,d,np.nan),transform=ccrs.PlateCarree(),cmap="OrRd",vmin=0,vmax=200,shading="auto")
     ax.set_title(title,fontsize=11); return im
 mapax(0,gf,latg,long,"GFED5 emissions")
-mapax(1,A,latA,lonA,"A  Leaderboard\nfFire ILAMB 0.667  (3.4 PgC/yr)")
-im=mapax(2,B,latB,lonB,"B  Coupling (+curing)\nfFire ILAMB 0.656  (3.4 PgC/yr)")
+mapax(1,A,latA,lonA,"F  Regional-GDP\nfFire ILAMB 0.667  (3.4 PgC/yr)")
+im=mapax(2,B,latB,lonB,"G  = F + curing\nfFire ILAMB 0.656  (3.4 PgC/yr)")
 cax=fig.add_axes([0.35,0.53,0.32,0.017]); cb=fig.colorbar(im,cax=cax,orientation="horizontal"); cb.set_label("fire emissions (g C / m2 / yr)",fontsize=9); cb.ax.tick_params(labelsize=8)
 
 axb=fig.add_subplot(gs[1,:]); regs=list(RB); x=np.arange(len(regs)); wb=0.26
 gv=[emis(gf,latg,long,RB[r]) for r in regs]; av=[emis(A,latA,lonA,RB[r]) for r in regs]; bv=[emis(B,latB,lonB,RB[r]) for r in regs]
-axb.bar(x-wb,gv,wb,label="GFED5 (truth)",color="0.35"); axb.bar(x,av,wb,label="A leaderboard",color="#0072B2"); axb.bar(x+wb,bv,wb,label="B coupling (+curing)",color="#D55E00")
+axb.bar(x-wb,gv,wb,label="GFED5 (truth)",color="0.35"); axb.bar(x,av,wb,label="F  regional-GDP",color="#0072B2"); axb.bar(x+wb,bv,wb,label="G  = F + curing",color="#D55E00")
 for xi,(g0,a0,b0) in enumerate(zip(gv,av,bv)):
     for dx,val,c in [(-wb,g0,"0.35"),(0,a0,"#0072B2"),(wb,b0,"#D55E00")]:
         axb.text(xi+dx,val+8,f"{val:.0f}",ha="center",va="bottom",fontsize=7,color=c)

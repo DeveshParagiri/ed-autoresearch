@@ -30,8 +30,8 @@ def mapax(i,data,title):
     im=ax.pcolormesh(lon,lat,np.where(np.nan_to_num(data)>0,data,np.nan),transform=ccrs.PlateCarree(),cmap="YlOrRd",vmin=0,vmax=15,shading="auto")
     ax.set_title(title,fontsize=11); return im
 mapax(0,gf,"GFED5 observed")
-mapax(1,A,"A  Leaderboard model\nILAMB 0.679  (best score)")
-im=mapax(2,B,"B  Coupling model (+curing)\nILAMB 0.654  (steppe fixed)")
+mapax(1,A,"F  Regional-GDP model\nILAMB 0.679  (best score)")
+im=mapax(2,B,"G  = F + curing\nILAMB 0.654  (steppe fixed)")
 cax=fig.add_axes([0.35,0.53,0.32,0.017]); cb=fig.colorbar(im,cax=cax,orientation="horizontal")
 cb.set_label("burned fraction (% / yr)",fontsize=9); cb.ax.tick_params(labelsize=8)
 
@@ -40,14 +40,14 @@ axb=fig.add_subplot(gs[1,:])
 regs=list(RB); x=np.arange(len(regs)); wbar=0.26
 gv=[mha(gf,RB[r]) for r in regs]; av=[mha(A,RB[r]) for r in regs]; bv=[mha(B,RB[r]) for r in regs]
 axb.bar(x-wbar,gv,wbar,label="GFED5 (truth)",color="0.35")
-axb.bar(x,av,wbar,label="A leaderboard (no curing)",color="#0072B2")
-axb.bar(x+wbar,bv,wbar,label="B coupling (+curing)",color="#D55E00")
+axb.bar(x,av,wbar,label="F  regional-GDP (no curing)",color="#0072B2")
+axb.bar(x+wbar,bv,wbar,label="G  = F + curing",color="#D55E00")
 for xi,(g0,a0,b0) in enumerate(zip(gv,av,bv)):
     for dx,val,c in [(-wbar,g0,"0.35"),(0,a0,"#0072B2"),(wbar,b0,"#D55E00")]:
         axb.text(xi+dx,val+4,f"{val:.0f}",ha="center",va="bottom",fontsize=7,color=c)
 axb.set_xticks(x); axb.set_xticklabels(regs,fontsize=10)
 axb.set_ylabel("burned area (Mha / yr)"); axb.set_ylim(0,620)
-axb.set_title("Regional burned area: A misses the steppe & Australia; B fixes them (small aggregate-score cost)",fontsize=11)
+axb.set_title("Regional burned area: F misses the steppe & Australia; G fixes them (small aggregate-score cost)",fontsize=11)
 axb.legend(fontsize=9,frameon=False,ncol=3,loc="upper right")
 for sp in ("top","right"): axb.spines[sp].set_visible(False)
 _st=(mha(A,RB["Steppe"]),mha(B,RB["Steppe"])); _au=(mha(A,RB["Australia"]),mha(B,RB["Australia"]))
