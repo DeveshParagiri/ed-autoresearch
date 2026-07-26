@@ -54,5 +54,5 @@ _st=(mha(A,RB["Steppe"]),mha(B,RB["Steppe"])); _au=(mha(A,RB["Australia"]),mha(B
 axb.annotate(f"steppe {_st[0]:.0f} -> {_st[1]:.0f}\nAustralia {_au[0]:.0f} -> {_au[1]:.0f}",xy=(6,75),fontsize=8.5,color="#D55E00",ha="center")
 
 fig.suptitle("Two models, two purposes: aggregate ILAMB vs regional carbon fidelity",fontsize=14,y=0.98)
-fig.savefig("george_two_models.png",dpi=150,bbox_inches="tight"); print("[fig] george_two_models.png")
+fig.savefig("modelF_vs_G_burned_area.png",dpi=150,bbox_inches="tight"); print("[fig] modelF_vs_G_burned_area.png")
 print("regions:",{r:(round(mha(gf,RB[r])),round(mha(A,RB[r])),round(mha(B,RB[r]))) for r in regs})

@@ -47,5 +47,5 @@ axb.set_title("Regional fire emissions: curing adds burned AREA in grassland but
 axb.legend(fontsize=9,frameon=False,ncol=3,loc="upper right")
 for sp in ("top","right"): axb.spines[sp].set_visible(False)
 fig.suptitle("Fire emissions (fFire): leaderboard vs coupling+curing",fontsize=14,y=0.98)
-fig.savefig("george_two_models_ffire.png",dpi=150,bbox_inches="tight"); print("[fig] george_two_models_ffire.png")
+fig.savefig("modelF_vs_G_emissions.png",dpi=150,bbox_inches="tight"); print("[fig] modelF_vs_G_emissions.png")
 print("regional TgC/yr (GFED,A,B):",{r:(round(emis(gf,latg,long,RB[r])),round(emis(A,latA,lonA,RB[r])),round(emis(B,latB,lonB,RB[r]))) for r in regs})
