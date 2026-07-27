@@ -4,6 +4,18 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-07-27 — Model F shipped to Lei; F vs G decided; emissions + curing done
+- Named the two candidates F and G (follow C/D/E). Model F = regional-GDP (ILAMB BA 0.679, fFire 0.667,
+  best of ours on both TRENDY fire rows). Model G = F + grass-curing (BA 0.654, fFire 0.656; fixes steppe/
+  Australia burned AREA but adds ~no carbon -- grass is low biomass).
+- fFire retuned + scored for both; A/F leads emissions. Diagnosed the Kazakh-steppe under-burn (0.26x):
+  not temperature, not GDP (steppe at the GDP pivot), but the fuel/GPP coupling (tuned on high-GPP
+  savanna). Built + wired a grass-curing pathway (`CURING=1`); it fixes the steppe but LOWERS aggregate
+  ILAMB monotonically -- third clean demo of the metric thesis (`sweep_regcure.py`).
+- DECISION: promote Model F to Lei (carbon budget -> emissions; F wins both scored ILAMB fire rows; simpler
+  to couple). G stays a paper result. Lei email drafted (Gmail "Model E code question"), attach spec +
+  the two modelF_vs_G figures before sending. Full record: `GDP_HUMAN_TERM_FINDINGS.md` Steps 8-9.
+
 ## 2026-07-24 — Advisor meeting digest + human/GDP suppression term (DONE)
 - Read the 07/23 George meeting (`paper_gmd/meeting with advisor on 07_23_2026.pdf`). Main directions:
   paper thesis = "how much can optimization improve a global fire model" (before/after ILAMB); go

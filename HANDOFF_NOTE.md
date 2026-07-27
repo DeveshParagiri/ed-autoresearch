@@ -1,7 +1,51 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-07-23. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-07-27. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-07-27) — MODEL F SHIPPED TO LEI; F vs G DECIDED <<<
+
+>>> FULL TECHNICAL RECORD: `GDP_HUMAN_TERM_FINDINGS.md` (Steps 1-9). All committed + pushed to
+origin/coupled-refit-gfed5. The 2026-07-24 block below has the George meeting directions. <<<
+
+### The two candidate models (renamed to follow C, D, E)
+- **Model F = the regional-GDP model** (was "A"/"regional-GDP"/"ED-ModelC-gdpreg"). Model E on ED's
+  own dump drivers + a smooth per-region GDP human-suppression term. **RECOMMENDED / promoted to Lei.**
+  Official ILAMB vs GFED5: **burned area 0.679, fFire emissions 0.667** (best of our models on BOTH
+  TRENDY fire rows). Base params `models/C/params.coupledE_gdp.json`; regional gamma
+  `data_human/gdp_regional_gamma.json`; BA `ilamb/MODELS_GDP_REGIONAL/ED-ModelC-gdpreg/burntArea.nc`.
+- **Model G = F + grass-curing term** (was "B"). Fixes temperate-grassland BURNED AREA (Kazakh steppe
+  6->10, Australia 22->39) but scores LOWER (BA 0.654, fFire 0.656) and adds ~no carbon there (grass =
+  low biomass). Curing is `CURING=1` in `optimize_modelC_coupled.py`; base `params.coupledE_cure.json`.
+
+### THE DECISION (scientific): promote **Model F** to Lei, NOT G
+Reasons: (1) the coupled run is a CARBON budget -> emissions matter, and F leads emissions; G's grassland
+burned area emits almost no carbon. (2) F wins BOTH scored TRENDY rows (Burned Area Extended + Fire
+Emissions Extended) -- Richard confirmed both are scored in the official ILAMB scorecard, and both use
+the AGGREGATE metric that F wins. (3) F is simpler/more robust to couple (no extra unvalidated pathway).
+G only wins if the coupling needs grassland burned-area EXTENT itself (not carbon) -- unlikely for TRENDY.
+Curing stays a PAPER result (it's the cleanest demo of the metric thesis), not a coupled component.
+
+### Lei email — DRAFTED, ready to send (in Gmail thread "Model E code question")
+Draft recommends Model F, notes the George-meeting provenance of the GDP term, points Lei at branch
+coupled-refit-gfed5 + the spec, gives the 2 implementation checks (live GPP + dryness scale; lat orient).
+BEFORE SENDING: attach 3 files (repo root) -- `COUPLING_SPEC_for_Lei.md`, `modelF_vs_G_burned_area.png`,
+`modelF_vs_G_emissions.png`. (Gmail API can't attach; big NetCDFs stay on the branch.) Gotcha: Gmail
+auto-links filenames ending .nc/.cc/.md (country TLDs) -- the draft was reworded to drop those extensions.
+
+### IMMEDIATE NEXT (pick up here)
+1. Confirm the Lei email went out (attach the 3 figures/spec first). Coupling deliverable is otherwise DONE.
+2. Advisor figure for the next weekly George meeting: 4-panel "human factor" (score ladder C->D->E->F,
+   fire-vs-GDP, biome-gamma map, regional fidelity bars). Designed, deferred, not built.
+3. Paper: rebuild the outline TOPIC-SENTENCE-first (George's writing ask). Then the schematic diagram.
+4. Future physics (separate item the fFire work surfaced): the Australia/boreal EMISSIONS gap is a
+   BIOMASS/fuel limitation, not a burned-area one -- G fixed Australia's area but not its carbon.
+
+### Scripts added this session (all committed)
+fire_vs_{gdp_country,gdp_partial,pop_partial,landuse_partial}.py; add_gdp_{term,regional}.py;
+make_ed_gdp_netcdfs.py + check_ed_gdp_netcdfs.py (the Lei NetCDFs, validated to 0.6783);
+diag_steppe_terms.py; test_steppe_gamma.py; proto_curing.py; assemble_regional_cure.py; sweep_regcure.py;
+make_george_pair.py; make_george_figure.py + make_george_ffire_figure.py (F-vs-G figures).
 
 ## >>> READ THIS FIRST (2026-07-24) — ADVISOR MEETING (George, 07/23) + HUMAN/GDP TERM DONE <<<
 
