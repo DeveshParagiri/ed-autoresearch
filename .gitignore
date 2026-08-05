@@ -74,3 +74,6 @@ cpa/
 
 # GDP-term figure cache (regenerable from add_gdp_term.py)
 data_human/gdp_term_fields.npz
+
+# Advisor-deck figures (regenerable from scripts/make_advisor_gdp_deck_figs.py)
+figs_gdp_advisor/

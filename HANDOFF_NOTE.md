@@ -1,7 +1,197 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-07-27. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-08-04. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-08-04) — AGU ABSTRACT IS THE LIVE DELIVERABLE <<<
+
+The active work has moved OFF coupling and ONTO writing. Two live threads, the AGU abstract (deadline
+~August, so it is the near one) and the CPA. The coupling deliverable is parked exactly where the
+07-30 block below left it.
+
+### AGU 2026 abstract — v2 written to George's comments, ONE open question
+George returned the abstract with tracked changes and five comments (`paper_gmd/AGU Abstract_GH
+Comments.docx`). Revised version is `paper_gmd/AGU_2026_abstract_v2.md`, 278 words / 1873 chars, under
+the 2000-char limit. That file also carries the comment-by-comment resolution table, the numbers
+accounting, the F1 method note, and the score verification, so it is the single place to resume.
+- His retitle stands: "Development of a New Global Fire Model for Carbon Cycle Science Using
+  Autoresearch AI". The deliverable is now framed as A NEW MODEL, not as an optimization study.
+- FRAMING FLIPPED POSITIVE (his "masked" comment, Richard read it as "stop trashing our own model").
+  Every result leads as a gain. The "more than three times the observed value" clause is GONE.
+- STILL OPEN, the only blocker: George's comment said "the version of our model used was masked" and
+  the positive reframe does not mention masking at all. ASK HIM whether he wants masking stated in the
+  abstract. Recommendation is to keep it out of 250 words and carry it in the paper.
+- Submit to the CARBON MONITORING SYSTEM session George co-chairs. AGU 2026 San Francisco, ~Dec 10-14.
+
+### The search-scale numbers (his biggest comment) — DO NOT let his placeholder through
+He inserted "thousands of alternative model structures with millions of parameter combinations". NEITHER
+IS SUPPORTABLE. The three tiers are different things and the abstract now names them separately:
+- STRUCTURES = distinct equations (the gated optional terms in `fire_C`: AGB veg suppression, tropical
+  closed-canopy, fuel amplitude, scalar amplitude, seasonal transform, GDP multiplier, curing, plus the
+  historic 8-gate A and 5-gate B). Order of TEN actually run.
+- CONFIGURATIONS = structure x spatial scope x objective x saved param set. ~168 (189 JSON in models/C
+  minus 21 topk manifests). Many are k1..k8 siblings of ONE run, or the same structure fit per continent,
+  which is a SPATIAL change and not a form change.
+- PARAMETER COMBINATIONS = optuna trials. 62,600 logged.
+The early Model A/B autoresearch phase is real but UNCOUNTABLE. Its winning models, `shapley.json` and
+`MASTER_RESULTS.md` survive in git history but no trial-by-trial logs were ever committed. Folding it in
+would also overstate the fire search because that phase tuned SIX ED modules, not fire alone.
+Reported floor: "more than 160 configurations, more than sixty thousand parameter combinations".
+
+### F1 added (his "F1 scores?" comment) — `scripts/compute_fire_f1.py`
+Fire presence per grid cell on the 2001-2016 annual climatology, 0.5 deg, threshold 0.1%/yr (the same
+threshold as the paper's active-fire mask), GFED5 as truth, 50,790 valid cells.
+**ED-stock 0.452 -> Model E 0.764.** Holds at every threshold, 0.01% gives 0.486 -> 0.802 and 1% gives
+0.425 -> 0.682, so it is not an artifact of the cutoff. Precision/recall 0.783/0.318 vs 0.850/0.694.
+THE TALKING POINT: the baseline failure is RECALL, not precision. ED-stock misses two thirds of the cells
+GFED5 says burn while burning 3x too much area in the ones it does find, which is how a model
+over-predicts total burned area and under-detects fire extent at the same time. Monthly cell-month F1 is
+0.256 -> 0.442, held in reserve and not in the abstract.
+UNITS GOTCHA handled in the script: GFED5 burntArea is PERCENT, model output is FRACTION.
+
+### ED-stock baseline CONFIRMED (the 0.42 and 0.21 were unverified until now)
+ED-stock is NOT in the clean `paper_gmd/scoring/ba_clean` run (that holds only C, D, E-clean,
+E-seasonal), so the floor numbers were inherited rather than verified. Ran ED-stock + E-clean together
+through official ILAMB against GFED5 in one apples-to-apples run:
+  ED-stock  Bias 0.5437  RMSE 0.4652  Seas 0.4298  Spatial 0.2085  Overall 0.4225
+  E-clean   Bias 0.7514  RMSE 0.4753  Seas 0.7455  Spatial 0.8756  Overall 0.6646
+Reproduces the recorded table exactly, so the abstract's 0.42 -> 0.66 and 0.21 -> 0.88 are both verified.
+Evidence at `paper_gmd/scoring/ba_stockcheck/scalar_database.csv`.
+**GOTCHA WORTH REMEMBERING:** ILAMB's `scalar_database.csv` `Source` column reads `c` instead of `GFED5`
+in some runs. It is a COLUMN QUIRK, not a different reference dataset. That is what made the older
+`scoring/ba` run look unverified, and it cost an investigation. It was GFED5 all along.
+
+### CPA — Section IV COMPLETE (drive-only, gitignored, `cpa/STATUS.md` to resume)
+IV.A research narrative (undergrad mining study, MS Boston flood + DC food deserts, doctoral fire work as
+centerpiece written to the NEW thesis framing, Great Basin, biomass-uncertainty review, NASA Central
+Africa), IV.B four competencies needing preparation, IV.C Chapters 2 and 3, IV.D outputs list. Exported to
+`cpa/CPA_OwusuAnsah.docx`. Sections II and III were already complete. Sections I, V, VI, VII, VIII still
+skeleton. Next CPA target is VII (dissertation idea paper) or VI (annotated bib reformat).
+
+### Also worth knowing
+- 2026-08-01 (never written up until now): thesis reframed to "how much can optimization improve a global
+  fire model"; repo audit of George's version table -> `paper_gmd/version_table_audit.md` + corrected
+  table `cpa/Fire_Model_Version_Table_CORRECTED.docx`; AGU abstract v1. All detail in `paper_gmd/STATUS.md`.
+- SESSION-CONTEXT LESSON: a `/compact` late on 08-04 lost a further abstract refinement that had never
+  been written to a file. Everything of value now lives in `paper_gmd/AGU_2026_abstract_v2.md`. Write
+  deliverables to FILES as they are agreed, do not leave them in the conversation.
+
+## >>> READ THIS FIRST (2026-07-30) — GEORGE MEETING: E & F ARE OUT FOR COUPLING (1850 rule) <<<
+
+### THE PIVOT (today's George meeting) -- this changes the coupling deliverable
+- NEW HARD CONSTRAINT: every input to the coupled run must extend back to ~1850 (historical carbon-budget
+  run). GDP does NOT go back that far -> GDP is DISALLOWED for coupling. This REVERSES last week's
+  "forward-runnable is enough" rule that had let GDP in. Richard flagged the reversal himself.
+- Therefore **Model F (GDP) AND Model E (per-continent seams) are BOTH OUT for the coupled run.** F had
+  already been "shipped to Lei" -> it is now SUPERSEDED; Lei must be told the coupling deliverable changed.
+- NEW coupling target (George's words): a model BETTER than C and D, NOT per-continent (no seams), NO GDP.
+- **WE ALREADY HAVE IT: the single-global ED-dump refit = the `coupledE` family** (`models/C/params.coupledE*.k*.json`).
+  ~0.652-0.655 ILAMB BA, above C (0.6473) and D (0.6411). Single global (no seams), no GDP, runs on ED state
+  (biomass, GPP) + climate -- all extend to 1850. Built in the July coupling work, passed over THEN only
+  because E/F scored higher (now disallowed). See the 2026-07-23 coupling block below for the coupledE build.
+- HONEST CAVEAT to carry: this single-global model is the "regionally broken" one (good global TOTAL via
+  compensating regional errors -- boreal under-burns, S.America over-burns). It is the CONSTRAINED best
+  under no-seams + no-GDP + back-to-1850. E / F / the GDP story become PAPER / OFFLINE results, not coupled.
+- PRINCIPLED long-term fix George himself pointed at (07/23): key params to VEGETATION STATE (AGB / tree
+  cover / PFT), not lat/lon or GDP -> removes seams, needs no GDP, extends to 1850, migrates with veg. NOT
+  built. This is the right next model IF single-global regional errors matter for the carbon budget.
+
+### IMMEDIATE NEXT (coupling), pick up here
+1. Confirm the exact best `coupledE` variant + its ILAMB score (several k-files; nail down the pick).
+2. Retune combustion betas (fFire) on that BA so emissions are consistent (scripts/tune_combustion_params.py).
+3. Package + tell Lei that F is superseded; the coupled deliverable is now the single-global no-GDP model.
+
+### SCHEMATIC (paper Fig 1) -- REBUILT to George's actual hand-drawn sketch (grounded in the transcript)
+Read the 07/23 transcript this session (`paper_gmd/meeting with advisor on 07_23_2026.pdf`, extracted with
+pypdf) instead of guessing. Final `paper_gmd/figures/make_schematic.py` -> autoresearch_schematic.{png,pdf}:
+- PROPER FLOWCHART SHAPES, shape = type, NO legend/key (George: "you can't have different kinds of things
+  in the same kind of boxes"): Inputs = PARALLELOGRAM (data; split ED biomass/GPP vs non-ED climate/GDP,
+  GDP-only human input); fire model versions = STACKED rectangles (C/D/E/F, F promoted); Burned area +
+  carbon = PARALLELOGRAM (a model PRODUCT); Score / compare to benchmarks = RECTANGLE (an ACTIVITY).
+  [BA=product, Score=activity is George's exact wording -- I had them backwards before.]
+- TWO loops, FUNCTIONAL labels only (NO person names -- it is a publication figure): (1) auto-research loop
+  (score iterates back to the model, top); (2) implementation loop (couple the chosen model back into ED,
+  bottom, green) -- points at the ED PART of the inputs ONLY (biomass, GPP). REMOVED: the GCB/TRENDY end
+  box, the "converged?" diamond, the native-fire box (all were my inventions, not George's).
+- Still pending George's confirm. make_schematic.py is the source of truth; png/pdf regenerable.
+
+### CPA (Comprehensive Portfolio) -- Richard pivoted to this at end of session
+`cpa/` (Drive-only, gitignored). Section II COMPLETE (II.A original goals verbatim; II.B current goals =
+4 academic / 3 research / 4 professional; II.C 3x3 goals-framework schematic `cpa/framework_goals.png`,
+rows Academic/Research/Professional x cols Past/Present/Future, overarching-goal + scholar-practitioner
+banners). Sections I/III/IV/V/VI/VII/VIII still skeleton. Next drafts: VI (reformat the annotated bib) or
+VII (dissertation idea paper from paper_gmd + preproposal Ch2/3). Needs from Richard: CV, transcript, PAC
+member names. Read `cpa/STATUS.md` to resume. HOUSE STYLE strict (no em/en-dash, no semicolon/colon in
+prose, formal register, noun-phrase goal headers, avoid the word "program", never borrow sample phrasing).
+
+### ALSO this session
+- ADVISOR DECK for the GDP human-factor work built + verified (the 2026-07-29 block below has the detail).
+  NOTE: the GDP story is now a PAPER result, not coupled (see the pivot above).
+- ILAMB scoring learned from Collier2018 (`paper_gmd/references/CITED_PAPERS/Collier2018_ILAMB.pdf`):
+  Overall = (Sbias + 2*Srmse + Sphase + Siav + Sdist)/6, RMSE double-weighted; IAV omitted for fire, so
+  OUR Overall = (Bias + 2*RMSE + Seasonal + Spatial)/5. Collier 2.3 themselves warn "a higher score does
+  not necessarily reflect a more process-oriented model" = our metric-thesis in the benchmark authors' words.
+- COMMIT still NOT run this session (a classifier outage earlier + Richard deferred). Staged/ready: the deck
+  scripts + docs; the schematic generator lives in paper_gmd (Drive-only). When committing: LOCAL only, NO push.
+
+## >>> READ THIS FIRST (2026-07-29) — GDP->Model F ADVISOR DECK BUILT (weekly George meeting) <<<
+
+Lei email confirmed DELIVERED (Richard). Coupling deliverable stays DONE. This session built the
+advisor slide deck for George's human-factor / GDP assignment. Four-beat story, GDP only (no C/D/E
+backstory -- George knows it): plot it -> prove it is real -> prove it is the right factor -> build it
+in biome-specifically -> it wins.
+
+DECK: `GDP_ModelF_advisor_deck.pptx` (repo root; *.pptx is gitignored -> carried on Drive, regenerate
+from the two scripts). 6 slides, 16:9. Speaker notes carry the spoken script + backup numbers, with the
+two honesty asterisks baked in where they belong: (1) the biome-gamma map is CALIBRATED to GFED5, not
+derived from first principles; (2) boreal 0.52x + Australia 0.37x run low = a base FUEL/biomass limit,
+not the human term. Flow: S1 title -> S2 beat1 (signal real) -> S3 beat2 (right factor) -> S4 beat3
+(biome-specific gamma map) -> S5 beat4 (regional payoff) -> S6 bottom line.
+
+SCRIPTS (committed, re-runnable in edfire; python-pptx pip-installed into edfire this session):
+- `scripts/make_advisor_gdp_deck_figs.py` -> figs_gdp_advisor/ (4 PNGs, gitignored dir). All from cached
+  data, no model re-run. Beat 1 names exemplars (DR Congo/Zambia/S.Sudan/Angola vs USA/Germany/Norway)
+  on BOTH the raw and climate-removed panels -- the same countries hold position after climate is removed.
+  Beat 2 reproduces the CANONICAL nested-model F-test from the cached country CSVs (the original
+  fire_vs_{pop,landuse}_partial.py have hardcoded Mac paths but wrote the CSVs, which carry every column).
+- `scripts/build_gdp_advisor_deck.py` -> assembles the pptx.
+
+NUMBERS VERIFIED vs GDP_HUMAN_TERM_FINDINGS.md: raw -0.92/decade r-0.55 (164 countries); partial
+-0.70/decade r-0.47 p2e-10; population F=0.1 p=0.93; land use F=1.9 p=0.13; regional global 0.98x,
+Africa 1.13x, boreal 0.52x, Australia 0.37x. Controlled GDP-only score jump (if George asks): 0.6547 -> 0.6603.
+
+### SCHEMATIC -- our v2 is WRONG; George gave a hand-drawn target. REBUILD to his sketch (Mac mini)
+Our v2 (`paper_gmd/figures/make_schematic.py`, color-coded rounded boxes + two shaded loop panels) does
+NOT match George. He handed a HAND-DRAWN schematic (photo shown 07-29). THE ACTUAL TARGET:
+
+- **Flowchart SHAPES encode TYPE, not color** (his explicit point; the two loose shapes he drew = a key).
+  Use real flowchart geometry: PARALLELOGRAM = data / input-output (drivers, GFED5, scores);
+  RECTANGLE = process (Fire Model, compute burned area + carbon); DIAMOND = decision (converged?);
+  STADIUM/rounded = start-end terminator; STACKED rectangles = the model-version set. Drop the color legend.
+- **Single flat pipeline + a feedback loop** (NOT our two big panels):
+  Inputs -> Fire Model -> Burned area + Carbon -> Scores / compare to benchmarks -> "backward revision"
+  feedback loop back into Fire Model (+ an outer return loop). Simpler and flatter than ours.
+- **Inputs box split ED vs non-ED**: ED = Biomass, GPP;  non-ED = Climate, **GDP ONLY** (Richard: drop
+  POP and Landuse from the figure even though George's sketch listed them -- stats found them redundant).
+- **"Burned area + Carbon" is ONE output box** (not our split predict-BA vs coupling-carbon).
+- **Scores box = "compare to benchmarks"** (the TRENDY leaderboard framing), not just "Score vs GFED5".
+- **Coupled run**: the return/coupling path George verbally called "Lei" is the COUPLED RUN -- label it
+  "Coupled run", NOT "Lei" (that was him narrating the box).
+- **Model versions labelled C, D, E, F** (our naming), shown as the stacked-rectangles set.
+- The optimization loop is its own explicit element feeding the model stack.
+RICHARD may still probe George for more. Treat the current make_schematic.py as scrap; rebuild from the
+sketch photo. NOTE the figure content vs DRAFT.md (still Model-E-only) -> fold-in-F decision still open.
+
+### COMMIT STATUS -- NOT committed this session (deferred by Richard + a classifier outage)
+Staged/ready but NOT run: the deck scripts (make_advisor_gdp_deck_figs.py, build_gdp_advisor_deck.py),
+.gitignore, HANDOFF_NOTE.md, PROGRESS.md. The schematic generator lives in paper_gmd (drive-only, force-added
+on this branch). When committing: local only, DO NOT push (Richard's instruction). Deck pptx + figs_gdp_advisor
+PNGs are gitignored (regenerable).
+
+NEXT (unchanged from 07-27, minus the now-done Lei email): (a) run the deferred local commit (no push).
+(b) SCHEMATIC: get George's actual preferred layout, rework make_schematic.py (home/Mac mini). (c) paper
+outline topic-sentence-first (George's writing ask) -- this is where the fold-in-F-into-the-paper decision
+gets made. (d) the Australia/boreal EMISSIONS gap is a biomass/fuel fix in the base model, not a human-term fix.
 
 ## >>> READ THIS FIRST (2026-07-27) — MODEL F SHIPPED TO LEI; F vs G DECIDED <<<
 
