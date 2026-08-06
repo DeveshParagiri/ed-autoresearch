@@ -69,6 +69,14 @@ _PRESETS = {
                "Europe": "params.G_Europe.json", "N.America": "params.G_NAmerica.json",
                "Australia": "params.G_Australia.json"},
               "ED-ModelG7-continental"),
+    # "G6" = G7 minus Australia. Australia's own fit gained only +0.008 on its region and
+    # LOWERED its spatial score (0.6477 -> 0.6147), the same behaviour that made Model E leave
+    # Australia on the global fallback. Keep-best-per-region is decided on the ASSEMBLED global
+    # score, so both G6 and G7 are built and scored.
+    "G6":    ({"Africa": "params.G_Africa.json", "Boreal": "params.G_Boreal.json",
+               "S.America": "params.G_SAmerica.json", "SEAsia": "params.G_SEAsia.json",
+               "Europe": "params.G_Europe.json", "N.America": "params.G_NAmerica.json"},
+              "ED-ModelG6-continental"),
     "clean": ({"Africa": "params.africafuel.json", "Boreal": "params.boreal.json",
                "S.America": "params.samerica.json", "SEAsia": "params.seasia.json",
                "Europe": "params.europe.json"},
@@ -140,7 +148,8 @@ _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
            "cell": "MODELS_CONTINENTAL_CELL",
            "clean": "MODELS_CONTINENTAL_CLEAN",
            "G": "MODELS_CONTINENTAL_G",
-           "G7": "MODELS_CONTINENTAL_G7"}[ASSEMBLY]
+           "G7": "MODELS_CONTINENTAL_G7",
+           "G6": "MODELS_CONTINENTAL_G6"}[ASSEMBLY]
 # ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
 # folder without touching the existing MODELS_CONTINENTAL outputs.
 _OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")

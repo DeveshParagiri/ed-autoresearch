@@ -12,11 +12,13 @@ echo "[wait] both present; letting the optimizer finish writing"
 until ! tasklist //FI "IMAGENAME eq python.exe" 2>/dev/null | grep -q "optimize"; do sleep 10; break; done
 sleep 30
 
-echo "[assemble] seven-region Model G"
+echo "[assemble] Model G with all seven regions, and with six (Australia dropped)"
 SEASONAL_TRANSFORM=0 ASSEMBLY=G7 ASSEMBLE_FALLBACK=params.nsga2.json "$EDPY" scripts/assemble_continental.py
+SEASONAL_TRANSFORM=0 ASSEMBLY=G6 ASSEMBLE_FALLBACK=params.nsga2.json "$EDPY" scripts/assemble_continental.py
 
-mkdir -p paper_gmd/models/G7 paper_gmd/models/H
+mkdir -p paper_gmd/models/G7 paper_gmd/models/G6 paper_gmd/models/H
 cp ilamb/MODELS_CONTINENTAL_G7/ED-ModelG7-continental/burntArea.nc paper_gmd/models/G7/burntArea.nc
+cp ilamb/MODELS_CONTINENTAL_G6/ED-ModelG6-continental/burntArea.nc paper_gmd/models/G6/burntArea.nc
 cp ilamb/MODELS/ED-ModelC-final/burntArea.H.nc paper_gmd/models/H/burntArea.nc
 find paper_gmd/models -name "._*" -delete 2>/dev/null
 
