@@ -77,6 +77,22 @@ _PRESETS = {
                "S.America": "params.G_SAmerica.json", "SEAsia": "params.G_SEAsia.json",
                "Europe": "params.G_Europe.json", "N.America": "params.G_NAmerica.json"},
               "ED-ModelG6-continental"),
+    # "I" = Model G's recipe with the biomass gate on in EVERY region (14 params).
+    # "Ibest" = keep-best-per-region. The gate is switched on only within 23.5 deg of the
+    # equator, so it is inert in Europe, Boreal and most of N.America. Where inert it still
+    # enlarges the search space, and those regions scored WORSE with it (Europe -0.017,
+    # N.America -0.006), so Ibest takes G's ungated fit there and the gated fit in the four
+    # regions that gained (Africa, S.America, SEAsia, Australia).
+    "I":     ({"Africa": "params.Gtrop_Africa.json", "Boreal": "params.Gtrop_Boreal.json",
+               "S.America": "params.Gtrop_SAmerica.json", "SEAsia": "params.Gtrop_SEAsia.json",
+               "Europe": "params.Gtrop_Europe.json", "N.America": "params.Gtrop_NAmerica.json",
+               "Australia": "params.Gtrop_Australia.json"},
+              "ED-ModelI-continental"),
+    "Ibest": ({"Africa": "params.Gtrop_Africa.json", "Boreal": "params.G_Boreal.json",
+               "S.America": "params.Gtrop_SAmerica.json", "SEAsia": "params.Gtrop_SEAsia.json",
+               "Europe": "params.G_Europe.json", "N.America": "params.G_NAmerica.json",
+               "Australia": "params.Gtrop_Australia.json"},
+              "ED-ModelIbest-continental"),
     "clean": ({"Africa": "params.africafuel.json", "Boreal": "params.boreal.json",
                "S.America": "params.samerica.json", "SEAsia": "params.seasia.json",
                "Europe": "params.europe.json"},
@@ -149,7 +165,9 @@ _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
            "clean": "MODELS_CONTINENTAL_CLEAN",
            "G": "MODELS_CONTINENTAL_G",
            "G7": "MODELS_CONTINENTAL_G7",
-           "G6": "MODELS_CONTINENTAL_G6"}[ASSEMBLY]
+           "G6": "MODELS_CONTINENTAL_G6",
+           "I": "MODELS_CONTINENTAL_I",
+           "Ibest": "MODELS_CONTINENTAL_IBEST"}[ASSEMBLY]
 # ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
 # folder without touching the existing MODELS_CONTINENTAL outputs.
 _OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")
