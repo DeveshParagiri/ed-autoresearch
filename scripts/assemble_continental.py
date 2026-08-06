@@ -60,6 +60,15 @@ _PRESETS = {
                "S.America": "params.G_SAmerica.json", "SEAsia": "params.G_SEAsia.json",
                "Europe": "params.G_Europe.json"},
               "ED-ModelG-continental"),
+    # "G7" = Model G with ALL SEVEN regions fitted. The five-region "G" preset above exists
+    # only to match Model E's clean assembly cell-for-cell. G's entire remaining excess sat in
+    # N.America (3.54x observed) and Australia, the two regions E leaves on the global fallback,
+    # so those were fitted too on 2026-08-06.
+    "G7":    ({"Africa": "params.G_Africa.json", "Boreal": "params.G_Boreal.json",
+               "S.America": "params.G_SAmerica.json", "SEAsia": "params.G_SEAsia.json",
+               "Europe": "params.G_Europe.json", "N.America": "params.G_NAmerica.json",
+               "Australia": "params.G_Australia.json"},
+              "ED-ModelG7-continental"),
     "clean": ({"Africa": "params.africafuel.json", "Boreal": "params.boreal.json",
                "S.America": "params.samerica.json", "SEAsia": "params.seasia.json",
                "Europe": "params.europe.json"},
@@ -130,7 +139,8 @@ enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
 _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
            "cell": "MODELS_CONTINENTAL_CELL",
            "clean": "MODELS_CONTINENTAL_CLEAN",
-           "G": "MODELS_CONTINENTAL_G"}[ASSEMBLY]
+           "G": "MODELS_CONTINENTAL_G",
+           "G7": "MODELS_CONTINENTAL_G7"}[ASSEMBLY]
 # ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
 # folder without touching the existing MODELS_CONTINENTAL outputs.
 _OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")
