@@ -4,6 +4,41 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-06 (overnight) — MODEL G IS THE BEST VERSION; the paper's conclusion changes
+- **Nine versions scored in one official ILAMB run** (`paper_gmd/scoring/ba_final/`):
+  ED-stock 0.4225 | C 0.6485 | D 0.6411 | G5 0.6818 | G6 0.6848 | **G7 0.6862** | E 0.6646 |
+  **H 0.6819** | F 0.6783.
+- **Model G, all seven regions, is the best version at 0.6862, with NO change to the equation.** Model
+  C's original 12 parameters, fitted separately by region. Headline becomes ED-stock 0.42 to 0.69, a
+  gain of 0.264 or 62 percent.
+- **The drafted conclusion is withdrawn.** "The functional form, not the scoring criterion, is the
+  binding constraint" is contradicted: C to G is +0.0377 with no form change, D to E is +0.0235.
+- **Model E is no longer the best.** It ranks fifth. It still owns the best spatial score (0.8756),
+  the best precision (0.854) and the closest magnitude of the reanalysis versions (816 Mha).
+- **Keep Australia.** Its own regional fit gained only +0.008 and lowered its regional spatial score,
+  but the assembled model is better with it (G7 0.6862) than without (G6 0.6848). Keep-best-per-region
+  must be judged on the assembly. Both were built for exactly this reason.
+- **Model H rescues the human factor.** C + GDP per capita on the same CRUJRA drivers as everything
+  else, gdp_gamma fitted jointly at 1.81, nothing pinned. 0.6819, above Model F's 0.6783. So the
+  submitted abstract's socioeconomic claim is supportable by a comparable version at last. Model F
+  becomes development history, its magnitude being imposed rather than achieved.
+- **F1 recomputed for every version**, 49746 shared cells: ED-stock 0.456, C 0.768, D 0.775, G7 0.813,
+  E 0.766, H 0.804. The paper's pair becomes 0.46 to 0.81 and recall rises 0.318 to 0.826.
+- **Three levers, three jobs.** Regional fitting buys pattern and seasonality but barely moves magnitude
+  (1001 to 946 Mha). The form change buys magnitude (1219 to 816) at a cost in seasonality. The human
+  term buys magnitude best (1001 to 830) at a cost in RMSE.
+- **BUG FIXED (8f5d0f0).** `score_BA` ignored `REGION_MASK`, so any past `REGION=` run on the default
+  S_overall objective was a global fit with a regional false-positive penalty. Bit-identical when
+  REGION is unset, asserted at import. Model E unaffected; its fits used SPATIAL_OBJ=1, the only
+  region-aware objective the code had, which is likely why that objective was chosen.
+- **Figures**: `ba_all_versions.png` (ten panels), `ba_diff_all_versions.png`, and `ba_single/` one map
+  per version. Note matplotlib CANNOT render in the `edfire` env on Windows; use `base`.
+- **Writing**: `TOPIC_SENTENCE_OUTLINE.md` complete, Introduction through Conclusions, all to these
+  scores, with five writing rules recorded.
+- **Tell George**: the submitted abstract's "0.42 to 0.66" predates Model G and understates the result.
+- **Next run worth doing**: Model I, G plus the GDP term, about 3 h. G and H gain by different routes
+  and may be close to additive.
+
 ## 2026-08-05/06 — score_BA REGION bug fixed, MODEL G RUN (best version in the paper), topic sentences
 - **BUG (commit 8f5d0f0).** `score_BA` in `optimize_modelC_coupled.py` ignored `REGION_MASK` entirely.
   Its weights (`mass_w`, `mass_w_burn`, `w2_burn`, `land_mask`) are all global, so `REGION=X` with the

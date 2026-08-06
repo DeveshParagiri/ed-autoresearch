@@ -1,7 +1,83 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-08-06. Read `CLAUDE.md` first for environment, file locations, and conventions.
-This note is the "where are we, what's next" narrative.
+Last updated: 2026-08-06 (overnight). Read `CLAUDE.md` first for environment and conventions.
+
+## >>> READ THIS FIRST — THE BEST MODEL IS NOW G, AND THE PAPER'S CONCLUSION HAS CHANGED <<<
+
+### The scores that matter (one official ILAMB run, `paper_gmd/scoring/ba_final/`)
+
+| Model | Bias | RMSE | Seasonal | Spatial | Overall | Mha/yr | F1 |
+|---|---|---|---|---|---|---|---|
+| ED-stock | 0.5437 | 0.4652 | 0.4298 | 0.2085 | 0.4225 | 2500 | 0.456 |
+| C | 0.6977 | 0.4754 | 0.8246 | 0.7691 | 0.6485 | 1001 | 0.768 |
+| D | 0.6951 | 0.4662 | 0.7914 | 0.7864 | 0.6411 | 1219 | 0.775 |
+| **G (7 regions)** | 0.7481 | 0.4936 | **0.8455** | 0.8502 | **0.6862** | 946 | **0.813** |
+| E | 0.7514 | 0.4753 | 0.7455 | **0.8756** | 0.6646 | **816** | 0.766 |
+| **H (C + GDP)** | 0.7258 | 0.5201 | 0.8353 | 0.8081 | **0.6819** | 830 | 0.804 |
+| F | 0.7531 | 0.5120 | 0.7745 | 0.8400 | 0.6783 | 785 | - |
+
+### The five things that changed
+
+1. **Model G is the best version, 0.6862.** It makes NO change to the equation. Model C's original
+   12 parameters, fitted separately for seven regions. Headline is now ED-stock 0.42 to 0.69, and the
+   F1 pair is 0.46 to 0.81 with recall rising 0.318 to 0.826.
+2. **The drafted conclusion is withdrawn.** It said the functional form rather than the scoring
+   criterion is the binding constraint. C to G is +0.0377 with no form change at all, against D to E's
+   +0.0235. Not supported. Withdraw, do not soften.
+3. **Model E is no longer the best version.** It ranks fifth. What it still owns is the best spatial
+   score (0.8756), the best precision (0.854), and the closest magnitude of the reanalysis versions.
+4. **Model H rescues the human factor.** C + GDP on the SAME drivers as everything else, gdp_gamma
+   fitted jointly at 1.81, nothing pinned. 0.6819, above Model F's 0.6783. The submitted abstract's
+   socioeconomic claim is now supportable by a comparable version. Report F as development history.
+5. **Three levers, three jobs.** Regional fitting buys pattern and seasonality, barely moves magnitude
+   (1001 to 946). The form change buys magnitude (1219 to 816), costs seasonality. The human term buys
+   magnitude best of all (1001 to 830), costs RMSE.
+
+### Tell George before he presents
+The submitted AGU abstract says the score rose "from 0.42 to 0.66". That was written before Model G
+existed and is now an understatement. The paper carries 0.69.
+
+### The one run worth doing next
+**Model I, Model G plus the GDP term.** G and H each buy about +0.035 over C by DIFFERENT routes, G
+through spatial pattern and H through magnitude. If they are close to additive, I would be the best
+model in the paper by a clear margin. Seven continental runs with `GDP_TERM=1`, about 3 h.
+Richard's instruction was to run this only if H understated the human effect. It did not, so it was
+left for him to decide.
+
+### Bug fixed this session, affects any past regional run
+`score_BA` in `optimize_modelC_coupled.py` ignored `REGION_MASK` entirely, so `REGION=X` with the
+default S_overall objective was a GLOBAL fit with a regional false-positive penalty. Fixed in commit
+8f5d0f0, bit-identical when REGION is unset (asserted at import). Model E is unaffected, its fits used
+SPATIAL_OBJ=1 which was always region-aware, and that is likely WHY that objective was chosen.
+
+### Environment gotcha, Windows
+matplotlib in the `edfire` env CANNOT render. Every `fig.savefig` dies with Windows fatal exception
+0xc06d007f in all formats. Use the `base` env for figures, `C:/Users/owusu/miniforge3/python.exe`,
+which is also where ILAMB lives. `edfire` remains the env for the optimizer.
+
+### Where the writing is
+`paper_gmd/TOPIC_SENTENCE_OUTLINE.md` is complete, Introduction through Conclusions, all updated to
+these scores. Five writing rules are recorded in it, all from Richard's pushback:
+1. No numbers in Introduction topic sentences; numbers in Results ones. Register from Ma et al. 2022.
+2. A topic sentence states the paragraph's claim, not everything the paragraph covers, about 30 words.
+3. A paragraph needs 5 or 6 sentences of material or it is not a paragraph.
+4. Results reports, Discussion argues.
+5. Name the versions, never "the optimized model".
+
+### Figures
+`paper_gmd/figures/ba_all_versions.png` (ten panels, every version, each titled with its Mha/yr),
+`ba_diff_all_versions.png`, and `ba_single/` with one map per version. Regenerate with
+`base` python on `paper_gmd/figures/make_fig_maps_all.py`; it picks up new versions automatically.
+
+### Still open with George
+- He does not want "ED-stock" but has given no replacement. Best candidate from his own abstract is
+  "its original formulation".
+- The abstract describes a two-tier search (forms and parameters); the paper argues three, including
+  the goodness-of-fit criterion. This decides how much of Results 3.2 survives.
+- Whether the version table regains a Functional form column. Without it the table says A equals B and
+  says D to E was spatial alone, both false.
+
+---
 
 ## >>> READ THIS FIRST (2026-08-06) — MODEL G CHANGES THE PAPER'S CONCLUSION <<<
 
