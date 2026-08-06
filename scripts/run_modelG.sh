@@ -9,7 +9,8 @@ set -u
 cd "$(dirname "$0")/.."
 PY="${PY:-C:/Users/owusu/miniforge3/envs/edfire/python.exe}"
 N="${N_TRIALS:-1500}"
-for R in Africa Boreal S.America SEAsia Europe; do
+REGIONS="${REGIONS:-Africa Boreal S.America SEAsia Europe}"
+for R in $REGIONS; do
   TAG="G_$(echo "$R" | tr -d '.')"
   echo "=== Model G: fitting $R  (tag=$TAG, N_TRIALS=$N)  $(date '+%H:%M:%S') ==="
   PHYSICAL=1 MAG_BAND=1.3 FP_MIN=0.80 SAMPLER=nsga2 \
