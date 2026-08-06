@@ -1,7 +1,97 @@
 # HANDOFF NOTE — ED fire submodule (Model C)
 
-Last updated: 2026-08-04. Read `CLAUDE.md` first for environment, file locations, and conventions.
+Last updated: 2026-08-06. Read `CLAUDE.md` first for environment, file locations, and conventions.
 This note is the "where are we, what's next" narrative.
+
+## >>> READ THIS FIRST (2026-08-06) — MODEL G CHANGES THE PAPER'S CONCLUSION <<<
+
+Two things happened this session that the next session must not miss. A bug in the optimizer's scorer,
+and a new model version that overturns the drafted paper's central claim.
+
+### 1. BUG FIXED in `optimize_modelC_coupled.py` — `score_BA` ignored REGION (commit 8f5d0f0)
+`score_BA`, which computes the S_overall objective, weighted bias and RMSE by `mass_w`, seasonal by
+`mass_w_burn`, and the spatial term by `land_mask` and `w2_burn`. All four are built from the GLOBAL
+land mask and none consulted `REGION_MASK`. Only `spatial_taylor` (SPATIAL_OBJ=1) and `physical_score`
+were region-aware.
+- CONSEQUENCE: `REGION=X` with the default S_overall objective was a GLOBAL fit with a regional
+  false-positive penalty. NOT a per-continent fit. The tell was `[warm] Overall=0.5987` printed
+  identically for Africa, Boreal and S.America.
+- This is also WHY Model E's continental fits used SPATIAL_OBJ=1. It was the only region-aware
+  objective the code had. Model E is unaffected and its 0.6646 stands.
+- Fix adds SCORE_MASK / SCORE_MASS_W / SCORE_MASS_W_BURN / SCORE_W2_BURN after REGION_MASK. Bit-identical
+  to the old globals when REGION and CELL_HOLDOUT are unset, asserted at import. Verified: global warm
+  start reproduces 0.5987 exactly.
+- Any past REGION run on S_overall is suspect. Three invalid G fits were discarded; their log is
+  `logs/opt_modelG.INVALID-global-scoreBA.log`.
+
+### 2. MODEL G RAN, AND IT IS THE BEST VERSION IN THE PAPER (commit a74fa54)
+G = Model C's 12-parameter form and C's S_overall objective, fitted PER CONTINENT over the same five
+regions as E's clean assembly. Only the spatial parameterization differs from C. Built to isolate the
+column that D to E confounds. Params `models/C/params.G_*.json`, `ASSEMBLY=G` in
+`assemble_continental.py`, scored in `paper_gmd/scoring/ba_withG/`.
+
+Official ILAMB, ALL versions in one run against GFED5:
+
+| Model | Bias | RMSE | Seasonal | Spatial | Overall | Mha/yr |
+|---|---|---|---|---|---|---|
+| ED-stock | 0.5437 | 0.4652 | 0.4298 | 0.2085 | 0.4225 | 2500 |
+| C | 0.6977 | 0.4754 | 0.8246 | 0.7691 | 0.6485 | 1001 |
+| D | 0.6951 | 0.4662 | 0.7914 | 0.7864 | 0.6411 | 1219 |
+| **G** | 0.7430 | 0.4885 | **0.8419** | 0.8471 | **0.6818** | 1002 |
+| E-clean | 0.7514 | 0.4753 | 0.7455 | **0.8756** | 0.6646 | 816 |
+
+**WHAT THIS OVERTURNS.** The drafted paper concludes "the functional form, not the scoring criterion,
+is the binding constraint on burned-area skill". NOT SUPPORTED. C to G is +0.0333 on the same statistic,
+D to E is +0.0235. Spatial parameterization alone bought more than the form-and-spatial bundle. That
+sentence must be WITHDRAWN, not softened.
+
+**WHAT THE TWO LEVERS ACTUALLY DID.** Regional fitting buys pattern and keeps seasonality (Spatial
+0.7691 to 0.8471, Seasonal 0.8419) but does NOT fix magnitude (1002 Mha, essentially C's 1001, against
+793 observed). The form change buys magnitude (1219 to 816) and pushes Spatial to 0.8756, but costs
+seasonality (0.7914 to 0.7455). Different jobs, which is a better finding than one lever winning.
+
+**CAVEAT, MUST BE STATED.** G and E also differ in OBJECTIVE (S_overall vs spatial-Taylor). ILAMB
+reports the composite, so G was fitted close to the metric being reported and E was not. Part of G's
+margin is that alignment.
+
+**THE ONE RUN THAT WOULD CLOSE IT.** Model G refitted on spatial-Taylor (SPATIAL_OBJ=1 SEAS_W=0),
+matching D and E exactly, about 2 h via `scripts/run_modelG.sh` with those env vars. Then D to Gspatial
+isolates spatial and Gspatial to E isolates form, statistic held fixed across all three.
+
+### 3. WRITING: topic sentences done for Introduction and Results
+`paper_gmd/TOPIC_SENTENCE_OUTLINE.md` is the live writing document. Introduction rebuilt to 7 paragraphs
+(was 5 drafted), Results to 3.1 through 3.6. Discussion and Conclusion NOT yet done and the Conclusion
+must be rewritten around the G result.
+
+FIVE WRITING RULES were established this session, all recorded in that file, all from Richard's
+pushback. Apply them to Discussion and Conclusion:
+1. Introduction topic sentences carry NO numbers. Results topic sentences DO. Register is set by
+   Ma et al. 2022 (`references/CITED_PAPERS/Ma2022_ED-v3.pdf`), which George co-authored.
+2. A topic sentence states the paragraph's CLAIM, not everything the paragraph covers. Ma's run ~30
+   words. Ours were 47 to 55 before this was caught.
+3. One paragraph needs 5 or 6 sentences of material behind it. If a claim cannot sustain that it is a
+   sentence inside another paragraph. 3.1 went 5 -> 3 on this.
+4. RESULTS REPORTS, DISCUSSION ARGUES. Ma names discrepancies without explaining them. A trial drafting
+   of 3.1 was full of "therefore" and "this explains"; those lines are parked in the outline for reuse
+   in the Discussion.
+5. NAME THE VERSIONS (ED-stock, C, D, E, F, G), never "the optimized model" or "the unoptimized module".
+   Descriptive labels assert the conclusion in the label.
+
+### 4. AGU abstract is FINAL and trimmed
+George returned it 08-05 with his own closing sentence. His text was 2130 chars, 130 OVER the AGU limit.
+Trimmed to 1938 with 62 to spare, in `paper_gmd/AGU_2026_abstract_v2.md`, which holds both his untrimmed
+return and the final, with every cut itemized. The human-factor clause is what came out.
+
+### 5. OPEN WITH GEORGE
+- He does NOT want the baseline called "ED-stock" (said 08-06) but has not given a replacement. Working
+  name kept. Best candidate from his own abstract is "its original formulation".
+- The abstract describes a search over structural forms and parameter values, TWO tiers. The paper
+  argues THREE, including the goodness-of-fit criterion. Either the abstract gains a clause or the
+  paper demotes the criterion from a headline contribution. This decides how much of 3.2 survives.
+- Whether Model F is a paper row. It is on dump climate, magnitude-pinned by construction, and not
+  GCB-viable. Model H would make it comparable.
+- Whether the version table gets a Functional form column back. Without it the table says A equals B
+  and says D to E was spatial alone, both false.
 
 ## >>> READ THIS FIRST (2026-08-04) — AGU ABSTRACT IS THE LIVE DELIVERABLE <<<
 

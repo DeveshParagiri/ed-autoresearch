@@ -4,6 +4,45 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-05/06 — score_BA REGION bug fixed, MODEL G RUN (best version in the paper), topic sentences
+- **BUG (commit 8f5d0f0).** `score_BA` in `optimize_modelC_coupled.py` ignored `REGION_MASK` entirely.
+  Its weights (`mass_w`, `mass_w_burn`, `w2_burn`, `land_mask`) are all global, so `REGION=X` with the
+  default S_overall objective was a GLOBAL fit with only a regional false-positive penalty. Caught
+  because `[warm] Overall=0.5987` printed identically for Africa, Boreal and S.America. Fixed with
+  SCORE_MASK aliases defined after REGION_MASK, bit-identical to the old globals when REGION is unset
+  (asserted at import, and the global warm start reproduces 0.5987 exactly). This is also why Model E's
+  continental fits used SPATIAL_OBJ=1, the only region-aware objective the code had. E is unaffected.
+- **MODEL G (commit a74fa54).** Model C's 12-param form and C's S_overall objective, fitted per
+  continent over E's five regions. Isolates the spatial-parameterization column that D to E confounds.
+  Official ILAMB, all versions in one run (`paper_gmd/scoring/ba_withG/`):
+  ED-stock 0.4225 | C 0.6485 | D 0.6411 | **G 0.6818** | E-clean 0.6646.
+  G IS THE HIGHEST-SCORING VERSION IN THE PAPER and it makes no structural change at all.
+- **This overturns the drafted paper's conclusion.** "The functional form, not the scoring criterion,
+  is the binding constraint" is not supported. C to G is +0.0333 against D to E's +0.0235. Withdraw,
+  do not soften.
+- **The levers do different jobs.** Regional fitting buys spatial pattern (0.7691 to 0.8471) and keeps
+  seasonality (0.8419) but does not touch magnitude (1002 Mha vs C's 1001, observed 793). The form
+  change buys magnitude (1219 to 816) and spatial (to 0.8756) but costs seasonality (to 0.7455).
+- CAVEAT: G and E differ in objective too (S_overall vs spatial-Taylor), and ILAMB reports the
+  composite, so G was fitted closer to the reported metric. A G refit on spatial-Taylor (~2 h) would
+  remove this and let the two levers be attributed cleanly.
+- Assembler updated: `ASSEMBLY=G` preset, transform now follows `SEASONAL_TRANSFORM` instead of
+  hardcoding Model E's form, fallback overridable. Verified by rebuilding Model C to 1001.5 Mha against
+  the recorded 1001.0.
+- **WRITING.** `paper_gmd/TOPIC_SENTENCE_OUTLINE.md` now carries the Introduction (7 paragraphs, was 5)
+  and all of Results. Five writing rules established and recorded, all from Richard's pushback: no
+  numbers in Introduction topic sentences but numbers in Results ones, a topic sentence states the
+  claim not the whole paragraph, a paragraph needs 5 or 6 sentences of material, Results reports while
+  Discussion argues, and name the versions rather than describing them. Register set by Ma et al. 2022,
+  which George co-authored. Discussion and Conclusion still to do.
+- Introduction P3 gained the scale-mismatch clause, now CITED (Jones 2022 p.52-54, Oberhagemann 2025
+  p.5/19/24, quotes in `references/P3/EVIDENCE.md`), so P3 and P7 name the same obstacle and the
+  introduction predicts the conclusion.
+- AGU abstract FINAL. George's 08-05 return was 2130 chars, 130 over the limit; trimmed to 1938. Both
+  versions kept in `paper_gmd/AGU_2026_abstract_v2.md` with every cut itemized.
+- Version table rebuilt to George's own 9 columns (`cpa/Fire_Model_Version_Table_CORRECTED.docx`), and
+  D to E confirmed as TWO levers not one by direct inspection of the parameter files.
+
 ## 2026-08-04 — AGU abstract v2 to George's comments, F1 computed, ED-stock baseline confirmed
 - George returned the AGU abstract with tracked changes and five comments (`paper_gmd/AGU Abstract_GH
   Comments.docx`). Revised abstract saved to `paper_gmd/AGU_2026_abstract_v2.md` (278 words, 1873 chars,
