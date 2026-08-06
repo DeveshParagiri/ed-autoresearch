@@ -297,6 +297,24 @@ if CELL_HOLDOUT:
     REGION_MASK = REGION_MASK & CELL_MASK
     print(f"[opt] CELL_HOLDOUT={CELL_HOLDOUT}: {int(REGION_MASK.sum())} cells after tile split")
 
+# ── score_BA masking (2026-08-05) ───────────────────────────────────────────
+# BUG FIX: score_BA (the S_overall objective) was weighted by mass_w / mass_w_burn /
+# w2_burn, all built from the GLOBAL land_mask, so it ignored REGION entirely. Only
+# spatial_taylor (SPATIAL_OBJ=1) and physical_score were region-aware. That made
+# `REGION=X` with the default S_overall objective a GLOBAL fit with a regional
+# false-positive penalty, not a per-continent fit -- the tell was that the [warm]
+# Overall printed identically for every region. These aliases make score_BA follow
+# REGION_MASK. When REGION and CELL_HOLDOUT are unset, REGION_MASK == land_mask and
+# every value below is bit-identical to the old globals (asserted at import).
+SCORE_MASK        = REGION_MASK
+SCORE_MASS_W      = (mass_w * REGION_MASK).astype(np.float64)
+SCORE_MASS_W_BURN = (mass_w_burn * REGION_MASK).astype(np.float64)
+SCORE_W2_BURN     = (w2_burn * REGION_MASK).astype(np.float64)
+if not REGION and not CELL_HOLDOUT:
+    assert np.array_equal(SCORE_MASS_W, mass_w), "global score_BA weights changed"
+    assert np.array_equal(SCORE_MASS_W_BURN, mass_w_burn), "global score_BA weights changed"
+    assert np.array_equal(SCORE_W2_BURN, w2_burn), "global score_BA weights changed"
+
 # Magnitude weight that follows REGION (== w3_land when global)
 W3_OBJ = (w3 * REGION_MASK[None, :, :]).astype(np.float64)
 # Restrict the false-positive / hotspot masks to REGION too (idempotent when global,
@@ -327,13 +345,13 @@ def score_BA(pred_monthly):
     # Bias score: exp(-|bias / crms|), mass-weighted
     bias_per_cell = pred_tm - gfed_tm
     bias_score_per_cell = np.exp(-np.abs(bias_per_cell) / gfed_std)
-    bias = float((bias_score_per_cell * mass_w).sum() / (mass_w.sum() + 1e-12))
+    bias = float((bias_score_per_cell * SCORE_MASS_W).sum() / (SCORE_MASS_W.sum() + 1e-12))
 
     # RMSE score: centralized RMSE / crms, mass-weighted
     pred_anom = pred_monthly.astype(np.float64) - pred_tm[None, :, :]
     crmse_per_cell = np.sqrt(((pred_anom - obs_anom) ** 2).mean(axis=0))
     rmse_score_per_cell = np.exp(-crmse_per_cell / gfed_std)
-    rmse_s = float((rmse_score_per_cell * mass_w).sum() / (mass_w.sum() + 1e-12))
+    rmse_s = float((rmse_score_per_cell * SCORE_MASS_W).sum() / (SCORE_MASS_W.sum() + 1e-12))
 
     # Seasonal score: phase-shift of month-of-peak
     pred_cyc = pred_monthly.reshape(N_YEARS, 12, 180, 360).mean(axis=0)
@@ -342,12 +360,12 @@ def score_BA(pred_monthly):
     shift = np.where(shift >  6, shift - 12, shift)
     shift = np.where(shift < -6, shift + 12, shift)
     seas_per_cell = (1.0 + np.cos(np.abs(shift) / 12.0 * 2.0 * np.pi)) * 0.5
-    seas = float((seas_per_cell * mass_w_burn).sum() / (mass_w_burn.sum() + 1e-12))
+    seas = float((seas_per_cell * SCORE_MASS_W_BURN).sum() / (SCORE_MASS_W_BURN.sum() + 1e-12))
 
     # Spatial score: Taylor diagram (ILAMB Variable.py)
-    obs_flat  = gfed_tm[land_mask]
-    pred_flat = pred_tm[land_mask]
-    pw_flat   = w2_burn[land_mask]
+    obs_flat  = gfed_tm[SCORE_MASK]
+    pred_flat = pred_tm[SCORE_MASK]
+    pw_flat   = SCORE_W2_BURN[SCORE_MASK]
     if pw_flat.sum() > 0:
         ow = (obs_flat * pw_flat).sum() / pw_flat.sum()
         pw = (pred_flat * pw_flat).sum() / pw_flat.sum()
