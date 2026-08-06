@@ -1,0 +1,72 @@
+[
+  {
+    "rank": 1,
+    "trial": 1298,
+    "internal_overall": 0.5974,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.8994,
+    "pred_lm_ratio": 1.1652,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_Boreal.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_Boreal/ED-ModelC-G_Boreal-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 767,
+    "internal_overall": 0.5926,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9145,
+    "pred_lm_ratio": 1.0286,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_Boreal.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_Boreal/ED-ModelC-G_Boreal-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1180,
+    "internal_overall": 0.5921,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9187,
+    "pred_lm_ratio": 1.0006,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_Boreal.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_Boreal/ED-ModelC-G_Boreal-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 1462,
+    "internal_overall": 0.5899,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9265,
+    "pred_lm_ratio": 0.9379,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_Boreal.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_Boreal/ED-ModelC-G_Boreal-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 1345,
+    "internal_overall": 0.5864,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.932,
+    "pred_lm_ratio": 1.2805,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_Boreal.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_Boreal/ED-ModelC-G_Boreal-k5"
+  }
+]

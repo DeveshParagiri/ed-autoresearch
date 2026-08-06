@@ -16,7 +16,7 @@ import importlib.util, sys, types, json, os
 from pathlib import Path
 import numpy as np, xarray as xr, cftime
 
-os.environ.setdefault("SEASONAL_TRANSFORM", "1")
+os.environ.setdefault("SEASONAL_TRANSFORM", "1")   # callers override for C/D-form assemblies (Model G)
 sys.modules.setdefault("h5py", types.ModuleType("h5py"))
 REPO = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("rmc", REPO / "scripts" / "reproduce_modelC.py")
@@ -52,22 +52,35 @@ _PRESETS = {
     # exactly. Only the 3 seasonal-blended regions differ from "best" (borealseas->boreal,
     # seasiaseas->seasia, europeseas->europe); Africa/S.America were already pure-spatial.
     # This makes the D->E step change the functional-form lever alone (objective held).
+    # "G" = Model G, Model C's 12-param form and C's S_overall objective, fitted
+    # PER CONTINENT (2026-08-06). Isolates the spatial-parameterization column, which
+    # D->E confounds with the form change. Legacy transform and Model C as the fallback,
+    # so the ONLY difference from Model C is that parameters vary by region.
+    "G":     ({"Africa": "params.G_Africa.json", "Boreal": "params.G_Boreal.json",
+               "S.America": "params.G_SAmerica.json", "SEAsia": "params.G_SEAsia.json",
+               "Europe": "params.G_Europe.json"},
+              "ED-ModelG-continental"),
     "clean": ({"Africa": "params.africafuel.json", "Boreal": "params.boreal.json",
                "S.America": "params.samerica.json", "SEAsia": "params.seasia.json",
                "Europe": "params.europe.json"},
               "ED-ModelC-continental-clean"),
 }
 REGION_PARAMS, _OUT_NAME = _PRESETS[ASSEMBLY]
-FALLBACK = "params.spatial.k1.json"
+FALLBACK = os.environ.get("ASSEMBLE_FALLBACK", "params.spatial.k1.json")
 
 
 def load_params(name):
     return json.load(open(REPO / "models" / "C" / name))["params"]
 
 
+_SEASONAL = os.environ.get("SEASONAL_TRANSFORM", "1") == "1"
+
+
 def transform(rate):
     rc = np.minimum(rate, rmc.FIRE_MAX_RATE)
-    return 1.0 - np.exp(-rc / 12.0)     # SEASONAL_TRANSFORM form
+    if _SEASONAL:
+        return 1.0 - np.exp(-rc / 12.0)          # E/F form (per-month disturbance)
+    return (1.0 - np.exp(-rc)) / 12.0            # C/D legacy form (even spread)
 
 
 d = rmc.load_drivers()
@@ -116,7 +129,8 @@ enc = {"burntArea": {"zlib": True, "complevel": 4, "_FillValue": 1e20},
        "time_bounds": {"units": tu, "calendar": "noleap", "dtype": "float64"}}
 _PARENT = {"best": "MODELS_CONTINENTAL", "ho": "MODELS_CONTINENTAL_HO",
            "cell": "MODELS_CONTINENTAL_CELL",
-           "clean": "MODELS_CONTINENTAL_CLEAN"}[ASSEMBLY]
+           "clean": "MODELS_CONTINENTAL_CLEAN",
+           "G": "MODELS_CONTINENTAL_G"}[ASSEMBLY]
 # ASSEMBLE_OUTDIR (env) overrides the output dir, e.g. to regenerate E into the paper
 # folder without touching the existing MODELS_CONTINENTAL outputs.
 _OUTDIR_ENV = os.environ.get("ASSEMBLE_OUTDIR", "")
