@@ -4,6 +4,31 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-06 (afternoon) — MODEL I: the best-scoring model is not the best model
+- **Model I built and scored.** Model G's recipe with the biomass gate on (14 params), all seven
+  regions fitted. Official ILAMB, eleven versions in one run (`paper_gmd/scoring/ba_withI/`):
+  G7 **0.6862** | H 0.6819 | F 0.6783 | **I 0.6765** | Ibest 0.6766 | E 0.6646 | C 0.6485 | D 0.6411.
+- **Model I is physically right and scores fifth.** 794 Mha against an observed 793, the best bias
+  score of any version (0.7552), and the ONLY version that gets both the Congo (0.68x) and the Amazon
+  (0.74x) right. Model G over-burns both; Model E fixes the Congo but extinguishes the Amazon at 0.04x.
+- **Model G scores highest and burns Congo closed canopy at 35 %/yr against 3.5 observed.** The score
+  gap between them is 0.010; the Congo error differs by a factor of fifteen.
+- **This is the paper's most valuable result**, the benchmark critique measured rather than asserted.
+  Richard found it by looking at the map, not by reading a score.
+- The gate gains only where it can act, inside 23.5 deg of the equator (S.America +0.013, Australia
+  +0.032). It is inert in Europe and Boreal and slightly HURTS there, because inert parameters enlarge
+  the search space for the same trial budget.
+- **Two outline sentences were actively wrong** and are fixed. Results 3.3 P3 and Conclusions P3
+  claimed the vegetation term corrected the Congo "at no cost in overall score". It costs 0.010.
+- **George's fine-fuel diagram reproduced from data** (`paper_gmd/figures/finefuel_pft.png`). Fine fuel
+  has his two humps; total productivity, the current fuel proxy, does not turn over at the wet end;
+  observed burning tracks fine fuel. In Congo cells with AGB>10 and rain>1500 mm, productivity is 36.2
+  against a global land median of 3.9 while fine fuel is 6.9 against 3.7.
+- **Version table** rebuilt to Richard's nine-column layout, rows alphabetical, plain headers, and a new
+  Vegetation dependence column that explains the Congo result at a glance.
+- **Topic sentences** rebuilt on Richard's v2 structure, 39 paragraphs, with five rules recorded.
+- ENV: matplotlib cannot render in `edfire`, use `base`. Background ILAMB needs `nohup`.
+
 ## 2026-08-06 (overnight) — MODEL G IS THE BEST VERSION; the paper's conclusion changes
 - **Nine versions scored in one official ILAMB run** (`paper_gmd/scoring/ba_final/`):
   ED-stock 0.4225 | C 0.6485 | D 0.6411 | G5 0.6818 | G6 0.6848 | **G7 0.6862** | E 0.6646 |

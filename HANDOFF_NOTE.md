@@ -1,6 +1,91 @@
-# HANDOFF NOTE — ED fire submodule (Model C)
+# HANDOFF NOTE — ED fire submodule
 
-Last updated: 2026-08-06 (overnight). Read `CLAUDE.md` first for environment and conventions.
+Last updated: 2026-08-06. Read `CLAUDE.md` first for environment and conventions.
+
+## >>> READ THIS FIRST — THE BEST-SCORING MODEL IS NOT THE BEST MODEL <<<
+
+Eleven versions, one official ILAMB run against GFED5 (`paper_gmd/scoring/ba_withI/`).
+
+| Model | Bias | RMSE | Seasonal | Spatial | Overall | Mha/yr | Congo (AGB>10) |
+|---|---|---|---|---|---|---|---|
+| ED-stock | 0.5437 | 0.4652 | 0.4298 | 0.2085 | 0.4225 | 2500 | - |
+| C | 0.6977 | 0.4754 | 0.8246 | 0.7691 | 0.6485 | 1001 | 3.7x |
+| D | 0.6951 | 0.4662 | 0.7914 | 0.7864 | 0.6411 | 1219 | - |
+| E | 0.7514 | 0.4753 | 0.7455 | **0.8756** | 0.6646 | 816 | 2.4x (Amazon 0.04x) |
+| F | 0.7531 | 0.5120 | 0.7745 | 0.8400 | 0.6783 | 785 | - |
+| G (7 regions) | 0.7481 | 0.4936 | **0.8455** | 0.8502 | **0.6862** | 946 | **10.1x** |
+| H (C + GDP) | 0.7258 | 0.5201 | 0.8353 | 0.8081 | 0.6819 | 830 | 1.9x |
+| **I (G + gate)** | **0.7552** | 0.4798 | 0.8200 | 0.8478 | 0.6765 | **794** | **0.68x** |
+
+**Model G scores highest and is physically wrong.** It burns Congo closed-canopy forest at 35 %/yr
+against 3.5 observed.
+
+**Model I is physically right and scores fifth.** 794 Mha against an observed 793, the best bias score
+of any version, and the ONLY version that gets both the Congo (0.68x) and the Amazon (0.74x) right.
+Model E fixes the Congo but extinguishes the Amazon at 0.04x; Model G over-burns both.
+
+**That contrast is the paper's most valuable result.** An aggregate score computed over a mostly
+fire-free land surface ranked a physically wrong model above a physically sensible one. The score gap
+is 0.010; the Congo error differs by a factor of fifteen. Richard found it by looking at the map.
+
+### Model I, what it is
+Model G's recipe with `TROP_MASK=1`, 14 parameters, adding only `trop_agb_crit` and `trop_k_veg`. Not
+Model E's fuel terms, not the seasonal transform. One attribute changed from G, so it takes its own
+letter under George's rule. The unbuilt G+GDP proposal moves off I to O.
+
+Regional fits gain where the gate can act (inside 23.5 deg of the equator): S.America +0.013,
+Australia +0.032, Africa +0.003, SEAsia +0.001. They lose slightly where it is inert (Europe -0.017,
+N.America -0.006) because two inert parameters enlarge the search space for the same 1500 trials. A
+keep-best variant (`Ibest`) was built and scores the same, 0.6766.
+
+### The live question the paper must answer
+**Which version ships?** The best-scoring and the best-behaved are different models. For the coupled
+runs and the carbon budget the magnitude and the rainforest matter, which argues for I. For the
+leaderboard, G. The paper should say which and why.
+
+### Writing state
+`paper_gmd/TOPIC_SENTENCES_COMPLETE.md` is the document for George. 39 paragraphs, Introduction through
+Code and Data Availability, built on Richard's v2 structure. Five topic-sentence rules recorded in it:
+read down and the argument must hold alone; no demonstrative pointing at body text; main verb inside
+fifteen words; one idea per sentence; everything else is evidence, not a paragraph.
+
+TWO SENTENCES WERE ACTIVELY WRONG until 2026-08-06 and are fixed. Results 3.3 P3 and Conclusions P3
+both claimed the vegetation term corrected the Congo "at no cost in overall score". It costs 0.010.
+
+STILL TO DO in the writing: Results 3.1 and 3.2 still present Model G as the headline without the
+caveat that it is physically wrong. `TOPIC_SENTENCE_OUTLINE.md` (the evidence file) is one revision
+behind `TOPIC_SENTENCES_COMPLETE.md`.
+
+### Table state
+`cpa/Fire_Model_Version_Table_CORRECTED.docx`, nine columns, rows alphabetical, plain headers, and a
+new Vegetation dependence column that explains the Congo result at a glance. NEEDS: Model I's scores in
+Table 2, and its spatial cell changed from "Africa fitted, rest pending" to "Continental (7 regions)".
+
+### Figures
+`paper_gmd/figures/` holds `ba_all_versions.png` (every version, each titled with its Mha/yr),
+`ba_diff_all_versions.png`, `ba_single/` with one map per version, and `finefuel_pft.png`, George's
+fine-fuel sketch reproduced from the model's own drivers. Model I is not yet in the map figures.
+
+### Two environment gotchas, both cost time today
+- matplotlib CANNOT render in the `edfire` env on this machine. Every `savefig` dies with Windows fatal
+  exception 0xc06d007f. Use `base` (`C:/Users/owusu/miniforge3/python.exe`) for figures.
+- Background ILAMB runs were killed twice. Launch with `nohup ... &` so they survive.
+
+### Bug fixed 2026-08-05, affects any past regional run
+`score_BA` ignored `REGION_MASK`, so `REGION=X` with the default S_overall objective was a GLOBAL fit
+with a regional false-positive penalty. Commit 8f5d0f0. Bit-identical when REGION is unset, asserted at
+import. Model E unaffected, its fits used SPATIAL_OBJ=1 which was always region-aware.
+
+### Open with George
+1. The baseline's name. He has ruled out "ED-stock" without giving a replacement.
+2. Whether the criterion search stays a headline contribution. His abstract describes two tiers; the
+   paper argues three.
+3. Whether the version table regains a functional-form column.
+4. His submitted abstract says 0.42 to 0.66. It predates Model G and understates the result.
+5. PFT. The drivers carry no grass/tree split, so the column cannot be filled without a new dump from
+   Lei. What exists is vegetation-STATE dependence keyed on biomass, which is not the same thing.
+
+---
 
 ## >>> READ THIS FIRST — THE BEST MODEL IS NOW G, AND THE PAPER'S CONCLUSION HAS CHANGED <<<
 
