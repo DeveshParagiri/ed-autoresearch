@@ -1,6 +1,335 @@
-# HANDOFF NOTE — ED fire submodule
+# HANDOFF NOTE — ED fire submodule, the GMD paper, and the CPA
 
-Last updated: 2026-08-06. Read `CLAUDE.md` first for environment and conventions.
+Last updated **2026-08-06, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
+Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH.**
+
+## HOW TO ORIENT IN FIVE MINUTES
+
+1. This file, all of it.
+2. `git log -20 --oneline`.
+3. `cpa/STATUS.md` for the portfolio. **`cpa/` IS NOT IN GIT.** It exists only on the Drive, so
+   `git log` will never show CPA work. `paper_gmd/` IS in git, force-added on this branch.
+4. `paper_gmd/TOPIC_SENTENCES_COMPLETE.md` is the paper's live writing document.
+5. `paper_gmd/references/VERIFIED_CITATIONS.md` before writing any sentence with a citation in it.
+
+## IF YOU ARE ON THE MAC
+
+Per `CLAUDE.md` the Mac has **no conda and no ILAMB**, system python only. So on the Mac:
+- **Do the writing.** The paper outline, the CPA, the prose. That is where the work is anyway.
+- **Do NOT attempt** optimizer runs, assemblies, or ILAMB scoring. Nothing needs re-running.
+- Figures may work if matplotlib is installed, but every figure the paper needs already exists.
+- The numbers in this file are final and were produced on Windows. Quote them, do not recompute.
+
+---
+
+# PART 1. THE MODELS
+
+## The scores. Eleven versions, one official ILAMB run, `paper_gmd/scoring/ba_withI/`
+
+| Model | Bias | RMSE | Seasonal | Spatial | Overall | Mha/yr | x obs | F1 | Congo | Amazon |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ED-stock | 0.5437 | 0.4652 | 0.4298 | 0.2085 | 0.4225 | 2500 | 3.15 | 0.456 | - | - |
+| C | 0.6977 | 0.4754 | 0.8246 | 0.7691 | 0.6485 | 1001 | 1.26 | 0.768 | 3.7x | 21.3x |
+| D | 0.6951 | 0.4662 | 0.7914 | 0.7864 | 0.6411 | 1219 | 1.54 | 0.775 | - | - |
+| E | 0.7514 | 0.4753 | 0.7455 | **0.8756** | 0.6646 | 816 | 1.03 | 0.766 | 2.4x | **0.04x** |
+| F | 0.7531 | 0.5120 | 0.7745 | 0.8400 | 0.6783 | 785 | 0.99 | - | - | - |
+| G (5 reg) | 0.7430 | 0.4885 | 0.8419 | 0.8471 | 0.6818 | 1002 | 1.26 | - | - | - |
+| G6 | 0.7473 | 0.4913 | 0.8437 | 0.8503 | 0.6848 | 943 | 1.19 | - | - | - |
+| **G7** | 0.7481 | 0.4936 | **0.8455** | 0.8502 | **0.6862** | 946 | 1.19 | **0.813** | **10.1x** | 3.5x |
+| H | 0.7258 | 0.5201 | 0.8353 | 0.8081 | 0.6819 | 830 | 1.05 | 0.804 | 1.9x | 4.0x |
+| **I** | **0.7552** | 0.4798 | 0.8200 | 0.8478 | 0.6765 | **794** | **1.00** | - | **0.68x** | **0.74x** |
+| Ibest | 0.7561 | 0.4793 | 0.8220 | 0.8464 | 0.6766 | 806 | 1.02 | - | 0.68x | 0.74x |
+
+Congo and Amazon columns are mean annual burned fraction on closed-canopy cells (AGB > 10 kg C m-2)
+as a multiple of GFED5. GFED5 observes 3.49 %/yr in the Congo box and 0.62 %/yr in the Amazon box.
+GFED5 global total is 792.9 Mha/yr.
+
+## THE HEADLINE FINDING
+
+**The best-scoring model is not the best model.**
+
+Model G7 scores highest at 0.6862 and burns Congo closed-canopy rainforest at ten times the observed
+rate. Model I scores 0.6765, fifth, and is the only version that reproduces the observed global total
+(794 against 793) AND gets both tropical forests right. The score gap is 0.010. The Congo error differs
+by a factor of fifteen.
+
+An aggregate benchmark computed over a land surface that is mostly free of fire ranked a physically
+implausible model above a physically sound one. This is the paper's most valuable result and it is now
+Discussion P4 and Conclusions P3. **Richard found it by looking at a map, not by reading a score.**
+
+## What each version IS
+
+- **ED-stock** ED's native fire scheme, never fitted by us. The floor. George has RULED OUT the name
+  "ED-stock" and has not supplied a replacement. Current substitute in prose is "the original
+  formulation", which is his own phrase from the AGU abstract.
+- **A, B** historical, GFED4.1s target, buggy early driver pipeline, code removed from the repo. They
+  CANNOT appear in a GFED5 table. 8 and 5 mechanism gates respectively.
+- **C** `models/C/params.nsga2.json`. 12 params, S_overall objective, global. The start of the ladder.
+- **D** `models/C/params.paperD.k1.json`. Identical 12-param form to C, objective changed to
+  spatial-Taylor with SEAS_W=0 on the annual mean map. The ONLY clean single-lever step.
+- **E** the "clean" continental assembly, 5 regions. 16 params, adds fuel headroom (`fuel_k`,
+  `fuel_half`) and the biomass gate (`trop_agb_crit`, `trop_k_veg`) and switches the seasonal transform
+  ON. Changes TWO attributes from D, form and spatial. Best spatial score and best precision.
+- **F** `params.coupledE_gdp.json`. Global base plus a regionally varying GDP coefficient, fitted on
+  ED-dump climate with the global total PINNED to GFED5 by construction. NOT comparable to the rest.
+  Report as development history, not as a rung.
+- **G** C's form and C's objective, fitted per continent. G7 is all seven regions and is the version to
+  quote. `params.G_{Africa,Boreal,SAmerica,SEAsia,Europe,NAmerica,Australia}.json`.
+- **H** `params.H.json`. C plus a GDP-per-capita term, on CRUJRA, `gdp_gamma` fitted JOINTLY at 1.81,
+  nothing pinned. 13 params. The comparable replacement for F.
+- **I** `params.Gtrop_*.json`. G's recipe with `TROP_MASK=1`, 14 params, adding ONLY the biomass gate.
+  Its own letter because one attribute changed. The unbuilt "G + GDP" proposal moved off I to O.
+
+## Regional detail worth keeping
+
+Per-region internal scores, Model C on that region, then G, then I:
+
+| Region | C | G | I | I - G |
+|---|---|---|---|---|
+| Africa | 0.6048 | 0.6343 | 0.6369 | +0.003 |
+| Boreal | 0.4796 | 0.5974 | 0.5970 | -0.000 |
+| S.America | 0.3827 | 0.6245 | 0.6376 | +0.013 |
+| SEAsia | 0.5704 | 0.5975 | 0.5987 | +0.001 |
+| Europe | 0.5024 | 0.5729 | 0.5557 | **-0.017** |
+| N.America | 0.4012 | 0.5905 | 0.5845 | -0.006 |
+| Australia | 0.5053 | 0.5132 | 0.5453 | **+0.032** |
+
+The biomass gate is switched on only within 23.5 degrees of the equator, so it is INERT in Europe and
+Boreal. Where inert it slightly HURTS, because two useless parameters enlarge the search space for the
+same 1500 trials. Australia gains most (+0.032) because northern Australia is tropical woodland, and
+Australia was the one region regional fitting alone did nothing for.
+
+Keep-best-per-region must be judged on the ASSEMBLED global score, not the regional one. Australia's own
+fit looked poor yet G7 beats G6, so Australia is kept.
+
+## How to reproduce anything
+
+```
+# optimizer, env-var driven, see CLAUDE.md for the full flag list
+PHYSICAL=1 MAG_BAND=1.3 FP_MIN=0.80 SAMPLER=nsga2 WARM=params.nsga2.json TROP_MASK=0 \
+  SEASONAL_TRANSFORM=0 REGION=Africa N_TRIALS=1500 TAG=... python scripts/optimize_modelC_coupled.py
+
+# assembly presets in scripts/assemble_continental.py: best, ho, cell, clean, G, G6, G7, I, Ibest
+SEASONAL_TRANSFORM=0 ASSEMBLY=I ASSEMBLE_FALLBACK=params.nsga2.json python scripts/assemble_continental.py
+
+# scoring, from the base env, and use nohup or it gets killed
+export ILAMB_ROOT="$PWD/ilamb_ref_official"
+nohup ilamb-run --config OUT/ilamb.cfg --model_root "$PWD/paper_gmd/models" \
+  --regions global --build_dir OUT > log 2>&1 &
+```
+
+Driver scripts already written: `scripts/run_modelG.sh` (takes REGIONS), `run_modelH.sh`,
+`run_africa_trop.sh`, `run_Gtrop_rest.sh`, `finish_G7_H.sh`.
+
+## BUG FIXED 2026-08-05, commit 8f5d0f0. Affects any past regional run
+
+`score_BA` ignored `REGION_MASK` entirely. Its weights came from the global land mask, so `REGION=X`
+with the default S_overall objective was a GLOBAL fit with only a regional false-positive penalty. The
+tell was `[warm] Overall=0.5987` printed identically for Africa, Boreal and S.America. Fixed with
+SCORE_MASK aliases defined after REGION_MASK, bit-identical when REGION is unset (asserted at import).
+**Model E is unaffected**, its fits used SPATIAL_OBJ=1 which was always region-aware, and that is
+probably WHY that objective was chosen.
+
+## TWO ENVIRONMENT TRAPS THAT COST HOURS
+
+1. **matplotlib cannot render in the `edfire` env on Windows.** Every `savefig` dies with Windows fatal
+   exception 0xc06d007f, in every format, reproducible in three lines. Use `base`
+   (`C:/Users/owusu/miniforge3/python.exe`) for all figures. `edfire` is still the optimizer env.
+   ILAMB also lives in `base`.
+2. **Background ILAMB runs were killed twice.** Launch detached with `nohup ... &`.
+
+---
+
+# PART 2. THE PAPER
+
+## The live document
+
+`paper_gmd/TOPIC_SENTENCES_COMPLETE.md`. This is what goes to George. 39 paragraphs, Introduction
+through Code and Data Availability, built on Richard's own v2 structure. `TOPIC_SENTENCE_OUTLINE.md` is
+the older evidence-bearing file and is ONE REVISION BEHIND. Do not edit both; COMPLETE is authoritative.
+
+## FIVE RULES a topic sentence must pass. Richard's, learned the hard way. Honor them.
+
+1. Read the topic sentences in sequence with nothing else. They must form a coherent argument alone.
+2. No pronoun or demonstrative pointing at something stated only in body text. "This difficulty" is
+   allowed in Introduction P3 because P2's topic sentence names the difficulty. "That shortfall" was
+   rejected because no topic sentence had stated a performance gap.
+3. Main verb inside the first fifteen words. Assert. Do not open with a suspended subject clause.
+4. One idea per topic sentence. Importance and failure joined by "yet" is TWO ideas.
+5. Everything else in the section is EVIDENCE for that one idea, not a paragraph of its own. A section
+   with five paragraphs where one claim would do is wrong.
+
+Also: register follows **Ma et al. 2022 (ED v3.0)**, which George co-authored. Introduction topic
+sentences carry NO numbers; Results topic sentences DO lead with the measured value against its
+benchmark. Name the versions (C, D, E, G, H, I), never "the optimized model".
+
+## What changed in the paper's argument, and it changed twice
+
+The paper began as "functional form versus goodness-of-fit criterion, and the form is the binding
+constraint". That is WITHDRAWN. Model G improves on C by +0.038 with NO change to the equation, more
+than the form-and-spatial bundle bought. Then the Congo result added the second reversal, that the
+version winning the benchmark is physically wrong. The paper now says regional fitting bought most of
+the score, and the form change bought the physics.
+
+## Verified citations. READ THIS BEFORE WRITING ANY CITED SENTENCE
+
+`paper_gmd/references/VERIFIED_CITATIONS.md` has every claim with its quote and page. Two traps:
+
+- **Li et al. 2024 must NOT be cited for a wide burned-area spread.** Its own finding is that "most
+  CMIP6 models simulate the present-day global burned area and fire carbon emissions within the range
+  of satellite-based products". It supports the 0.28 to 0.70 spatial correlation and the failure to
+  reproduce the observed two-decade decline, nothing more.
+- **GEDI IS NOT GLOBAL.** Dubayah 2020 p.1 gives coverage "between 51.6 N and S latitude", which
+  EXCLUDES the boreal. Any claim of global canopy-height coverage is false. This is a design constraint
+  on CPA Chapter 2, not a wording fix.
+
+Still unverified: Cardoso 2003 (PDF held but text would not extract; it is George's own paper and the
+closest precedent for Chapter 3).
+
+## Figures, all in `paper_gmd/figures/`
+
+- `ba_all_versions.png` every version, each panel titled with its Mha/yr. Model I is NOT yet in it.
+- `ba_diff_all_versions.png` the same against GFED5.
+- `ba_single/` one map per version.
+- `finefuel_pft.png` **George's own fine-fuel sketch reproduced from the model's drivers.** Three
+  panels. Fine fuel has his two humps, grass peaking near 1375 mm and forest later. Total productivity,
+  which is what the submodel actually uses as its fuel proxy, does NOT turn over at the wet end.
+  Observed burning tracks fine fuel, not productivity. In Congo cells with AGB>10 and rain>1500 mm,
+  productivity is 36.2 against a global land median of 3.9 while fine fuel is 6.9 against 3.7. This
+  figure explains the Congo failure and justifies the biomass gate.
+- Generators: `make_fig_maps_all.py`, `make_fig_finefuel_pft.py`. Run from `base`, not `edfire`.
+
+## The version table
+
+`cpa/Fire_Model_Version_Table_CORRECTED.docx`, generated by `cpa/build_version_table_corrected.py`.
+NEVER edit the docx, edit the script and regenerate. Nine columns to Richard's layout, rows
+alphabetical, plain unshaded headers. Table 1 has a **Vegetation dependence** column that explains the
+Congo result at a glance, since every version with a blank there over-burns the rainforest.
+STILL NEEDED: Model I's scores in Table 2, and its spatial cell changed from "Africa fitted, rest
+pending" to "Continental (7 regions)".
+
+## OPEN WITH GEORGE
+
+1. **The baseline's name.** He has ruled out "ED-stock" and given no replacement.
+2. **Whether the criterion search stays a headline contribution.** His submitted abstract describes a
+   TWO-tier search (forms, parameter values). The work searched THREE, including the goodness-of-fit
+   criterion, which is what Model D is. This decides how much of Results 3.2 survives.
+3. **Whether the version table regains a functional-form column.** Without it the table says A equals B
+   and says the E step was spatial alone. Both false.
+4. **His submitted abstract says 0.42 to 0.66.** It predates Model G and understates the result, which
+   is 0.69. Tell him before he presents.
+5. **PFT.** The drivers carry NO grass/tree split, only land-use tiles and AGB, so the PFT column cannot
+   be filled without a new dump from Lei with PFT-resolved productivity and biomass. What exists is
+   vegetation-STATE dependence keyed on biomass, which is NOT the same thing and must not be presented
+   as PFT. The honest line is that the question behind the column now has direct evidence, worth a
+   factor of ten in the Congo, and that closing it properly is his and Lei's decision.
+6. **Which version ships to the coupled runs and the carbon budget.** The best-scoring and the
+   best-behaved are different models. Magnitude and the rainforest argue for I. The leaderboard argues
+   for G.
+
+---
+
+# PART 3. THE CPA
+
+**`cpa/` IS NOT IN GIT.** It lives only on the Drive. `cpa/STATUS.md` is the detailed resume point and
+has been updated alongside this file. The working document is `cpa/CPA_OwusuAnsah.md`.
+
+## Section status, measured 2026-08-06
+
+| Section | State | Words |
+|---|---|---|
+| I. Curriculum Vitae | EMPTY | needs Richard's CV file |
+| II. Goal Description | WRITTEN | 2933 |
+| III. Coursework | PARTIAL | 268 plus `cpa/coursework_tables.docx` (all 66 courses) |
+| IV. Research Experiences | WRITTEN | 3049 |
+| V. Professional Experiences | EMPTY | needs Richard's input on what to include |
+| VI. Analytical and Integrative Thinking | EMPTY | raw material EXISTS, see below |
+| VII. Initial Dissertation Planning | WRITTEN 2026-08-06 | 2398 |
+| VIII. Documentation | EMPTY | appendix, mechanical |
+
+## What happened on the CPA today
+
+**Section VII was drafted in full and is being reviewed subsection by subsection with Richard.**
+Do not rewrite it wholesale. He is walking A through G in order.
+
+- **A. Title** unchanged from the pre-proposal, "Advances in Remote Sensing and Modeling for Fire in the
+  Carbon Cycle". Flagged as describing a field rather than a contribution. Not yet decided.
+- **B. Introduction (real-world problem) APPROVED.** Five paragraphs, 605 words, twelve citations, all
+  verified. Richard rejected two earlier drafts. The lessons: the real-world problem is NOT the modeling
+  gap, the modeling gap is the obstacle; paragraph one must contain NO models at all; every factual
+  claim needs a citation; and the section must return to the real-world consequence at the end.
+- **C. Research Questions PRESENTED, NOT YET RESOLVED.** Chapter 1's question was rewritten to match
+  George's submitted abstract, "Can an automated, artificial-intelligence-assisted search, referred to
+  here as Autoresearch AI, develop a global fire model that predicts observed burning substantially
+  better than its original formulation?" FOUR ISSUES RAISED AND STILL OPEN: the overarching question is
+  a topic not a question and is inherited from the pre-proposal; Chapter 1 carries the unverified
+  calibration claim; Chapter 2's paragraph ends flatly on "and the Ecosystem Demography model does";
+  Chapter 3 has no citation and no numbers because the six-to-nine-month skill figure from the
+  pre-proposal has no source. **RESUME HERE.**
+- **D, E, F, G written but NOT yet reviewed with him.**
+
+**Model G is the endpoint used throughout Section VII, at Richard's explicit instruction.** Therefore
+score 0.42 to 0.69, F1 0.46 to 0.81, recall 0.32 to 0.83, spatial 0.21 to 0.85, and burned area falling
+to 1.19 times observed. The "within one percent" figure belongs to Model I and appears only in the
+Congo paragraph, as what the vegetation correction buys. Do not mix the two.
+
+## Section VI, the next substantial piece
+
+The raw material already exists at
+`THE THESIS JOURNEY -REAL ONE/Annotated_Bibliography_Owusu-Ansah_May2026.md`. Eight papers in two
+themes, the ED lineage and other DGVMs' fire schemes, each with a stated gap, plus a closing synthesis.
+Richard's own guideline note in Section VI says it is "essentially this section already".
+
+Three things to fix before moving it in:
+1. **Its closing synthesis names a gap the dissertation no longer fills.** It defines the missing piece
+   as a richer mechanistic fire module combining three-factor probability, behaviour physics and
+   anthropogenic drivers with ED's cohort structure. Chapter 1 as executed is an automated search over
+   an existing formulation.
+2. **But one sentence in it has become the most important thing in the portfolio.** "None of these
+   approaches operates on a resolved size and age distribution of live vegetation." Written in May,
+   before any of this. In August the top-scoring version burned the Congo tenfold precisely because it
+   could not distinguish rainforest from savanna. That gap statement was right and now has evidence.
+3. **Two literatures are missing**, and papers for both are already verified in the repository. Nothing
+   on observations and benchmarking (GFED5, ILAMB, FireMIP, CMIP6), which is the ground Chapter 1 stands
+   on. Nothing on machine learning in Earth-system modeling (Reichstein 2019, Zhu 2022, Son 2024,
+   Grundner 2025, Boardman 2025), which is what makes Autoresearch AI a contribution rather than a tool.
+
+## Richard's standing CPA preferences. `cpa/STATUS.md` section 3 has the full list. The critical ones
+
+- House style, Hurtt's: **no em-dashes, no en-dashes, no semicolons, no colons in body prose.**
+- Formal academic register. Casual phrasing has been rejected repeatedly.
+- **Never copy phrasing or structure from the sample portfolios.** Format only.
+- Goal headers are noun phrases, not "I want to" sentences.
+- He dislikes the word **"program"** as in research program.
+- An academic goal must be a RECOGNIZED, TRANSFERABLE field. Benchmarking and ILAMB and Optuna are
+  METHODS shown under a real field, never goals.
+- Section II research GOALS are durable field-level contributions. Section IV is the concrete projects.
+  Keep them from overlapping.
+
+---
+
+# PART 4. NEXT ACTIONS, in priority order
+
+1. **Finish reviewing CPA Section VII with Richard.** Resume at **C, Research Questions**, where four
+   issues are open and listed above. Then D, E, F, G.
+2. **CPA Section VI.** Move the annotated bibliography in, add a third theme on benchmarking and
+   automated methods from papers already verified, and rewrite the synthesis to the gap Chapter 1
+   actually addresses.
+3. **CPA Sections V, I, VIII.** V needs Richard's input, I needs his CV, VIII is mechanical.
+4. **Paper: Results 3.1 and 3.2** still present Model G as the headline without the caveat that it is
+   physically wrong. `TOPIC_SENTENCE_OUTLINE.md` is one revision behind COMPLETE.
+5. **Version table:** add Model I to Table 2 and update its spatial cell.
+6. **Figures:** regenerate the map figures so Model I appears.
+7. **Optional runs, NOT on the Mac.** Model N (G refitted on spatial-Taylor, about 2 h) would let the
+   spatial and form levers be attributed with the statistic held fixed. Model O (G plus the GDP term,
+   about 3 h) would test whether the regional and human gains are additive, though as currently defined
+   it would inherit G's rainforest fault, so the better version is I plus GDP.
+8. **Update IV.A's doctoral paragraph in the CPA.** It still says 0.42 to 0.66 and locates the residual
+   in missing fine-scale physics. Both moved.
+
+---
+
+# ARCHIVE OF EARLIER SESSIONS BELOW
 
 ## >>> READ THIS FIRST — THE BEST-SCORING MODEL IS NOT THE BEST MODEL <<<
 
