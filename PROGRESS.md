@@ -4,6 +4,35 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-13 (day) — the figure and table pass, then back to the CPA
+
+- **Two rules now enforced in the scripts, not in a note.** Draw every figure at final print size, and
+  put no caption text on a figure. Both figures Richard rejected were legible on screen and about 6 pt
+  in Word, because they were drawn on a wide canvas and scaled down on insert.
+- **Schematic redrawn**, 8.2 x 3.2 in, insert at 7.5. Its version stack read C to F and now reads C to
+  I. Pipeline arrows meet card edges rather than the tabs of older cards.
+- **Regional matrix redrawn**, 7.3 x 3.65 in. Title and footnote removed, they are caption material.
+- **The asterisk on Model F is gone everywhere.** It was explained by a footnote now removed. The
+  caveat still holds and belongs in prose, F was fitted on coupled-model climate with its total pinned.
+- **Every performance table now comes out of one function**, `format_table()` in
+  `scripts/build_tables.py`, called for global and each of the seven regions. They used to share a
+  shape by inspection, which is how the columns drifted. Richard's spec applied across the set: fixed
+  column order, burned area integer, emissions two decimals, scores and F1 three decimals, observed
+  value stated once in the caption instead of repeated as a column, best value bold. **The two
+  composites are now BA score and Emis. score rather than both reading Overall**, which was the worst
+  of it.
+- **Best means largest for the scores and closest to observed for burned area and emissions**, since
+  bolding the largest burned area would bold the worst model. Bold is decided on the printed string, so
+  ties bold together. South America has one, G and I both at 76 Mha.
+- **New cross-region matrix table**, versions down and regions across. **Unnumbered**, because the
+  outline has no free number and because it duplicates Figure 4. Decision open.
+- **The Word builder reads its captions from `TABLES.md`**, so document and table cannot drift.
+- Observed values every caption now states: 793 Mha yr-1 burned area, 3.40 Pg C yr-1 emissions.
+- Wrote down what to ask Lei for Model J. The question that decides the cost is whether ED carries PFT
+  as a real output axis or aggregates it on write.
+- **Handoff note updated and the next-actions list rewritten.** Paper resumes at the matrix
+  figure-or-table decision. Richard moved back to the CPA.
+
 ## 2026-08-13 (overnight) — the paper rebuilt to George's skeleton, and the inversion measured
 
 - **Methods and Results restructured** to the outline George wrote on 08/06, confirmed against the

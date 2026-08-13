@@ -87,6 +87,78 @@ one page. The map scripts compute their own grid at three columns, so a tenth ve
 Ten open decisions are listed at the end of `TOPIC_SENTENCES_v3.md` and on the last page of the outline
 docx.
 
+### LATER THE SAME DAY, 2026-08-13. THE FIGURE AND TABLE PASS. RESUME THE PAPER HERE
+
+Richard reviewed the built figures and tables and gave two rules. Both are now in the code, not in a
+note, so they hold for anything built later.
+
+**RULE ONE. Draw every figure at final print size.** Both figures he rejected were legible on screen
+and unreadable in Word for the same reason. They were laid out on a wide canvas with small type, so
+inserting them at column width scaled the type down to about 6 pt. The schematic was 13 inches with
+10 pt text and the matrix was 11 inches with 8 pt cells. Both are now drawn at the size they are
+inserted at, so nothing is rescaled. **Check any new figure by asking what point size the labels end
+up at after the insert, not by looking at the PNG.**
+
+- `autoresearch_schematic.png` is 8.2 by 3.2 inches, insert at 7.5.
+- `regional_matrix_fit7.png` is 7.3 by 3.65 inches, insert at 7.5 or less.
+
+**RULE TWO. No caption text on a figure.** The title and the footnote came off the matrix figure
+because Richard writes captions as text below the figure and the figure was duplicating them. The same
+rule already removed the Model F caveat from both map figures. Anything a caption would say does not
+belong on the image.
+
+**Two content changes that came out of that pass.**
+
+- **The schematic's version stack read C to F and now reads C to I.** It was drawn before Model G, H
+  and I existed. The front card is the newest version, not a claim about which one is reported.
+- **The asterisk on Model F is gone everywhere,** figures and tables. It was explained by a footnote
+  that is now removed, so it pointed at nothing. The caveat itself still matters and belongs in prose.
+  Model F was fitted on the coupled model's own climate with its global total pinned to the observed
+  value, so its bias score reflects a constraint we imposed rather than skill.
+
+**EVERY PERFORMANCE TABLE NOW COMES OUT OF ONE FUNCTION.** `format_table()` in
+`scripts/build_tables.py` is called for the global table and each of the seven regions, and
+`format_matrix()` shares its precision rules. They used to share a shape by inspection, which is how
+the columns drifted apart. Do not hand-format a table. Add a column once and it appears in all eight.
+
+Richard's formatting spec, now implemented and not to be relitigated.
+
+| | Rule |
+|---|---|
+| Columns | Version, BA (Mha yr-1), Bias, RMSE, Seasonal, Spatial, BA score, F1, Emissions (Pg C yr-1), Emis. score |
+| Precision | burned area integer, emissions two decimals, every ILAMB score and F1 three decimals |
+| Observed | stated once in the caption, never repeated as a column |
+| Best | bold, per column |
+| Composites | **BA score and Emis. score. They must never both read Overall.** This was the worst of it |
+
+Two judgment calls inside that spec, both defensible and both already in the captions. **Best means
+largest for the scores and F1 but closest to observed for burned area and emissions,** since bolding
+the largest burned area would bold the worst model. **Bold is decided on the printed string, not the
+float,** so two versions that round to the same value are both bold or neither. South America has such
+a tie, G and I both at 76 Mha.
+
+**The Word builder now reads its captions out of `TABLES.md`,** so the wording and the numbers in the
+document come from the same place the table does and cannot drift from it.
+
+**A new cross-region matrix TABLE exists** in `TABLES.md` and in the docx, versions down and regions
+across, the tabular form of Figure 4. **It has no number**, because the outline fixes Tables 2 to 8 as
+regional, 9 as attributes and 10 as coupled, and because it carries numbers identical to Figure 4.
+Printing both prints the same content twice. Undecided which one the paper uses.
+
+**Two smaller things noticed and not acted on.** F1 is nearly flat across versions within a region,
+0.897 to 0.914 across all of Africa, so it may be earning its column only in Table 1. And the observed
+global burned area is 793 Mha yr-1 with observed emissions 3.40 Pg C yr-1, which is what every caption
+now states.
+
+**What to ask Lei in person about Model J,** since this came up and the answer decides the cost. One
+sentence is enough, "can I get PFT-resolved output on the global baseline dump, same 0.5 degree monthly
+1997 to 2016". The files are `global_baseline_modelC_inputs_1997-2016.nc` and
+`global_baseline_modelCfuel_inputs_1997-2016.nc`. What is needed is GPP, above-ground biomass and area
+fraction split by plant functional type instead of by land use, plus the PFT index table. **The question
+that decides everything is whether ED carries PFT as a real output axis or aggregates it on write.** If
+the per-cohort PFT state never reaches the region files, Model J costs a full ED rerun rather than a
+repackaging.
+
 ## IF YOU ARE ON THE MAC
 
 Per `CLAUDE.md` the Mac has **no conda and no ILAMB**, system python only. So on the Mac:
@@ -263,9 +335,20 @@ closest precedent for Chapter 3).
 
 ## Figures, all in `paper_gmd/figures/`
 
-- `ba_all_versions.png` every version, each panel titled with its Mha/yr. Model I is NOT yet in it.
+**All of these were rebuilt for the paper's eight versions on 2026-08-13. Model I IS in them now.**
+Read the figure and table pass in the 08-13 block above before regenerating any of them, because both
+rules there are enforced in the scripts and easy to undo by accident.
+
+- `ba_all_versions.png` every version, each panel titled with its Mha/yr. Three columns, one page.
+- `ffire_all_versions.png` the same panels for fire carbon emissions.
+- `regional_matrix_fit7.png` the score matrix, regions down and versions across. No title and no
+  footnote on the figure, both are caption material. `_gfed14` is the fourteen-region version, scored
+  and held back.
+- `attribution.png` the score change contributed by each attribute, against Model C.
+- `autoresearch_schematic.png` Figure 1, the loop. Drawn at print size, insert at 7.5 inches.
 - `ba_diff_all_versions.png` the same against GFED5.
 - `ba_single/` one map per version.
+- `_archive/` five figures built for the version set that ended at E. Superseded, kept not deleted.
 - `finefuel_pft.png` **George's own fine-fuel sketch reproduced from the model's drivers.** Three
   panels. Fine fuel has his two humps, grass peaking near 1375 mm and forest later. Total productivity,
   which is what the submodel actually uses as its fuel proxy, does NOT turn over at the wet end.
@@ -385,22 +468,30 @@ Three things to fix before moving it in:
 
 # PART 4. NEXT ACTIONS, in priority order
 
-1. **Finish reviewing CPA Section VII with Richard.** Resume at **C, Research Questions**, where four
-   issues are open and listed above. Then D, E, F, G.
-2. **CPA Section VI.** Move the annotated bibliography in, add a third theme on benchmarking and
-   automated methods from papers already verified, and rewrite the synthesis to the gap Chapter 1
-   actually addresses.
-3. **CPA Sections V, I, VIII.** V needs Richard's input, I needs his CV, VIII is mechanical.
-4. **Paper: Results 3.1 and 3.2** still present Model G as the headline without the caveat that it is
-   physically wrong. `TOPIC_SENTENCE_OUTLINE.md` is one revision behind COMPLETE.
-5. **Version table:** add Model I to Table 2 and update its spatial cell.
-6. **Figures:** regenerate the map figures so Model I appears.
-7. **Optional runs, NOT on the Mac.** Model N (G refitted on spatial-Taylor, about 2 h) would let the
+**Rewritten 2026-08-13 at the end of the figure and table pass. Items 4, 5, 6 and 8 of the old list
+are DONE and have been removed. Richard moved back to the CPA at this point, so the paper resumes at
+item 4 below.**
+
+1. **CPA Section VIII, Documentation.** The last unwritten section, 29 words of stub. Mechanical, and
+   everything it must list already exists.
+2. **CPA Section VII is probably over the five-page cap** at 3156 words. The identified next cut is
+   Section B or the second research-literature paragraph, about 225 words.
+3. **CPA, the burned-area figure for VII.** Richard's own idea, the original formulation beside the
+   best version. Not started, and cheap now that both maps exist.
+4. **Paper, decide figure or table for the cross-region matrix.** They carry identical numbers and the
+   table has no number until this is settled. My read is the figure goes in the main text and the table
+   goes to the supplement.
+5. **Paper, ask Lei for the PFT dump.** Blocks Model J. The one sentence to say and the question that
+   decides the cost are in the 08-13 block above.
+6. **Paper, the coupled run, Table 10 and Sect. 3.3.** Needs Lei, and needs the reported version chosen.
+7. **Paper, held-out validation appears nowhere.** A referee will ask about overfitting. The work
+   exists, Model E lost 0.050.
+8. **Five items still need George,** listed under OPEN WITH GEORGE above. The two that block finishing
+   are the dissertation title and the committee names, both for the CPA.
+9. **Optional runs, NOT on the Mac.** Model N (G refitted on spatial-Taylor, about 2 h) would let the
    spatial and form levers be attributed with the statistic held fixed. Model O (G plus the GDP term,
    about 3 h) would test whether the regional and human gains are additive, though as currently defined
    it would inherit G's rainforest fault, so the better version is I plus GDP.
-8. **Update IV.A's doctoral paragraph in the CPA.** It still says 0.42 to 0.66 and locates the residual
-   in missing fine-scale physics. Both moved.
 
 ---
 
