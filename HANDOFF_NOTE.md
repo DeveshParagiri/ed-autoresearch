@@ -1,6 +1,6 @@
 # HANDOFF NOTE — ED fire submodule, the GMD paper, and the CPA
 
-Last updated **2026-08-06, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
+Last updated **2026-08-13, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
 Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH.**
 
 ## HOW TO ORIENT IN FIVE MINUTES
@@ -9,8 +9,83 @@ Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH.**
 2. `git log -20 --oneline`.
 3. `cpa/STATUS.md` for the portfolio. **`cpa/` IS NOT IN GIT.** It exists only on the Drive, so
    `git log` will never show CPA work. `paper_gmd/` IS in git, force-added on this branch.
-4. `paper_gmd/TOPIC_SENTENCES_COMPLETE.md` is the paper's live writing document.
+4. `paper_gmd/TOPIC_SENTENCES_v3.md` is the paper's live outline. `TOPIC_SENTENCES_COMPLETE.md`
+   is the older working copy, kept for its evidence brackets.
 5. `paper_gmd/references/VERIFIED_CITATIONS.md` before writing any sentence with a citation in it.
+
+---
+
+## 2026-08-13, WINDOWS SESSION. THE PAPER REBUILT TO GEORGE'S 08/06 SKELETON
+
+**Read `paper_gmd/TOPIC_SENTENCES_v3.md` first. It supersedes `TOPIC_SENTENCES_COMPLETE.md`,**
+which is now the working file holding evidence and bracketed notes. The clean document for George is
+`paper_gmd/Topic_Sentence_Outline_v3.docx`, in his own bullet arrangement, rebuilt by
+`python paper_gmd/build_outline_docx.py`.
+
+### What George asked for on 08/06, and what was done
+
+His written skeleton and the meeting transcript are in `paper_gmd/`. Methods became one overview plus
+four steps in the order the work was done. ED is introduced for the first time. The offline design and
+its consequence are stated in Methods. The version table moved out of Methods into Results.
+Socioeconomics moved from Methods to Results. Results became Model performance, with Globally and
+Regionally as subsections, then Attribution, then the coupled model.
+
+**A correction worth remembering.** I first kept a grid-cell subsection on the strength of one
+transcript line. George rejected it twice, in speech, "fire intensity or robustness with held data,
+these have got to go in somewhere else, these are too small a point", and by leaving it out of what he
+wrote. **When the transcript and the written skeleton disagree, the skeleton wins.** The per-cell
+numbers now live in the body of Sect. 3.1.1 and the scatter is supplementary.
+
+### Runs completed this session, all official ILAMB, all reproducible
+
+| Output | What |
+|---|---|
+| `paper_gmd/scoring/ba_regions/` | burned area, global plus the seven fitting regions, eleven versions |
+| `paper_gmd/scoring/ba_gfed14/` | burned area, the fourteen standard GFED regions |
+| `paper_gmd/models_ffire_paper/` | fFire computed for all eight paper versions, `scripts/run_ffire_all_versions.sh` |
+| `paper_gmd/scoring/ffire_regions/` | fFire scored over global, the seven and the fourteen |
+
+**The headline result of the session.** Model G wins the global score and is the best version in one
+region of seven. Model I is best in four of seven, first on the regional mean, and third globally. On
+the fourteen GFED regions the same inversion appears, I best in six and G in three. The compensating
+error argument is now a systematic measurement rather than one basin.
+
+**Regional emissions are the other new finding.** Model G's global emissions land within four percent
+of GFED5 while its regional emissions are wrong by up to a factor of six, Africa over and everything
+else under. Correcting burned area did not correct emissions, which is Discussion P6.
+
+**Do not reuse 3.15 Pg C.** That figure came from an earlier combustion calibration. Model E gives 2.82
+with the current betas and Model G gives 3.24.
+
+### Documents and how to regenerate them
+
+- `python scripts/build_tables.py` writes `paper_gmd/TABLES.md`, Table 1 global, Tables 2 to 8 one per
+  region with identical rows and columns, Table 9 the version attributes, authored inside the script,
+  Table 10 a stub. Emissions appear beside burned area in every table.
+- `python paper_gmd/build_figs_tables_v2.py` writes `paper_gmd/Figures_and_Tables_v2.docx`, every
+  figure and table in the order the outline calls for it. **Version 2 supersedes
+  `Figures_and_Tables.docx`.**
+- `python paper_gmd/build_outline_docx.py` writes the outline docx.
+- Figures. `make_fig_maps_all.py`, `make_fig_ffire_all.py`, `make_fig_regional_matrix.py`,
+  `make_fig_attribution.py`, `make_fig_scatter.py`, all run with the BASE python, not edfire.
+
+**George's one-page rule is built into the figure scripts.** Whatever the item, the whole of it sits on
+one page. The map scripts compute their own grid at three columns, so a tenth version will not spill.
+
+### The three things that are not done, and who they need
+
+1. **Model J, the plant functional type version.** Committed, reserved in Table 9, and blocked on a
+   productivity split by plant functional type from Lei. The current dump splits by land use only.
+   This is George's own mechanism, see his fine-fuel diagram.
+2. **The coupled run, Table 10 and Sect. 3.3.** Needs Lei. **The version to reintegrate is not chosen**,
+   and the paper's own argument makes it awkward, since the aggregate score picks Model G while Model I
+   is the physically faithful one.
+3. **Held-out validation now appears nowhere.** George cut it from Results and it is not what he meant
+   by testing. The work exists, Model E lost 0.050 and 0.015 of its correlation. A referee will ask
+   about overfitting.
+
+Ten open decisions are listed at the end of `TOPIC_SENTENCES_v3.md` and on the last page of the outline
+docx.
 
 ## IF YOU ARE ON THE MAC
 

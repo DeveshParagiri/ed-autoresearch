@@ -65,8 +65,8 @@ def load_dbar_2001_2016():
     return np.repeat(np.repeat(dbar_1, 2, axis=-2), 2, axis=-1).astype(np.float32)
 
 
-def load_model_ba(model_name):
-    p = REPO / "ilamb" / "MODELS_LEADERBOARD" / model_name / "burntArea.nc"
+def load_model_ba(model_name, ba_path=None):
+    p = Path(ba_path) if ba_path else REPO / "ilamb" / "MODELS_LEADERBOARD" / model_name / "burntArea.nc"
     ds = xr.open_dataset(p)
     yr = np.array([t.year for t in ds["time"].values])
     m = (yr >= 2001) & (yr <= 2016)
@@ -127,6 +127,10 @@ def main():
     ap.add_argument("--out-suffix", default="-Hurtt")
     ap.add_argument("--betas-json", default=None,
                     help="Optional JSON with tuned beta_max overrides")
+    ap.add_argument("--ba-path", default=None,
+                    help="Read burntArea.nc from this path instead of MODELS_LEADERBOARD/<model>/")
+    ap.add_argument("--out-dir", default=None,
+                    help="Write fFire.nc here instead of MODELS_LEADERBOARD_FFIRE_GFED5/<model><suffix>/")
     args = ap.parse_args()
     if args.betas_json:
         import json as _json
@@ -140,7 +144,7 @@ def main():
         print(f"  loaded tuned BETA_MAX={BETA_MAX}, D_REF={args.d_ref}")
 
     print(f"Loading inputs for {args.model} (D_REF={args.d_ref}) ...")
-    ba, lat, lon, times = load_model_ba(args.model)
+    ba, lat, lon, times = load_model_ba(args.model, args.ba_path)
     agb = load_agb_2001_2016()
     csoil = load_csoil_2001_2016(lat, lon)
     dbar = load_dbar_2001_2016()
@@ -164,7 +168,8 @@ def main():
           f"(GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, "
           f"NOT the literature ~2 -- match the reference, not 2.0)")
 
-    out_dir = REPO / "ilamb" / "MODELS_LEADERBOARD_FFIRE_GFED5" / (args.model + args.out_suffix)
+    out_dir = (Path(args.out_dir) if args.out_dir else
+               REPO / "ilamb" / "MODELS_LEADERBOARD_FFIRE_GFED5" / (args.model + args.out_suffix))
     out_p = out_dir / "fFire.nc"
     write_ffire(out_p, ffire, lat, lon, times, args.model, args.d_ref)
     print(f"wrote {out_p}")

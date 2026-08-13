@@ -4,6 +4,26 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-13 (overnight) — the paper rebuilt to George's skeleton, and the inversion measured
+
+- **Methods and Results restructured** to the outline George wrote on 08/06, confirmed against the
+  meeting transcript. Overview plus four steps; ED introduced; offline stated; version table moved to
+  Results; socioeconomics moved to Results. Grid-cell subsection CUT, he rejected it twice.
+- **Regional ILAMB, burned area.** Seven fitting regions and the fourteen GFED regions, eleven
+  versions. `paper_gmd/scoring/ba_regions/`, `ba_gfed14/`.
+- **fFire computed for all eight versions** and scored over global plus both region sets.
+  `paper_gmd/models_ffire_paper/`, `paper_gmd/scoring/ffire_regions/`.
+- **THE RESULT.** G wins globally, best in 1 region of 7 and 3 of 14. I is best in 4 of 7 and 6 of 14
+  and first on the regional mean. The ranking inverts with the scale of assessment.
+- **Regional emissions fail while the global total looks good.** G is within 4 percent globally and
+  wrong by up to 6x regionally. Africa over, everything else under.
+- **3.15 Pg C is retired.** It came from an older beta calibration. E is 2.82, G is 3.24.
+- **Tables 1 to 10 built** by `scripts/build_tables.py`, emissions beside burned area everywhere.
+- **Figures 3 and 5 created**, the regional score matrix and the attribution bars. Figures 2 and 4
+  rebuilt to the current eight versions on one page each.
+- **Two documents for George**, `Topic_Sentence_Outline_v3.docx` and `Figures_and_Tables_v2.docx`.
+- Open, needing Lei: Model J's PFT split, and the coupled run for Table 10.
+
 ## 2026-08-06 (afternoon) — MODEL I: the best-scoring model is not the best model
 - **Model I built and scored.** Model G's recipe with the biomass gate on (14 params), all seven
   regions fitted. Official ILAMB, eleven versions in one run (`paper_gmd/scoring/ba_withI/`):
