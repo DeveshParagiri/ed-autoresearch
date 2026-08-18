@@ -1,0 +1,60 @@
+{
+  "benchmark_sensitivity": {
+    "candidate_overall_score_delta_gfed5_minus_gfed4_1s": -0.04009299999999999,
+    "stock_overall_score_delta_gfed5_minus_gfed4_1s": -0.04009299999999999
+  },
+  "candidate": {
+    "gfed4_1s": {
+      "benchmark_period_mean_percent": 0.32711,
+      "bias_percent": -0.208603,
+      "bias_score": 0.68067,
+      "model_period_mean_percent": 0.118507,
+      "overall_score": 0.477503,
+      "phase_shift_months": 3.2245,
+      "rmse_percent": 0.643489,
+      "rmse_score": 0.488924,
+      "seasonal_cycle_score": 0.43859,
+      "spatial_distribution_score": 0.290408
+    },
+    "gfed5": {
+      "benchmark_period_mean_percent": 0.487444,
+      "bias_percent": -0.380519,
+      "bias_score": 0.621668,
+      "model_period_mean_percent": 0.106925,
+      "overall_score": 0.43741,
+      "phase_shift_months": 2.78413,
+      "rmse_percent": 0.869637,
+      "rmse_score": 0.466119,
+      "seasonal_cycle_score": 0.467363,
+      "spatial_distribution_score": 0.16578
+    }
+  },
+  "period": "2001-01/2016-12",
+  "schema": "ed-fire-evaluation/v1",
+  "stock": {
+    "gfed4_1s": {
+      "benchmark_period_mean_percent": 0.32711,
+      "bias_percent": -0.208603,
+      "bias_score": 0.68067,
+      "model_period_mean_percent": 0.118507,
+      "overall_score": 0.477503,
+      "phase_shift_months": 3.2245,
+      "rmse_percent": 0.643489,
+      "rmse_score": 0.488924,
+      "seasonal_cycle_score": 0.43859,
+      "spatial_distribution_score": 0.290408
+    },
+    "gfed5": {
+      "benchmark_period_mean_percent": 0.487444,
+      "bias_percent": -0.380519,
+      "bias_score": 0.621668,
+      "model_period_mean_percent": 0.106925,
+      "overall_score": 0.43741,
+      "phase_shift_months": 2.78413,
+      "rmse_percent": 0.869637,
+      "rmse_score": 0.466119,
+      "seasonal_cycle_score": 0.467363,
+      "spatial_distribution_score": 0.16578
+    }
+  }
+}

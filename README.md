@@ -1,6 +1,6 @@
 # ED-Fire autoresearch
 
-This repository is the working record for research on the mechanistic fire model used by Ecosystem Demography. It now has a runnable burned-area baseline: a pinned TRENDY v14 EDv3 S3 output is staged as the candidate and evaluated by ILAMB 2.7.3 against GFED5 and GFED4.1s over 2001–2016. The original ED source revision and producing command are not present, so this establishes a reproducible evaluation floor, not source-level reproduction of ED.
+This repository is the working record for research on the mechanistic fire model used by Ecosystem Demography. It has a recorded, reproducible burned-area baseline: a pinned TRENDY v14 EDv3 S3 output is staged as the candidate and evaluated by ILAMB 2.7.3 against GFED5 and GFED4.1s over 2001–2016. Two matched runs at the same code revision reproduced the candidate, complete metric vector, ILAMB score products, and five canonical figures byte for byte. The original ED source revision and producing command are not present, so this is an evaluation floor rather than source-level reproduction of ED. The measured result and decision live in `research/experiments/experiment.stock-baseline/experiment.md`.
 
 The structure is intentionally small. One document defines the science, one records the current handoff, one reusable skill tells an agent how to operate, and the remaining files either identify data, lock an evaluation, execute an experiment, or preserve its evidence. There is no `ar` CLI, separate memory directory, archive, data cache, or UI.
 

@@ -86,11 +86,11 @@ Manifest checks, metadata inspection, unit checks, and small diagnostic slices a
 
 Human approval is required before changing the active evaluation family, headline region set, target mask, hard scientific constraint, promotion rule, ED integration target, project-wide research procedure, or publication claim. It is also required before an expensive coupled run. A coupled request must identify the unresolved question, matched offline evidence, exact configuration, required outputs, expected cost, and stopping rule.
 
-## Current sequence
+## Research sequence
 
-The first experiment is `experiment.stock-baseline`. It stages the pinned ED artifact, records its identity and environment, evaluates it against both GFED products, and produces the locked evidence suite. Acceptance requires a second run at the same code revision with matching candidate identity, metric vector, and canonical figures.
+The first required control is a stock evaluation at one committed revision, followed by a matched repeat with the same candidate identity, metric vector, and canonical figures. Its measured result and completion state belong in the experiment record, while the current handoff belongs in `memory.md`.
 
-After that baseline, the first decision is not “run Optuna.” The evidence must be inspected for benchmark-product sensitivity, mask behavior, regional failures, and evaluator consistency. The project must then obtain the relevant ED fire source and configuration or establish a clean mechanistic implementation before proposing an actual model change. The first such change should isolate one interpretable process and state its predicted regional and seasonal signature before execution.
+After that control, the first decision is not “run Optuna.” The evidence must be inspected for benchmark-product sensitivity, mask behavior, regional failures, and evaluator consistency. The project must then obtain the relevant ED fire source and configuration or establish a clean mechanistic implementation before proposing an actual model change. The first such change should isolate one interpretable process and state its predicted regional and seasonal signature before execution.
 
 Coupled transfer, fire emissions, new inputs, and parameter search become descendants only when their prerequisite interface and control exist. Model A through E remain outside this sequence.
 

@@ -1,0 +1,89 @@
+{
+  "changed_files": [],
+  "code_revision": "d1518e88f03c371303bd06d9ff767d6ea1ee3358",
+  "commands": [
+    {
+      "argv": [
+        "/Users/devparagiri/Research/ed-fire/.venv/bin/python3",
+        "scripts/stage_stock_baseline.py"
+      ],
+      "completed_at": "2026-08-18T17:12:20Z",
+      "exit_code": 0,
+      "role": "candidate",
+      "started_at": "2026-08-18T17:12:20Z",
+      "stderr": "research/experiments/experiment.stock-baseline/runs/run.20260818T171220Z.a7122045/logs/candidate.stderr.log",
+      "stdout": "research/experiments/experiment.stock-baseline/runs/run.20260818T171220Z.a7122045/logs/candidate.stdout.log"
+    },
+    {
+      "argv": [
+        "/Users/devparagiri/miniconda3/envs/edfire/bin/python",
+        "scripts/evaluate_burned_area.py"
+      ],
+      "completed_at": "2026-08-18T17:14:12Z",
+      "exit_code": 0,
+      "role": "evaluator",
+      "started_at": "2026-08-18T17:12:20Z",
+      "stderr": "research/experiments/experiment.stock-baseline/runs/run.20260818T171220Z.a7122045/logs/evaluator.stderr.log",
+      "stdout": "research/experiments/experiment.stock-baseline/runs/run.20260818T171220Z.a7122045/logs/evaluator.stdout.log"
+    }
+  ],
+  "completed_at": "2026-08-18T17:14:12Z",
+  "contract": {
+    "id": "contract.ed-fire.burned-area.v1",
+    "path": "evals/contracts/burned-area-v1.json",
+    "sha256": "a4b4d12224ae9e075f14876f15c34f49d95357965e9e19e1442c8ec6d2aca059"
+  },
+  "dirty_worktree": false,
+  "execution": {
+    "adapter": "scripts/stage_stock_baseline.py",
+    "argv": [
+      "{python}",
+      "scripts/stage_stock_baseline.py"
+    ],
+    "mode": "mechanistic",
+    "tool": "direct"
+  },
+  "experiment": "experiment.stock-baseline",
+  "experiment_kind": "baseline",
+  "failure": null,
+  "id": "run.20260818T171220Z.a7122045",
+  "inputs": [
+    "benchmark.ed-stock.burned-area",
+    "benchmark.gfed5.ilamb-burned-area",
+    "benchmark.gfed4.ilamb-burned-area",
+    "benchmark.config.gfed5-burned-area",
+    "benchmark.config.gfed4-burned-area"
+  ],
+  "official_metrics_sha256": "053901e8c5f0d5552c593582f3d7d5bc28b5322a1313c811b6eddece0f8d52bd",
+  "protected_files": [
+    {
+      "path": "data/benchmarks/configs/gfed4.1s-burned-area.cfg",
+      "sha256": "aeb6bb73e03905dce3bb2680a4cbe67fa8bedb4878993376887458be97a2c72f"
+    },
+    {
+      "path": "data/benchmarks/configs/gfed5-burned-area.cfg",
+      "sha256": "4dd31a5144e143ed30350f541af1ef720590dc5836d9ad5c321632709a945185"
+    },
+    {
+      "path": "data/benchmarks/observations/gfed4.1s-burned-area.nc",
+      "sha256": "1dec2035daf0048be74161e95995202e68138a156e9edba8da8b84b0d05f4095"
+    },
+    {
+      "path": "data/benchmarks/observations/gfed5-burned-area.nc",
+      "sha256": "46594753a3f111e0ddc5526370708b0648f7f7b67458b42153dc04b7d035051b"
+    },
+    {
+      "path": "data/benchmarks/comparison-models/ilamb/EDv3/burntArea.nc",
+      "sha256": "73c07a379ab25a04eb3d55a9ccc7e8671ddac334f2e7bdeeb409aaa59be9caeb"
+    },
+    {
+      "path": "scripts/evaluate_burned_area.py",
+      "sha256": "d628c2dc31dd091606ee094570fc4ad207685b1bb12de93b62b40d185c4d39ce"
+    }
+  ],
+  "schema": "research-run/v1",
+  "search": null,
+  "started_at": "2026-08-18T17:12:20Z",
+  "status": "completed",
+  "working_directory": "/Users/devparagiri/Research/ed-fire"
+}
