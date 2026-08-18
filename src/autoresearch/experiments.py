@@ -29,6 +29,7 @@ REQUIRED_BODY_SECTIONS = (
     "# Question",
     "# Change",
     "# Prediction",
+    "# Plan",
     "# Result",
     "# Decision",
     "# Revisit when",

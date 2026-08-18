@@ -28,6 +28,10 @@ Introduce no research change. Connect the existing target to a run-owned output 
 
 The first execution will either establish the baseline or identify a precise missing interface, dependency, or evaluation requirement.
 
+# Plan
+
+Define the expected evidence, likely execution or interpretation failures, cost tier, and stopping rule before activating this experiment.
+
 # Result
 
 No run has been recorded.

@@ -120,6 +120,61 @@ experiments = []
             self.assertEqual(result[0].status, "conflict")
             self.assertFalse((project / "data" / "inputs" / "test").is_symlink())
 
+    def test_installer_accepts_a_file_resolved_through_a_parent_link(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            project = root / "project"
+            source = root / "source"
+            (project / "data" / "inputs").mkdir(parents=True)
+            (source / "collection").mkdir(parents=True)
+            (source / "collection" / "value.txt").write_text("evidence")
+            (project / "data" / "inputs" / "collection").symlink_to(
+                source / "collection"
+            )
+            (project / "data" / "catalog.toml").write_text(
+                """
+schema = "data-catalog/v1"
+
+[[datasets]]
+id = "input.member"
+category = "inputs"
+role = "baseline-input"
+required_for = ["offline-baseline"]
+path = "data/inputs/collection/value.txt"
+kind = "file"
+required = true
+""".strip()
+            )
+            (project / "data" / "sources.toml").write_text(
+                """
+schema = "data-sources/v1"
+
+[store]
+environment_variable = "TEST_DATA_SOURCE_ROOT"
+default_relative_to_project = "../source"
+
+[[sources]]
+id = "input.member"
+source_path = "collection/value.txt"
+acquisition = "lab-seed"
+source_name = "Nested test fixture"
+version = "1"
+retrieval = "Supply the fixture source."
+time_coverage = "test period"
+spatial_coverage = "test grid"
+units = "dimensionless"
+preprocessing = "none"
+limitations = "test fixture only"
+license = "test only"
+integrity = "fixture contents"
+experiments = []
+""".strip()
+            )
+
+            result = install_links(project, source, dry_run=True)
+
+            self.assertEqual(result[0].status, "ready")
+
     def test_installer_reports_optional_missing_without_required_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

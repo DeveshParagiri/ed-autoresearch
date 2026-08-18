@@ -10,6 +10,8 @@ This repository uses one experiment graph, one data boundary, and one evaluation
 
 The durable record has higher authority than `memory.md`. Data identity belongs in `data/catalog.toml` and `data/sources.toml`. Evaluation identity belongs in `evals/contracts/`. Questions and decisions belong in experiment records. Measured evidence belongs in run directories. Git identifies the code that produced a run.
 
+The README, research charter, memory file, and skill state their responsibility at the start. The active handoff appears at the start of `memory.md`; experiment decisions and revisit conditions stay at the end of the fixed experiment sequence. A fact has one authoritative owner; other files link to it instead of maintaining a paraphrased copy. Use stable headings and exact paths, manifest IDs, contract IDs, commands, units, and evidence references. Keep chronological history in Git and run evidence rather than appending change logs to root documents.
+
 ## File tree
 
 ```text
@@ -26,7 +28,7 @@ __PROJECT_SLUG__/
 │   └── baseline-v1.json                   draft machine evaluation contract
 ├── research/experiments/
 │   └── experiment.baseline/
-│       └── experiment.md                  baseline question, execution, result, and decision
+│       └── experiment.md                  baseline question, plan, result, and decision
 ├── scripts/
 │   ├── check_workspace.py                 read-only validation entry point
 │   ├── install_data.py                    manifest-driven link installer
@@ -55,7 +57,7 @@ The installer creates `data/inputs/`, `data/benchmarks/`, `data/reference/`, or 
 
 An experiment is the only graph node. Its `parents` field creates lineage. Its scientific `kind` states what is being tested. Its execution `mode` is `mechanistic`, `simulation`, or `hybrid`. Its execution `tool` names the implementation route, normally `direct` or `optuna`. The mode, kind, and tool are separate because a simulator can be run directly, a mechanistic model can be tuned with Optuna, and a hybrid experiment can invoke several project tools without changing the graph schema.
 
-Every experiment keeps its question, isolated change, prediction, result, decision, and revisit condition in one `experiment.md`. One terminal attempt creates one run ID. Retries and failures are new runs rather than edits to old evidence.
+Every experiment keeps its question, isolated change, prediction, execution plan, result, decision, and revisit condition in one `experiment.md`. The plan states expected evidence, known failure modes, cost, and the stopping rule. One terminal attempt creates one run ID. Retries and failures are new runs rather than edits to old evidence.
 
 A run contains `run.json` for identity, status, revision, inputs, commands, and failure stage; `contract.json` for the exact evaluation snapshot; `metrics.json` for trusted scalar evidence; `artifacts.json` for artifact paths and checksums; `events.jsonl` for the append-only execution timeline; `logs/` for stdout, stderr, environment, Git status, and diffs; `figures/` for canonical figures; `artifacts/` for durable non-figure outputs; and `work/` for disposable candidate state. Interpretation is written back to `experiment.md`, so the runner does not create a second notes file.
 
@@ -81,7 +83,7 @@ After the baseline adapter and contract are complete, active, reviewed, and comm
 uv run python scripts/run_experiment.py experiment.baseline
 ```
 
-There is no `ar` command. These three script entry points are the complete public harness surface.
+There is no `ar` command. These three script entry points are the complete public command surface.
 
 ## Script naming
 

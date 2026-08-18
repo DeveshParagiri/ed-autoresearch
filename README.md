@@ -41,7 +41,7 @@ ed-fire/
 ├── research/
 │   ├── experiments/
 │   │   └── <experiment-id>/
-│   │       ├── experiment.md         question, prediction, command, result, and decision
+│   │       ├── experiment.md         question, change, plan, result, and decision
 │   │       └── runs/<run-id>/        immutable evidence from one terminal attempt
 │   └── autoresearch/                 generic scaffolder for other research projects
 ├── scripts/

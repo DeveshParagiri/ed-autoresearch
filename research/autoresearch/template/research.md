@@ -1,5 +1,7 @@
 # __PROJECT_NAME__ research charter
 
+This file defines the project-specific scientific target, evidence, constraints, branch policy, and approval boundaries. Setup belongs in `README.md`, the current handoff belongs in `memory.md`, data identity belongs in the manifests, executable evaluation policy belongs in contracts, and reusable agent procedure belongs in `skills/autoresearch/SKILL.md`.
+
 ## Objective
 
 __PROJECT_DESCRIPTION__
@@ -32,9 +34,9 @@ State hard scientific constraints, leakage risks, protected evidence, cost tiers
 
 Experiments and runs are durable memory. Each experiment states its parents, prediction, result, decision, and conditions for revisiting it. A failed execution is not automatically evidence against the research idea.
 
-## Current frontier
+## Research sequence
 
-Describe the baseline, immediate controls, active branches, and current blockers. Keep the short current handoff in `memory.md`.
+Define which controls must precede model changes, how work progresses from cheap diagnostics to expensive validation, and which prerequisites unlock new inputs, optimization, or coupled execution. Completion state and the immediate next action belong in experiment records and `memory.md`.
 
 ## Open questions
 

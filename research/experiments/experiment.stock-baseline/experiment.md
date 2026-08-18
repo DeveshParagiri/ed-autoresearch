@@ -33,6 +33,10 @@ This experiment introduces no scientific change. It stages the pinned TRENDY v14
 
 The run should reproduce the same GFED5 score vector already associated with the pinned file, add a matched GFED4.1s score vector, and generate the five contract figures. It must not be interpreted as a candidate-model improvement or as proof that native ED can be rebuilt here.
 
+# Plan
+
+Expected evidence is the staged candidate hash, both complete ILAMB score vectors, the five canonical figures, command logs, environment identity, and unchanged protected-file hashes. Likely failures are a missing source link, an incompatible ILAMB environment, candidate-interface drift, or evaluator output that violates the contract. One run costs roughly two minutes on this machine. Stop after one complete run and one matched repeat at the same revision; invalidate any attempt that changes project or protected files.
+
 # Result
 
 Three terminal runs completed. The initial run, `run.20260818T170639Z.ed6f7759`, established the result at revision `8cda0eff2c520570f9c0c73f04533936ae63c0f6`. After removing a duplicate evaluator entry from run-lock bookkeeping, `run.20260818T171022Z.bc08c8d2` and `run.20260818T171220Z.a7122045` repeated the experiment at the identical revision `d1518e88f03c371303bd06d9ff767d6ea1ee3358`. Both commands exited successfully, protected hashes passed before and after evaluation, the worktree remained unchanged, and no failure was recorded.

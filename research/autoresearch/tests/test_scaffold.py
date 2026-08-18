@@ -75,6 +75,10 @@ Run one fixture candidate.
 
 The trusted evaluator will replace candidate-written official evidence.
 
+# Plan
+
+Expect trusted metrics and one fixed figure; stop after one terminal attempt.
+
 # Result
 
 No run yet.
@@ -158,14 +162,27 @@ pixel = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
     def test_template_is_complete(self) -> None:
         self.assertEqual(scaffold.check_template(), ())
 
-    def test_ed_fire_and_template_expose_the_same_core_modules(self) -> None:
+    def test_document_responsibilities_do_not_overlap(self) -> None:
+        research = (scaffold.TEMPLATE_ROOT / "research.md").read_text()
+        memory = (scaffold.TEMPLATE_ROOT / "memory.md").read_text()
+        self.assertIn("## Research sequence", research)
+        self.assertNotIn("## Current frontier", research)
+        self.assertIn("current frontier", memory.lower())
+        experiment = (
+            scaffold.TEMPLATE_ROOT
+            / "research"
+            / "experiments"
+            / "experiment.baseline"
+            / "experiment.md"
+        ).read_text()
+        self.assertIn("# Plan", experiment)
+
+    def test_ed_fire_and_template_share_the_same_core_modules(self) -> None:
         repository_root = SCAFFOLD_ROOT.parents[1]
         for filename in ("runner.py", "optuna_records.py"):
             project_text = (repository_root / "src" / "autoresearch" / filename).read_text()
             template_text = (scaffold.TEMPLATE_ROOT / "src" / "autoresearch" / filename).read_text()
-            for function in ("run_experiment",) if filename == "runner.py" else ("run_local_storage", "export_study"):
-                self.assertIn(f"def {function}(", project_text)
-                self.assertIn(f"def {function}(", template_text)
+            self.assertEqual(project_text, template_text, filename)
 
     def test_slugify_is_stable(self) -> None:
         self.assertEqual(scaffold.slugify("A Research Problem 2.0"), "a-research-problem-2-0")
@@ -184,22 +201,23 @@ pixel = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
             with self.assertRaises(FileExistsError):
                 scaffold.create_workspace(destination, name="Existing")
 
-    def test_create_sets_the_declared_baseline_mode(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            destination = Path(temporary) / "simulation"
-            scaffold.create_workspace(
-                destination,
-                name="Simulation Research",
-                mode="simulation",
-            )
-            experiment = (
-                destination
-                / "research"
-                / "experiments"
-                / "experiment.baseline"
-                / "experiment.md"
-            ).read_text()
-            self.assertIn("  mode: simulation\n", experiment)
+    def test_create_sets_each_supported_baseline_mode(self) -> None:
+        for mode in ("mechanistic", "simulation", "hybrid"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as temporary:
+                destination = Path(temporary) / mode
+                scaffold.create_workspace(
+                    destination,
+                    name=f"{mode.title()} Research",
+                    mode=mode,
+                )
+                experiment = (
+                    destination
+                    / "research"
+                    / "experiments"
+                    / "experiment.baseline"
+                    / "experiment.md"
+                ).read_text()
+                self.assertIn(f"  mode: {mode}\n", experiment)
 
     def test_generated_workspace_has_only_the_three_public_scripts(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -232,6 +250,50 @@ pixel = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
             template_skill = (scaffold.TEMPLATE_ROOT / "skills" / "autoresearch" / "SKILL.md").read_text()
             generated_skill = (destination / "skills" / "autoresearch" / "SKILL.md").read_text()
             self.assertEqual(generated_skill, template_skill)
+
+    def test_generated_installer_accepts_a_member_through_a_parent_link(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            destination = root / "generated"
+            source = root / "source"
+            scaffold.create_workspace(destination, name="Linked Data Research")
+            (source / "collection").mkdir(parents=True)
+            (source / "collection" / "value.txt").write_text("evidence")
+            (destination / "data" / "inputs").mkdir()
+            (destination / "data" / "inputs" / "collection").symlink_to(
+                source / "collection"
+            )
+            (destination / "data" / "catalog.toml").write_text(
+                """schema = "data-catalog/v1"
+datasets = [{ id = "input.member", path = "data/inputs/collection/value.txt", required = true }]
+"""
+            )
+            (destination / "data" / "sources.toml").write_text(
+                """schema = "data-sources/v1"
+[store]
+environment_variable = "LINKED_DATA_ROOT"
+default_relative_to_project = "../source"
+
+[[sources]]
+id = "input.member"
+source_path = "collection/value.txt"
+acquisition = "lab-seed"
+"""
+            )
+            environment = os.environ.copy()
+            environment["PYTHONPATH"] = str(destination / "src")
+
+            result = self._script(
+                destination,
+                environment,
+                "install_data.py",
+                "plan",
+                "--source-root",
+                str(source),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("READY", result.stdout)
 
     def test_run_is_transactional(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

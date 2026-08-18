@@ -20,9 +20,9 @@ The first experiment therefore establishes an evaluation baseline, not source-le
 
 ## Research target and candidate interface
 
-The target is the fire mechanism, not the orchestration code. In coupled ED, fire depends on climate, vegetation and fuel state, productivity, disturbance history, and any explicitly justified human or land-use drivers; fire then changes later vegetation and carbon state. Offline work holds the supplied state fixed so that equations, parameters, inputs, and diagnostics can be compared cheaply. Coupled work tests whether an offline result survives feedback into ED.
+Research changes the fire mechanism; orchestration code only records and evaluates those changes. In coupled ED, fire depends on climate, vegetation and fuel state, productivity, disturbance history, and any explicitly justified human or land-use drivers; fire then changes later vegetation and carbon state. Offline work holds the supplied state fixed so that equations, parameters, inputs, and diagnostics can be compared cheaply. Coupled work tests whether an offline result survives feedback into ED.
 
-ED-Fire experiments use `execution.mode: mechanistic`. A direct run and an Optuna study are execution tools, not scientific modes. The generic scaffold supports simulation-engine projects, but ED-Fire is not relabeled as a simulation experiment merely because its code is executed by a computer.
+ED-Fire experiments use `execution.mode: mechanistic`. Direct runs and Optuna studies select execution tools. The generic scaffold also supports simulation-engine projects; running ED-Fire code on a computer does not change its mechanistic mode.
 
 Every burned-area candidate evaluated under `contract.ed-fire.burned-area.v1` must produce `work/model/Candidate/burntArea.nc`. It must contain monthly `burntArea` on the global 0.5-degree, 360 × 720 grid from January 2001 through December 2016, with burned area represented as a fraction of grid-cell area per month. Candidate-specific files may remain in run-owned work or diagnostics, but official metrics and canonical figures are written only by the trusted evaluator.
 

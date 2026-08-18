@@ -43,6 +43,10 @@ def _same_link(destination: Path, source: Path) -> bool:
     return linked.resolve(strict=False) == source.resolve(strict=False)
 
 
+def _same_location(destination: Path, source: Path) -> bool:
+    return destination.exists() and destination.resolve() == source.resolve()
+
+
 def _safe_child(root: Path, relative: str, *, label: str) -> Path:
     path = Path(relative)
     if path.is_absolute() or ".." in path.parts:
@@ -56,6 +60,21 @@ def _safe_child(root: Path, relative: str, *, label: str) -> Path:
     return candidate
 
 
+def _declared_child(root: Path, relative: str, *, label: str) -> Path:
+    path = Path(relative)
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"{label} must be a safe relative path: {relative!r}")
+    return root / path
+
+
+def _parent_is_local(project_root: Path, destination: Path) -> bool:
+    try:
+        destination.parent.resolve(strict=False).relative_to(project_root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def _link(
     item_id: str,
     source: Path,
@@ -63,15 +82,20 @@ def _link(
     *,
     required: bool,
     dry_run: bool,
+    project_root: Path,
 ) -> InstallEvent:
     if not source.exists():
         return InstallEvent("missing-source" if required else "optional-missing", item_id, str(source))
+    if _same_location(destination, source):
+        return InstallEvent("ready", item_id, f"{destination} -> {source}")
     if _same_link(destination, source):
         return InstallEvent("ready", item_id, f"{destination} -> {source}")
     if destination.is_symlink():
         return InstallEvent("conflict", item_id, f"{destination} points to {os.readlink(destination)!r}")
     if destination.exists():
         return InstallEvent("conflict", item_id, f"{destination} exists and is not a symlink")
+    if not _parent_is_local(project_root, destination):
+        return InstallEvent("conflict", item_id, f"{destination} has a parent outside the project")
     if dry_run:
         return InstallEvent("would-link", item_id, f"{destination} -> {source}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -93,7 +117,7 @@ def install(project_root: Path, root: Path, *, dry_run: bool = False) -> tuple[I
     for item_id in sorted(catalog_by_id):
         dataset = catalog_by_id[item_id]
         source = source_by_id[item_id]
-        destination = _safe_child(
+        destination = _declared_child(
             project_root,
             dataset["path"],
             label=f"dataset path for {item_id}",
@@ -120,6 +144,15 @@ def install(project_root: Path, root: Path, *, dry_run: bool = False) -> tuple[I
             if destination.is_symlink() or (destination.exists() and not destination.is_dir()):
                 events.append(InstallEvent("conflict", item_id, str(destination)))
                 continue
+            if not destination.exists() and not _parent_is_local(project_root, destination):
+                events.append(
+                    InstallEvent(
+                        "conflict",
+                        item_id,
+                        f"{destination} has a parent outside the project",
+                    )
+                )
+                continue
             if not dry_run:
                 destination.mkdir(parents=True, exist_ok=True)
             for member in members:
@@ -134,13 +167,14 @@ def install(project_root: Path, root: Path, *, dry_run: bool = False) -> tuple[I
                             member,
                             label=f"source member for {item_id}",
                         ),
-                        _safe_child(
+                        _declared_child(
                             destination,
                             member,
                             label=f"destination member for {item_id}",
                         ),
                         required=required,
                         dry_run=dry_run,
+                        project_root=project_root,
                     )
                 )
             continue
@@ -151,6 +185,7 @@ def install(project_root: Path, root: Path, *, dry_run: bool = False) -> tuple[I
                 destination,
                 required=required,
                 dry_run=dry_run,
+                project_root=project_root,
             )
         )
     return tuple(events)

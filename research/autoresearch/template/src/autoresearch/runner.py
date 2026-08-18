@@ -451,7 +451,10 @@ def _untracked(project_root: Path) -> tuple[str, ...] | None:
         path
         for path in output.splitlines()
         if path
-        and not (path.startswith("research/experiments/") and "/runs/" in path)
+        and not (
+            path.startswith("research/experiments/")
+            and "/runs/" in path
+        )
     )
 
 
@@ -539,7 +542,11 @@ def run_experiment(
         raise RunError("candidate command cannot be empty")
     if not isinstance(inputs, list) or not all(isinstance(value, str) for value in inputs) or set(inputs) - known_inputs:
         raise RunError(f"experiment {experiment_id} has invalid inputs")
-    if not isinstance(execution, Mapping) or execution.get("mode") not in {"mechanistic", "simulation", "hybrid"}:
+    if not isinstance(execution, Mapping) or execution.get("mode") not in {
+        "mechanistic",
+        "simulation",
+        "hybrid",
+    }:
         raise RunError(f"experiment {experiment_id} has invalid execution metadata")
     adapter = execution.get("adapter")
     if not _safe(adapter) or not (project_root / adapter).is_file():
@@ -608,7 +615,14 @@ def run_experiment(
         "failure": None,
     }
     _write_json(run_root / "run.json", run)
-    _record_event(run_root, "run-started", run_id=run_id, experiment_id=experiment_id, execution_mode=execution.get("mode"), tool=execution.get("tool"))
+    _record_event(
+        run_root,
+        "run-started",
+        run_id=run_id,
+        experiment_id=experiment_id,
+        execution_mode=execution.get("mode"),
+        tool=execution.get("tool"),
+    )
     environment = os.environ.copy()
     environment.update(
         AUTORESEARCH_RUN_ID=run_id,
@@ -619,7 +633,12 @@ def run_experiment(
     _record_event(run_root, "candidate-started", argv=list(command))
     candidate, interrupted = _invoke(project_root, run_root, command, "candidate", environment)
     run["commands"].append(candidate)
-    _record_event(run_root, "candidate-finished", exit_code=candidate["exit_code"], interrupted=interrupted)
+    _record_event(
+        run_root,
+        "candidate-finished",
+        exit_code=candidate["exit_code"],
+        interrupted=interrupted,
+    )
     changed = _git(project_root, "diff", "HEAD", "--binary") != diff_before or _untracked(project_root) != untracked_before
     if interrupted:
         run["status"], run["failure"] = "interrupted", "candidate command was interrupted"
@@ -638,7 +657,10 @@ def run_experiment(
             )
             missing = [path.name for path in required_search_artifacts if not path.is_file()]
             if missing:
-                run["status"], run["failure"] = "invalid", "Optuna execution did not preserve required study artifacts: " + ", ".join(missing)
+                run["status"], run["failure"] = (
+                    "invalid",
+                    "Optuna execution did not preserve required study artifacts: " + ", ".join(missing),
+                )
                 _record_event(run_root, "search-artifacts-missing", files=missing)
 
     if run["status"] == "running":
@@ -655,7 +677,12 @@ def run_experiment(
         _record_event(run_root, "evaluation-started", argv=evaluator_argv)
         evaluator, interrupted = _invoke(project_root, run_root, evaluator_argv, "evaluator", environment)
         run["commands"].append(evaluator)
-        _record_event(run_root, "evaluation-finished", exit_code=evaluator["exit_code"], interrupted=interrupted)
+        _record_event(
+            run_root,
+            "evaluation-finished",
+            exit_code=evaluator["exit_code"],
+            interrupted=interrupted,
+        )
         changed = _git(project_root, "diff", "HEAD", "--binary") != diff_before or _untracked(project_root) != untracked_before
         if interrupted:
             run["status"], run["failure"] = "interrupted", "trusted evaluator was interrupted"

@@ -7,7 +7,7 @@ description: Conduct persistent, experiment-driven research from repository stat
 
 ## Module 1: Recover state and choose the next question
 
-Run `python scripts/check_workspace.py`. Read `README.md` for the repository interface, `research.md` for project rules, `memory.md` for the current handoff, and the active experiment with its ancestors and recent runs. Open manifests, contracts, logs, metrics, and artifacts only when the current decision needs them.
+Run `uv run python scripts/check_workspace.py`. Read `README.md` for the repository interface, `research.md` for project rules, `memory.md` for the current handoff, and the active experiment with its ancestors and recent runs. Open manifests, contracts, logs, metrics, and artifacts only when the current decision needs them.
 
 Treat experiment records, runs, contracts, manifests, artifacts, Git, and explicit researcher decisions as authority. Treat `memory.md` as a short pointer. Repair stale memory from the durable record and state unresolved uncertainty instead of relying on chat recollection.
 
@@ -29,7 +29,7 @@ For direct execution, invoke the declared adapter once. For Optuna, declare obje
 
 Export `optuna-study.json`, `optuna-trials.jsonl`, and `selected-parameters.json`. Make the selected parameters produce the ordinary candidate output, then pass that output through the same trusted evaluator used for direct execution. Require a later non-adaptive confirmation experiment before promotion.
 
-Execute through `python scripts/run_experiment.py <experiment-id>`. Keep retries, replications, repairs, interruptions, and invalid attempts as separate run IDs. Preserve the exact command, revision and diff, environment, inputs, contract snapshot, events, stdout, stderr, metrics, canonical figures, artifacts, timings, and failure stage.
+Execute through `uv run python scripts/run_experiment.py <experiment-id>`. Keep retries, replications, repairs, interruptions, and invalid attempts as separate run IDs. Preserve the exact command, revision and diff, environment, inputs, contract snapshot, events, stdout, stderr, metrics, canonical figures, artifacts, timings, and failure stage.
 
 ## Module 3: Interpret evidence and preserve the result
 
@@ -39,6 +39,6 @@ Classify a negative result as data failure, target or simulator execution failur
 
 Choose one recorded continuation: replicate, repair, deepen, ablate, attribute, combine, investigate an anomaly, confirm selected parameters, request expensive validation, pause, close, or reopen under a satisfied trigger. A paused branch keeps its evidence and `Revisit when` condition.
 
-Write the result, interpretation, decision, and revisit condition into `experiment.md`. Preserve run evidence unchanged. Update the single root `memory.md` with the active frontier, material blockers, researcher priority, and next action, then run `python scripts/check_workspace.py` again.
+Write the result, interpretation, decision, and revisit condition into `experiment.md`. Preserve run evidence unchanged. Update the single root `memory.md` with the active frontier, material blockers, researcher priority, and next action, then run `uv run python scripts/check_workspace.py` again.
 
 Do not create another state file, memory tree, protocol collection, finding node, or tracking layer. Keep project science in `research.md`, repository operation in `README.md`, data identity in manifests, evaluation identity in contracts, execution evidence in runs, and reusable agent behavior in this skill.

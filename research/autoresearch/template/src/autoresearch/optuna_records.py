@@ -11,7 +11,8 @@ from typing import Any
 
 
 def run_local_storage(run_root: Path) -> str:
-    path = run_root.resolve() / "artifacts" / "optuna-study.db"
+    """Return a run-owned SQLite storage URL for a local Optuna study."""
+    path = (run_root.resolve() / "artifacts" / "optuna-study.db")
     path.parent.mkdir(parents=True, exist_ok=True)
     return f"sqlite:///{path}"
 
@@ -23,6 +24,7 @@ def export_study(
     selected_trial_number: int,
     selection_rule: str,
 ) -> tuple[Path, Path, Path]:
+    """Write the portable Optuna evidence required by a recorded search run."""
     artifacts = run_root.resolve() / "artifacts"
     artifacts.mkdir(parents=True, exist_ok=True)
     trials = list(study.get_trials(deepcopy=False))
@@ -33,12 +35,11 @@ def export_study(
     if selected is None:
         raise ValueError(f"selected Optuna trial does not exist: {selected_trial_number}")
 
+    directions = [str(getattr(direction, "name", direction)).lower() for direction in study.directions]
     summary = {
         "schema": "autoresearch-optuna-study/v1",
         "study_name": study.study_name,
-        "directions": [
-            str(getattr(direction, "name", direction)).lower() for direction in study.directions
-        ],
+        "directions": directions,
         "sampler": study.sampler.__class__.__name__,
         "pruner": study.pruner.__class__.__name__,
         "trial_count": len(trials),
@@ -70,7 +71,6 @@ def export_study(
 
 def _trial_record(trial: Any) -> dict[str, Any]:
     state = getattr(trial, "state", None)
-    duration = getattr(trial, "duration", None)
     return {
         "number": trial.number,
         "state": str(getattr(state, "name", state)).lower(),
@@ -80,8 +80,12 @@ def _trial_record(trial: Any) -> dict[str, Any]:
         "intermediate_values": _json_value(getattr(trial, "intermediate_values", {})),
         "started_at": _json_value(getattr(trial, "datetime_start", None)),
         "completed_at": _json_value(getattr(trial, "datetime_complete", None)),
-        "duration_seconds": duration.total_seconds() if isinstance(duration, timedelta) else None,
+        "duration_seconds": _duration_seconds(getattr(trial, "duration", None)),
     }
+
+
+def _duration_seconds(value: Any) -> float | None:
+    return value.total_seconds() if isinstance(value, timedelta) else None
 
 
 def _json_value(value: Any) -> Any:

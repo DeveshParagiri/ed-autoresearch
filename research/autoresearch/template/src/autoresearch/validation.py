@@ -21,7 +21,7 @@ EXPERIMENT_FIELDS = {
 }
 EXPERIMENT_STATUSES = {"proposed", "running", "completed", "paused", "closed", "invalid"}
 EXPERIMENT_SECTIONS = (
-    "# Question", "# Change", "# Prediction", "# Result", "# Decision", "# Revisit when",
+    "# Question", "# Change", "# Prediction", "# Plan", "# Result", "# Decision", "# Revisit when",
 )
 SOURCE_FIELDS = {
     "id", "source_path", "source_url", "acquisition", "source_name", "version",

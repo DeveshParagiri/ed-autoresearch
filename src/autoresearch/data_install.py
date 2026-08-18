@@ -145,6 +145,34 @@ def _same_link(destination: Path, source: Path) -> bool:
     return link_value.resolve(strict=False) == source.resolve(strict=False)
 
 
+def _same_location(destination: Path, source: Path) -> bool:
+    return destination.exists() and destination.resolve() == source.resolve()
+
+
+def _declared_child(root: Path, relative: str, *, label: str) -> Path:
+    path = Path(relative)
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"{label} must be a safe relative path: {relative!r}")
+    return root / path
+
+
+def _source_child(root: Path, relative: str, *, label: str) -> Path:
+    candidate = _declared_child(root.resolve(), relative, label=label)
+    try:
+        candidate.parent.resolve(strict=False).relative_to(root.resolve())
+    except ValueError as exc:
+        raise ValueError(f"{label} escapes its root: {relative!r}") from exc
+    return candidate
+
+
+def _parent_is_local(project_root: Path, destination: Path) -> bool:
+    try:
+        destination.parent.resolve(strict=False).relative_to(project_root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def _link_one(
     item_id: str,
     source: Path,
@@ -152,10 +180,13 @@ def _link_one(
     *,
     required: bool,
     dry_run: bool,
+    project_root: Path,
 ) -> InstallEvent:
     if not source.exists():
         status = "missing-source" if required else "optional-missing"
         return InstallEvent(status, item_id, str(source))
+    if _same_location(destination, source):
+        return InstallEvent("ready", item_id, f"{destination} -> {source}")
     if _same_link(destination, source):
         return InstallEvent("ready", item_id, f"{destination} -> {source}")
     if destination.is_symlink():
@@ -166,6 +197,8 @@ def _link_one(
         )
     if destination.exists():
         return InstallEvent("conflict", item_id, f"{destination} exists and is not a symlink")
+    if not _parent_is_local(project_root, destination):
+        return InstallEvent("conflict", item_id, f"{destination} has a parent outside the project")
     if dry_run:
         return InstallEvent("would-link", item_id, f"{destination} -> {source}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -188,7 +221,11 @@ def install_links(
 
     for spec in specs:
         catalog_item = catalog[spec.item_id]
-        destination = project_root / catalog_item["path"]
+        destination = _declared_child(
+            project_root,
+            catalog_item["path"],
+            label=f"dataset path for {spec.item_id}",
+        )
         required = bool(catalog_item.get("required", False))
         if spec.acquisition == "repository":
             if destination.exists():
@@ -203,14 +240,29 @@ def install_links(
             )
             continue
 
-        source = source_root / spec.source_path
+        source = _source_child(
+            source_root,
+            spec.source_path,
+            label=f"source path for {spec.item_id}",
+        )
         if spec.members:
-            if destination.is_symlink():
+            if destination.is_symlink() or (
+                destination.exists() and not destination.is_dir()
+            ):
                 events.append(
                     InstallEvent(
                         "conflict",
                         spec.item_id,
                         f"{destination} must be a directory containing selected model links",
+                    )
+                )
+                continue
+            if not destination.exists() and not _parent_is_local(project_root, destination):
+                events.append(
+                    InstallEvent(
+                        "conflict",
+                        spec.item_id,
+                        f"{destination} has a parent outside the project",
                     )
                 )
                 continue
@@ -220,10 +272,19 @@ def install_links(
                 events.append(
                     _link_one(
                         f"{spec.item_id}:{member}",
-                        source / member,
-                        destination / member,
+                        _source_child(
+                            source,
+                            member,
+                            label=f"source member for {spec.item_id}",
+                        ),
+                        _declared_child(
+                            destination,
+                            member,
+                            label=f"destination member for {spec.item_id}",
+                        ),
                         required=required,
                         dry_run=dry_run,
+                        project_root=project_root,
                     )
                 )
             continue
@@ -234,6 +295,7 @@ def install_links(
                 destination,
                 required=required,
                 dry_run=dry_run,
+                project_root=project_root,
             )
         )
     return tuple(events)

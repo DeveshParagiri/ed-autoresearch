@@ -19,6 +19,10 @@ Change one thing.
 
 State the expected result.
 
+# Plan
+
+State the evidence, failure modes, cost, and stopping rule.
+
 # Result
 
 No run yet.
