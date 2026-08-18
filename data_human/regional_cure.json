@@ -1,0 +1,16 @@
+{
+  "per_region_gamma": {
+    "Africa": 0.9,
+    "Boreal": 1.6,
+    "S.America": 1.6,
+    "SEAsia": 0.0,
+    "Europe": 1.6,
+    "N.America": 0.5,
+    "Australia": 0.0,
+    "fb": 1.6
+  },
+  "cure_k": 0.8,
+  "sigma": 4.0,
+  "s": 0.11630757606588302,
+  "base": "params.coupledE_cure.json"
+}
