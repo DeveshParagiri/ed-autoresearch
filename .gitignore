@@ -55,8 +55,8 @@ figures/
 email_attachments/
 from_lei/
 for_lei_*/
-"THE THESIS JOURNEY -REAL ONE/"
-"NEW DIRECTION - MEETING.gdoc"
+THE THESIS JOURNEY -REAL ONE/
+NEW DIRECTION - MEETING.gdoc
 .claude/
 .strict_reported
 *_extract.txt
@@ -77,3 +77,17 @@ data_human/gdp_term_fields.npz
 
 # Advisor-deck figures (regenerable from scripts/make_advisor_gdp_deck_figs.py)
 figs_gdp_advisor/
+
+# Driver dump archive, 626 MB, carried on Drive not git
+modelC_driver_dumps.zip
+
+# Loose working figures at the repo root (regenerable from scripts/)
+/*.png
+
+# Editor and tool leftovers
+.Rhistory
+*.LOCAL-BACKUP.py
+* (1).*
+
+# Rendered copy of the findings note, the .md is the source
+GDP_HUMAN_TERM_FINDINGS.html
