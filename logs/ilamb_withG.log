@@ -1,0 +1,40 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_withG/ilamb.cfg' and 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_withG\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/paper_gmd/models
+
+                                                C
+                                                D
+                                                E
+                                          E-clean
+                                       E-seasonal
+                                         ED-stock
+                                                G
+
+Parsing config file D:/FIRE_OFFLINE/paper_gmd/scoring/ba_withG/ilamb.cfg...
+
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:29
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:28
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E                    [92mCompleted[0m  0:00:29
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:29
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-seasonal           [92mCompleted[0m  0:00:27
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [92mCompleted[0m  0:00:27
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [92mCompleted[0m  0:00:24
+
+Finishing post-processing which requires collectives...
+
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:07
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:05
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E                    [92mCompleted[0m  0:00:05
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:05
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-seasonal           [92mCompleted[0m  0:00:05
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [92mCompleted[0m  0:00:05
+    scoring/ba_withG\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [92mCompleted[0m  0:00:05
+
+Completed in  0:03:55
+

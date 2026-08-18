@@ -1,0 +1,47 @@
+cp: /tmp/ilamb_out_ffire_lb/ilamb.cfg and /tmp/ilamb_out_ffire_lb/ilamb.cfg are identical (not copied).
+
+Searching for model results in /tmp/ffire_lb_root
+
+                                          CLASSIC
+                                        CLM-FATES
+                                             CLM6
+                                             E3SM
+                    ED-ModelC-continental-percont
+                                 ED-ModelC-Hybrid
+                                        ELM-FATES
+                                           JSBACH
+                                            SDGVM
+                                            VISIT
+
+Parsing config file /tmp/ilamb_out_ffire_lb/ilamb.cfg...
+
+                        FireCarbonEmissions/GFED5[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                        FireCarbonEmissions/GFED5 CLASSIC              [92mCompleted[0m  0:00:11
+                        FireCarbonEmissions/GFED5 CLM-FATES            [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 CLM6                 [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 E3SM                 [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 ED-ModelC-continental-percont [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 ED-ModelC-Hybrid     [92mCompleted[0m  0:00:11
+                        FireCarbonEmissions/GFED5 ELM-FATES            [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 JSBACH               [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 SDGVM                [92mCompleted[0m  0:00:10
+                        FireCarbonEmissions/GFED5 VISIT                [92mCompleted[0m  0:00:10
+
+Finishing post-processing which requires collectives...
+
+                        FireCarbonEmissions/GFED5 CLASSIC              [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 CLM-FATES            [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 CLM6                 [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 E3SM                 [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 ED-ModelC-continental-percont [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 ED-ModelC-Hybrid     [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 ELM-FATES            [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 JSBACH               [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 SDGVM                [92mCompleted[0m  0:00:02
+                        FireCarbonEmissions/GFED5 VISIT                [92mCompleted[0m  0:00:02
+
+Completed in  0:02:06
+

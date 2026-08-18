@@ -1,0 +1,55 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all/ilamb.cfg' and 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/paper_gmd/models
+
+                                                C
+                                                D
+                                          E-clean
+                                         ED-stock
+                                                F
+                                                G
+                                               G6
+                                               G7
+                                                H
+
+Parsing config file D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all/ilamb.cfg...
+
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:41
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:43
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:44
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [92mUsingCachedData[0m 
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ F                    [92mUsingCachedData[0m 
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [92mUsingCachedData[0m 
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G6                   [92mUsingCachedData[0m 
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G7                   [92mUsingCachedData[0m 
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ H                    [92mUsingCachedData[0m 
+
+Finishing post-processing which requires collectives...
+
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:11
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:08
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:08
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [91mKeyError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ F                    [91mKeyError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [91mKeyError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G6                   [91mKeyError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G7                   [91mKeyError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ H                    [91mKeyError[0m
+Traceback (most recent call last):
+  File "C:\Users\owusu\miniforge3\Scripts\ilamb-run", line 1078, in <module>
+    WorkPost(M, C, W, S, not args.quiet)
+  File "C:\Users\owusu\miniforge3\Scripts\ilamb-run", line 653, in WorkPost
+    c.generateHtml()
+  File "C:\Users\owusu\miniforge3\Lib\site-packages\ILAMB\Confrontation.py", line 1117, in generateHtml
+    mname = dataset.getncattr("name")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "src\\netCDF4\\_netCDF4.pyx", line 3127, in netCDF4._netCDF4.Dataset.getncattr
+  File "src\\netCDF4\\_netCDF4.pyx", line 1667, in netCDF4._netCDF4._get_att
+  File "src\\netCDF4\\_netCDF4.pyx", line 2164, in netCDF4._netCDF4._ensure_nc_success
+AttributeError: NetCDF: Attribute not found

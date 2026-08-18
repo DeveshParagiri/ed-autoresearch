@@ -1,0 +1,90 @@
+=== ED-stock ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for ED-stock (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.01303 max 0.181
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 3.014e-10  max 1.21e-07 kg/m2/s
+    global total ≈ 1.57 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\ED-stock\fFire.nc
+=== C ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for C (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.005228 max 0.0526
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 9.937e-10  max 7.78e-08 kg/m2/s
+    global total ≈ 5.06 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\C\fFire.nc
+=== D ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for D (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.006408 max 0.0514
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 1.072e-09  max 7.06e-08 kg/m2/s
+    global total ≈ 5.41 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\D\fFire.nc
+=== E-clean ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for E-clean (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.004375 max 0.197
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 5.773e-10  max 1.05e-07 kg/m2/s
+    global total ≈ 2.83 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\E-clean\fFire.nc
+=== F ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for F (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.00416 max 0.0855
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 3.634e-10  max 6.67e-08 kg/m2/s
+    global total ≈ 1.75 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\F\fFire.nc
+=== G7 ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for G7 (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.005075 max 0.0525
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 6.478e-10  max 7.21e-08 kg/m2/s
+    global total ≈ 3.24 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\G7\fFire.nc
+=== H ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for H (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.004331 max 0.0828
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 7.484e-10  max 1.03e-07 kg/m2/s
+    global total ≈ 3.74 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\H\fFire.nc
+=== I ===
+    loaded tuned BETA_MAX={'leaf': 0.9154962853668075, 'fine': 0.3843868953791183, 'coarse': 0.02852874521609368, 'litter': 0.7671106482419083}, D_REF=260.19319474244037
+  Loading inputs for I (D_REF=260.19319474244037) ...
+    BA    shape (192, 360, 720) mean 0.004269 max 0.0525
+    AGB   shape (192, 360, 720) mean 0.414 max 24.83 kgC/m2
+    cSoil shape (192, 360, 720) mean 0.699 max 32.22 kgC/m2
+    Dbar  shape (192, 360, 720) mean 681.17 max 73899.3 mm
+    C_combust mean 0.042  95th 0.242 kgC/m2
+    fFire     mean 5.094e-10  max 6.7e-08 kg/m2/s
+    global total ≈ 2.52 PgC/yr (GFED5 in THIS benchmark integrates to ~3.4 PgC/yr with this area method, NOT the literature ~2 -- match the reference, not 2.0)
+  wrote paper_gmd\models_ffire_paper\I\fFire.nc
+
+done. fFire written under paper_gmd/models_ffire_paper/<version>/fFire.nc

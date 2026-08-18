@@ -1,0 +1,13 @@
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+/opt/miniconda3/envs/ed-fire/lib/python3.10/site-packages/optuna/_experimental.py:33: ExperimentalWarning: Argument ``group`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Loading inputs (BA=ED-ModelC-gdpreg, train 2001-2010) ...
+  CLM5-defaults seed: overall=0.4624 (b=0.539 r=0.351 s=0.675 sp=0.321)
+
+TPE n_trials=3000 timeout=0.25h
+
+done, 2619 trials in 15.0 min
+Best #1238: overall=0.6745
+  b=0.999 r=0.346 s=0.667 sp=0.690
+  params: {'beta_leaf': 0.19810213352344597, 'beta_fine': 0.5044528857804637, 'beta_coarse': 0.29322308082626874, 'beta_litter': 0.9919594344393857, 'D_REF': 100.916592597199}

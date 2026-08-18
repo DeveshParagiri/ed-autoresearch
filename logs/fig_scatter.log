@@ -1,0 +1,9 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+  C: r=0.53 sigma=0.76 slope=0.40
+  D: r=0.50 sigma=0.85 slope=0.42
+  E: r=0.71 sigma=0.93 slope=0.66
+  G: r=0.66 sigma=0.90 slope=0.59
+  H: r=0.60 sigma=0.83 slope=0.50
+  I: r=0.72 sigma=0.81 slope=0.58
+wrote D:\FIRE_OFFLINE\paper_gmd\figures\per_cell_scatter.png and .pdf

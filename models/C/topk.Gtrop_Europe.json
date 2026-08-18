@@ -1,0 +1,58 @@
+[
+  {
+    "rank": 1,
+    "trial": 1217,
+    "internal_overall": 0.5557,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9983,
+    "pred_lm_ratio": 0.7779,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_Europe.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_Europe/ED-ModelC-Gtrop_Europe-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1492,
+    "internal_overall": 0.5557,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9983,
+    "pred_lm_ratio": 0.7779,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_Europe.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_Europe/ED-ModelC-Gtrop_Europe-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1347,
+    "internal_overall": 0.5198,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9984,
+    "pred_lm_ratio": 0.9699,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_Europe.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_Europe/ED-ModelC-Gtrop_Europe-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 776,
+    "internal_overall": 0.5158,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9988,
+    "pred_lm_ratio": 0.8774,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_Europe.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_Europe/ED-ModelC-Gtrop_Europe-k4"
+  }
+]

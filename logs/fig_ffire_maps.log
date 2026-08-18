@@ -1,0 +1,12 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+wrote ffire_all_versions
+  GFED5 (observed)      3.40 Pg C/yr   1.00x
+  Original formulation  1.57 Pg C/yr   0.46x
+  C                     5.06 Pg C/yr   1.49x
+  D                     5.40 Pg C/yr   1.59x
+  E                     2.82 Pg C/yr   0.83x
+  F*                    1.75 Pg C/yr   0.52x
+  G                     3.24 Pg C/yr   0.95x
+  H                     3.74 Pg C/yr   1.10x
+  I                     2.52 Pg C/yr   0.74x

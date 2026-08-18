@@ -1,0 +1,35 @@
+cp: /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_coupledE/ilamb.cfg and /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_coupledE/ilamb.cfg are identical (not copied).
+
+Searching for model results in /Volumes/RICHIE - T7/FIRE_OFFLINE/ilamb/MODELS_TOPK_coupledE
+
+                            ED-ModelC-coupledE-k1
+                            ED-ModelC-coupledE-k2
+                            ED-ModelC-coupledE-k3
+                            ED-ModelC-coupledE-k4
+                            ED-ModelC-coupledE-k5
+                            ED-ModelC-coupledE-k6
+
+Parsing config file /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_coupledE/ilamb.cfg...
+
+                                 BurnedArea/GFED5[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k1 [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k2 [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k3 [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k4 [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k5 [92mCompleted[0m  0:00:11
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k6 [92mCompleted[0m  0:00:11
+
+Finishing post-processing which requires collectives...
+
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k1 [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k2 [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k3 [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k4 [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k5 [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-coupledE-k6 [92mCompleted[0m  0:00:02
+
+Completed in  0:01:19
+

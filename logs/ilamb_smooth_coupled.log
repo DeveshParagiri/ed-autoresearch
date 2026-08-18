@@ -1,0 +1,23 @@
+cp: /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_smooth_coupled/ilamb.cfg and /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_smooth_coupled/ilamb.cfg are identical (not copied).
+
+Searching for model results in /Volumes/RICHIE - T7/FIRE_OFFLINE/ilamb/MODELS_SMOOTH_COUPLED
+
+                                   ED-ModelC-hard
+                                 ED-ModelC-smooth
+
+Parsing config file /private/tmp/claude-501/-Volumes-RICHIE---T7-FIRE-OFFLINE/c532496d-370d-40db-969d-b2a6dd880db0/scratchpad/ilamb_out_smooth_coupled/ilamb.cfg...
+
+                                 BurnedArea/GFED5[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                                 BurnedArea/GFED5 ED-ModelC-hard       [92mCompleted[0m  0:00:13
+                                 BurnedArea/GFED5 ED-ModelC-smooth     [92mCompleted[0m  0:00:11
+
+Finishing post-processing which requires collectives...
+
+                                 BurnedArea/GFED5 ED-ModelC-hard       [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 ED-ModelC-smooth     [92mCompleted[0m  0:00:02
+
+Completed in  0:00:29
+

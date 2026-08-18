@@ -1,0 +1,46 @@
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_final/ilamb.cfg' and 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_final\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/paper_gmd/models
+
+                                                C
+                                                D
+                                          E-clean
+                                         ED-stock
+                                                F
+                                                G
+                                               G6
+                                               G7
+                                                H
+
+Parsing config file D:/FIRE_OFFLINE/paper_gmd/scoring/ba_final/ilamb.cfg...
+
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:23
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:24
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:23
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [92mCompleted[0m  0:00:23
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ F                    [92mCompleted[0m  0:00:23
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [92mCompleted[0m  0:00:24
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G6                   [92mCompleted[0m  0:00:25
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G7                   [92mCompleted[0m  0:00:24
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ H                    [92mCompleted[0m  0:00:23
+
+Finishing post-processing which requires collectives...
+
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:07
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ F                    [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G6                   [92mCompleted[0m  0:00:06
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ G7                   [92mCompleted[0m  0:00:05
+    scoring/ba_final\EcosystemandCarbonCycle\BurnedArea\GFED5\ H                    [92mCompleted[0m  0:00:05
+
+Completed in  0:04:24
+

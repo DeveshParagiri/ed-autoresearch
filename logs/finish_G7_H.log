@@ -1,0 +1,78 @@
+[wait] for params.G_Australia.json and params.H.json ...
+[wait] both present; letting the optimizer finish writing
+[assemble] Model G with all seven regions, and with six (Australia dropped)
+[set] Africa: 3888 cells from params.G_Africa.json
+[set] Boreal: 4200 cells from params.G_Boreal.json
+[set] S.America: 3360 cells from params.G_SAmerica.json
+[set] SEAsia: 3690 cells from params.G_SEAsia.json
+[set] Europe: 1872 cells from params.G_Europe.json
+[set] N.America: 6960 cells from params.G_NAmerica.json
+[set] Australia: 1390 cells from params.G_Australia.json
+
+[write] D:\FIRE_OFFLINE\ilamb\MODELS_CONTINENTAL_G7\ED-ModelG7-continental\burntArea.nc
+Score it: python scripts/score_spatial.py ilamb/MODELS/ED-ModelC-final/burntArea.nc ilamb/MODELS_CONTINENTAL_G7/ED-ModelG7-continental/burntArea.nc
+and official ILAMB on ilamb/MODELS_CONTINENTAL (CLAUDE.md recipe).
+[set] Africa: 3888 cells from params.G_Africa.json
+[set] Boreal: 4200 cells from params.G_Boreal.json
+[set] S.America: 3360 cells from params.G_SAmerica.json
+[set] SEAsia: 3690 cells from params.G_SEAsia.json
+[set] Europe: 1872 cells from params.G_Europe.json
+[set] N.America: 6960 cells from params.G_NAmerica.json
+
+[write] D:\FIRE_OFFLINE\ilamb\MODELS_CONTINENTAL_G6\ED-ModelG6-continental\burntArea.nc
+Score it: python scripts/score_spatial.py ilamb/MODELS/ED-ModelC-final/burntArea.nc ilamb/MODELS_CONTINENTAL_G6/ED-ModelG6-continental/burntArea.nc
+and official ILAMB on ilamb/MODELS_CONTINENTAL (CLAUDE.md recipe).
+[ilamb] scoring every version together
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+cp: 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all/ilamb.cfg' and 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all\ilamb.cfg' are the same file
+
+Searching for model results in D:/FIRE_OFFLINE/paper_gmd/models
+
+                                                C
+                                                D
+                                                E
+                                          E-clean
+                                       E-seasonal
+                                         ED-stock
+                                                F
+                                                G
+                                               G6
+                                               G7
+                                                H
+
+Parsing config file D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all/ilamb.cfg...
+
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ C                    [92mCompleted[0m  0:00:23
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ D                    [92mCompleted[0m  0:00:24
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ E                    [91mFileNotFoundError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-clean              [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ E-seasonal           [91mFileNotFoundError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ ED-stock             [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ F                    [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G                    [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G6                   [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ G7                   [91mPermissionError[0m
+    scoring/ba_all\EcosystemandCarbonCycle\BurnedArea\GFED5\ H                    [91mPermissionError[0m
+
+Finishing post-processing which requires collectives...
+
+Traceback (most recent call last):
+  File "C:\Users\owusu\miniforge3\Scripts\ilamb-run", line 1078, in <module>
+    WorkPost(M, C, W, S, not args.quiet)
+  File "C:\Users\owusu\miniforge3\Scripts\ilamb-run", line 613, in WorkPost
+    c.determinePlotLimits()
+  File "C:\Users\owusu\miniforge3\Lib\site-packages\ILAMB\Confrontation.py", line 519, in determinePlotLimits
+    with Dataset(benchmark_file[0]) as dset:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "src\\netCDF4\\_netCDF4.pyx", line 2521, in netCDF4._netCDF4.Dataset.__init__
+  File "src\\netCDF4\\_netCDF4.pyx", line 2158, in netCDF4._netCDF4._ensure_nc_success
+OSError: [Errno -51] NetCDF: Unknown file format: 'D:/FIRE_OFFLINE/paper_gmd/scoring/ba_all\\EcosystemandCarbonCycle\\BurnedArea\\GFED5\\GFED5_Benchmark.nc'
+[figures] burned-area maps for every version
+C:\Users\owusu\miniforge3\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+=== FINISH_G7_H COMPLETE ===
