@@ -1,0 +1,20 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Large data links and generated products are machine-specific.
+data/inputs/*
+data/benchmarks/*
+data/reference/*
+data/derived/*
+
+# Temporary run work is disposable. Durable run records remain tracked.
+research/experiments/*/runs/*/work/
+research/experiments/*/runs/*/tmp/

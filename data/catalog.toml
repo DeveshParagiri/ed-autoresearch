@@ -1,0 +1,432 @@
+schema = "data-catalog/v1"
+
+[[datasets]]
+id = "input.crujra.processed"
+category = "inputs/climate"
+role = "baseline-input"
+required_for = ["offline-baseline"]
+path = "data/inputs/climate/crujra-processed"
+kind = "directory"
+required = true
+description = "Processed monthly CRUJRA climate drivers used by offline fire workflows."
+checks = [
+  { type = "glob_count", pattern = "*.npy", expected = 6 },
+  { type = "file_sha256", path = "dbar_monthly.npy", sha256 = "f794facef2f2a1170b6dc6519e48161287b2766d6ae62020302eb9bcb325f1ec" },
+  { type = "file_sha256", path = "p_ann_monthly.npy", sha256 = "2b445091267cb46e9ef102b68ab8adfa70b34e5bb375d0943d628a8918b9301f" },
+  { type = "file_sha256", path = "p_month_monthly.npy", sha256 = "034a916381c17e42355099977f24c7e33ff65748a711e76b324e49bf035810c4" },
+  { type = "file_sha256", path = "t_air_monthly.npy", sha256 = "7d87432326174b4c0aa96c217694609da2916fa64c8fcfc909ba5960a485e370" },
+]
+
+[[datasets]]
+id = "input.crujra.source"
+category = "inputs/climate"
+role = "reconstruction-source"
+required_for = ["climate-reconstruction"]
+path = "data/inputs/climate/crujra-source"
+kind = "directory"
+required = false
+description = "Raw annual CRUJRA v3.5 climate files used to rebuild processed arrays."
+checks = [{ type = "glob_count", pattern = "CRUJRA_v3.5_climate_*.nc", expected = 16 }]
+
+[[datasets]]
+id = "input.cru-ts.archive"
+category = "inputs/climate"
+role = "supporting-source"
+required_for = ["climate-diagnostics"]
+path = "data/inputs/climate/cru-ts-archive"
+kind = "directory"
+required = false
+description = "Legacy CRU TS precipitation, temperature, and PET archive used by diagnostics."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 6 }]
+
+[[datasets]]
+id = "input.ed.static"
+category = "inputs/ecosystem"
+role = "baseline-input"
+required_for = ["offline-baseline"]
+path = "data/inputs/ecosystem/ed-static"
+kind = "directory"
+required = true
+description = "Processed ED vegetation structure arrays."
+checks = [{ type = "glob_count", pattern = "*.npy", expected = 4 }]
+
+[[datasets]]
+id = "input.trendy-v14-ed"
+category = "inputs/ecosystem"
+role = "baseline-input"
+required_for = ["offline-baseline"]
+path = "data/inputs/ecosystem/trendy-v14-ed"
+kind = "directory"
+required = true
+description = "TRENDY v14 ED GPP, leaf, wood, and soil-carbon fields."
+checks = [{ type = "glob_count", pattern = "EDv3_S3_*.nc", expected = 4 }]
+
+[[datasets]]
+id = "input.ed.simulation"
+category = "inputs/ecosystem"
+role = "coupled-context"
+required_for = ["coupled-validation"]
+path = "data/inputs/ecosystem/ed-simulation.nc"
+kind = "file"
+required = false
+description = "ED global simulation output used by offline and coupled comparisons."
+min_bytes = 1000000000
+
+[[datasets]]
+id = "input.hybrid-vegetation"
+category = "inputs/ecosystem"
+role = "derived-candidate"
+required_for = ["hybrid-vegetation-experiment"]
+path = "data/inputs/ecosystem/hybrid-vegetation.npz"
+kind = "file"
+required = false
+description = "Derived hybrid vegetation fields used by current offline workflows."
+min_bytes = 1000000
+
+[[datasets]]
+id = "input.coupled.state"
+category = "inputs/coupled"
+role = "coupled-input"
+required_for = ["coupled-validation"]
+path = "data/inputs/coupled/state-1997-2016.nc"
+kind = "file"
+required = false
+description = "Coupled-state input dump used to compare offline and ED-consistent drivers."
+min_bytes = 400000000
+
+[[datasets]]
+id = "input.coupled.fuel-state"
+category = "inputs/coupled"
+role = "coupled-input"
+required_for = ["coupled-validation", "emissions-diagnostics"]
+path = "data/inputs/coupled/fuel-state-1997-2016.nc"
+kind = "file"
+required = false
+description = "Fuel and above-ground biomass input dump used for fire-emissions calculations."
+min_bytes = 200000000
+
+[[datasets]]
+id = "input.human.coupling"
+category = "inputs/human"
+role = "candidate-input"
+required_for = ["human-influence-experiment"]
+path = "data/inputs/human/coupling"
+kind = "directory"
+required = false
+description = "Human-driver fields currently prepared for coupled fire experiments."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 2 }]
+
+[[datasets]]
+id = "input.candidate.cveg"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["vegetation-carbon-experiment"]
+path = "data/inputs/candidate-drivers/cveg"
+kind = "directory"
+required = false
+description = "Observed or reference vegetation-carbon field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.fluxcom-gpp"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["productivity-experiment"]
+path = "data/inputs/candidate-drivers/fluxcom-gpp"
+kind = "directory"
+required = false
+description = "FLUXCOM GPP products available for alternative productivity evidence."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 2 }]
+
+[[datasets]]
+id = "input.candidate.gleam-et"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["moisture-driver-experiment"]
+path = "data/inputs/candidate-drivers/gleam-et"
+kind = "directory"
+required = false
+description = "GLEAM evapotranspiration field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.modis-et"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["moisture-driver-experiment"]
+path = "data/inputs/candidate-drivers/modis-et"
+kind = "directory"
+required = false
+description = "MODIS evapotranspiration field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.modis-lai"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["fuel-continuity-experiment"]
+path = "data/inputs/candidate-drivers/modis-lai"
+kind = "directory"
+required = false
+description = "MODIS leaf-area-index field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.cropland-lai"
+category = "inputs/candidate-drivers"
+role = "derived-candidate"
+required_for = ["cropland-fire-experiment"]
+path = "data/inputs/candidate-drivers/lai-cropland-proxy.npy"
+kind = "file"
+required = false
+description = "Cropland LAI proxy prepared for land-use-related exploration."
+min_bytes = 1000000
+
+[[datasets]]
+id = "input.candidate.lightning"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["natural-ignition-experiment"]
+path = "data/inputs/candidate-drivers/lightning"
+kind = "directory"
+required = false
+description = "LIS/OTD lightning climatology."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.population"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["human-influence-experiment"]
+path = "data/inputs/candidate-drivers/population"
+kind = "directory"
+required = false
+description = "GPW population-density data and supporting metadata."
+checks = [{ type = "glob_count", pattern = "*", expected = 7 }]
+
+[[datasets]]
+id = "input.candidate.dai-runoff"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["moisture-driver-experiment"]
+path = "data/inputs/candidate-drivers/dai-runoff"
+kind = "directory"
+required = false
+description = "Dai runoff reference field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.lora-runoff"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["moisture-driver-experiment"]
+path = "data/inputs/candidate-drivers/lora-runoff"
+kind = "directory"
+required = false
+description = "LORA runoff reference field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.hwsd-soil"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["soil-carbon-experiment"]
+path = "data/inputs/candidate-drivers/hwsd-soil"
+kind = "directory"
+required = false
+description = "HWSD soil-carbon references."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 2 }]
+
+[[datasets]]
+id = "input.candidate.ncscd-soil"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["soil-carbon-experiment"]
+path = "data/inputs/candidate-drivers/ncscd-soil"
+kind = "directory"
+required = false
+description = "NCSCD soil-carbon reference."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.soil-respiration"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["respiration-experiment"]
+path = "data/inputs/candidate-drivers/soil-respiration"
+kind = "directory"
+required = false
+description = "Soil-respiration reference field."
+checks = [{ type = "glob_count", pattern = "*.nc", expected = 1 }]
+
+[[datasets]]
+id = "input.candidate.luh2"
+category = "inputs/candidate-drivers"
+role = "candidate-input"
+required_for = ["land-use-experiment"]
+path = "data/inputs/candidate-drivers/luh2"
+kind = "directory"
+required = false
+description = "LUH2-GCB2026 land-use states, transitions, and management files."
+checks = [
+  { type = "glob_count", pattern = "*.nc", expected = 3 },
+  { type = "file_size", path = "states.nc", bytes = 6080810028 },
+  { type = "file_size", path = "transitions.nc", bytes = 16842976839 },
+  { type = "file_size", path = "management.nc", bytes = 1534118739 },
+]
+
+[[datasets]]
+id = "benchmark.gfed5.ilamb-burned-area"
+category = "benchmarks/observations"
+role = "primary-benchmark"
+required_for = ["offline-baseline"]
+path = "data/benchmarks/observations/gfed5-burned-area.nc"
+kind = "file"
+required = true
+description = "Project ILAMB-ready GFED5 burned-area reference derived from the official source product."
+min_bytes = 10000000
+
+[[datasets]]
+id = "benchmark.gfed4.ilamb-burned-area"
+category = "benchmarks/observations"
+role = "historical-benchmark"
+required_for = ["offline-baseline", "benchmark-sensitivity"]
+path = "data/benchmarks/observations/gfed4.1s-burned-area.nc"
+kind = "file"
+required = true
+description = "ILAMB-ready GFED4.1s burned-area reference used by historical workflows."
+min_bytes = 400000000
+checks = [{ type = "file_size", path = ".", bytes = 497712890 }]
+
+[[datasets]]
+id = "benchmark.gfed4.source"
+category = "benchmarks/source"
+role = "reconstruction-source"
+required_for = ["gfed4-reference-reconstruction"]
+path = "data/benchmarks/source/gfed4.1s"
+kind = "directory"
+required = false
+description = "GFED4.1s annual HDF5 files for 2001 through 2016."
+checks = [{ type = "glob_count", pattern = "GFED4.1s_*.hdf5", expected = 16 }]
+
+[[datasets]]
+id = "benchmark.gfed5.annual-source"
+category = "benchmarks/source"
+role = "reconstruction-source"
+required_for = ["gfed5-emissions-reconstruction"]
+path = "data/benchmarks/source/gfed5-annual"
+kind = "directory"
+required = false
+description = "GFED5 annual files containing monthly data for 2000 through 2016."
+checks = [{ type = "glob_count", pattern = "GFED5.1_monthly_*.nc", expected = 17 }]
+
+[[datasets]]
+id = "benchmark.gfed5.monthly-source"
+category = "benchmarks/source"
+role = "reconstruction-source"
+required_for = ["gfed5-burned-area-reconstruction"]
+path = "data/benchmarks/source/gfed5-monthly"
+kind = "directory"
+required = false
+description = "GFED5 monthly burned-area files and burnable-area grids for 1997 through 2020."
+checks = [
+  { type = "glob_count", pattern = "BA??????.nc", expected = 288 },
+  { type = "file_size", path = "BurnableArea.nc", bytes = 1034001 },
+  { type = "file_size", path = "BurnableArea_preMOD.nc", bytes = 141866 },
+]
+
+[[datasets]]
+id = "benchmark.trendy-v14.comparison-models"
+category = "benchmarks/comparison-models"
+role = "comparison-context"
+required_for = ["external-model-comparison"]
+path = "data/benchmarks/comparison-models/trendy-v14"
+kind = "directory"
+required = false
+description = "TRENDY v14 burned-area outputs for external model comparison."
+checks = [{ type = "glob_count", pattern = "*_S3_burntArea.nc", expected = 13 }]
+
+[[datasets]]
+id = "benchmark.trendy-v13.comparison-models"
+category = "benchmarks/comparison-models"
+role = "comparison-context"
+required_for = ["historical-model-comparison"]
+path = "data/benchmarks/comparison-models/trendy-v13"
+kind = "directory"
+required = false
+description = "TRENDY v13 comparison outputs retained for historical context."
+checks = [{ type = "glob_count", pattern = "**/*burntArea.nc", expected = 1 }]
+
+[[datasets]]
+id = "benchmark.ilamb.comparison-models"
+category = "benchmarks/comparison-models"
+role = "comparison-context"
+required_for = ["external-model-comparison"]
+path = "data/benchmarks/comparison-models/ilamb"
+kind = "directory"
+required = false
+description = "ILAMB-ready external model burned-area outputs, excluding experimental Model A through E artifacts."
+checks = [{ type = "glob_count", pattern = "*/burntArea.nc", expected = 12 }]
+
+[[datasets]]
+id = "benchmark.ed-stock.burned-area"
+category = "benchmarks/baselines"
+role = "native-model-baseline"
+required_for = ["stock-baseline", "candidate-comparison"]
+path = "data/benchmarks/comparison-models/ilamb/EDv3/burntArea.nc"
+kind = "file"
+required = true
+description = "Pinned TRENDY v14 EDv3 S3 native burned-area output used as the stock ED baseline."
+checks = [{ type = "file_sha256", path = ".", sha256 = "73c07a379ab25a04eb3d55a9ccc7e8671ddac334f2e7bdeeb409aaa59be9caeb" }]
+
+[[datasets]]
+id = "benchmark.config.gfed5-burned-area"
+category = "benchmarks/configs"
+role = "benchmark-configuration"
+required_for = ["offline-baseline"]
+path = "data/benchmarks/configs/gfed5-burned-area.cfg"
+kind = "file"
+required = true
+description = "ILAMB configuration for GFED5 burned-area evaluation."
+
+[[datasets]]
+id = "benchmark.config.gfed4-burned-area"
+category = "benchmarks/configs"
+role = "benchmark-configuration"
+required_for = ["offline-baseline", "benchmark-sensitivity"]
+path = "data/benchmarks/configs/gfed4.1s-burned-area.cfg"
+kind = "file"
+required = true
+description = "ILAMB configuration for GFED4.1s burned-area evaluation."
+
+[[datasets]]
+id = "benchmark.config.gfed5-emissions"
+category = "benchmarks/configs"
+role = "benchmark-configuration"
+required_for = ["emissions-evaluation"]
+path = "data/benchmarks/configs/gfed5-emissions.cfg"
+kind = "file"
+required = true
+description = "ILAMB configuration for GFED5 fire-emissions evaluation."
+
+[[datasets]]
+id = "benchmark.gfed5.ilamb-emissions"
+category = "benchmarks/observations"
+role = "primary-benchmark"
+required_for = ["emissions-evaluation"]
+path = "data/benchmarks/observations/gfed5-fire-emissions.nc"
+kind = "file"
+required = true
+description = "ILAMB-ready GFED5.1 fFire reference derived conservatively from the official monthly emissions files."
+min_bytes = 10000000
+
+[[datasets]]
+id = "reference.ilamb-data-tools"
+category = "reference"
+role = "reference-tool"
+required_for = ["benchmark-reconstruction"]
+path = "data/reference/ilamb-data-tools"
+kind = "directory"
+required = false
+description = "ILAMB data conversion and validation source repository."
+checks = [{ type = "glob_count", pattern = "*.toml", expected = 1 }]

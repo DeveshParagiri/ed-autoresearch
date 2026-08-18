@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "__PROJECT_SLUG__-autoresearch"
+version = "0.1.0"
+description = __PROJECT_DESCRIPTION_TOML__
+requires-python = ">=3.10"
+dependencies = [
+  "PyYAML>=6.0",
+  "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+optuna = ["optuna>=4.9,<5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

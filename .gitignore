@@ -1,0 +1,24 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Local data links and generated scientific products are machine-specific.
+data/inputs/*
+data/benchmarks/*
+data/reference/*
+data/derived/*
+!data/benchmarks/configs/
+data/benchmarks/configs/*
+!data/benchmarks/configs/*.cfg
+!data/reference/*.md
+
+# Run contents are durable when deliberately recorded, but transient work is not.
+research/experiments/*/runs/*/work/
+research/experiments/*/runs/*/tmp/
