@@ -33,7 +33,7 @@ import optuna
 import xarray as xr
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen, sig
+from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen, sig, trailing_mean
 
 REPO         = Path(__file__).resolve().parents[1]
 MODELS_DIR   = REPO / "models" / "C"
@@ -105,6 +105,22 @@ GDP_TERM = os.environ.get("GDP_TERM", "0") == "1"
 # gated out of forest by AGB and out of deserts by precip, dryness-modulated (cured_sat),
 # and boosted where fuel is fine/sparse (inverse GPP). Additive to the fire rate. Four fit
 # params: cure_k, cure_p_min, cure_gpp_ref, cure_agb_crit. Default off. See proto_curing.py.
+# FUEL_WINDOW (months) makes the fuel term's fuel-capacity field a causal trailing mean
+# instead of the whole-record mean. Lei's coupling rule is that no input may be static,
+# and the whole-record mean is static by construction. 0 keeps the old behaviour so every
+# already-fitted param set still reproduces. 60 is five years, long enough to be a
+# capacity rather than a season.
+FUEL_WINDOW = int(os.environ.get("FUEL_WINDOW", "0"))
+# LANDUSE_TERM=1 adds a human-activity multiplier keyed to ED's own LUH2 tiles,
+# M = (1 + lu_past*f_past) * (1 + lu_scnd*f_scnd). This is the coupling-legal stand-in
+# for GDP, which George disallowed because it does not reach 1850. Our own country-level
+# test (GDP_HUMAN_TERM_FINDINGS Step 7) found land use carries a real pro-fire signal
+# beyond climate, p=0.014, and rejected it only because GDP already subsumed it. With GDP
+# gone that objection goes with it. Both coefficients are pro-fire, matching that finding.
+# Caveat kept in view: the GPP driver is already an area-weighted sum over these same
+# tiles, so some of this signal is double-counted and the fit may return near-zero.
+LANDUSE_TERM = os.environ.get("LANDUSE_TERM", "0") == "1"
+_LU_KEYS = ("lu_past", "lu_scnd")
 CURING = os.environ.get("CURING", "0") == "1"
 _CURE_KEYS = ("cure_k", "cure_p_min", "cure_gpp_ref", "cure_agb_crit")
 
@@ -142,9 +158,26 @@ def load_coupled_drivers():
     af_s  = grab("area_frac_scnd")
     af_p  = grab("area_frac_past")
     gpp_total = (gpp_n * af_n + gpp_s * af_s + gpp_p * af_p).astype(np.float32)
-    ds.close()
-
     d["gpp_monthly"] = coarsen(gpp_total)
+    if LANDUSE_TERM:
+        d["f_past"] = coarsen(af_p)
+        d["f_scnd"] = coarsen(af_s)
+
+    # FUEL_WINDOW (months) replaces the fuel term's static whole-record GPP mean with a
+    # causal trailing mean, so the term can run forward and back to 1850. Built from the
+    # FULL dump and sliced afterwards, so the fit window opens with a real spun-up window
+    # rather than a one-month mean. FUEL_WINDOW=0 keeps the old static field.
+    if FUEL_WINDOW > 0:
+        full = np.zeros_like(ds["GPP_month_ntrl"].values, dtype=np.float32)
+        for tag in ("ntrl", "scnd", "past"):
+            g = np.clip(np.nan_to_num(ds[f"GPP_month_{tag}"].values.astype(np.float32), nan=0.0), 0, None)
+            a = np.nan_to_num(ds[f"area_frac_{tag}"].values.astype(np.float32), nan=0.0)
+            full += g * a
+        d["gpp_fuel"] = coarsen(trailing_mean(full, FUEL_WINDOW))[sl]
+        spin = min(FUEL_WINDOW, DUMP_SLICE_START)
+        print(f"[fuel] FUEL_WINDOW={FUEL_WINDOW} months, causal trailing mean, "
+              f"{spin} months of spin-up ahead of the fit window")
+    ds.close()
 
     # AGB for vegetation-aware suppression
     agb_p = REPO / "global_baseline_modelCfuel_inputs_1997-2016.nc"
@@ -390,8 +423,15 @@ def score_BA(pred_monthly):
                          overall=overall)
 
 
+def landuse_mult(p):
+    """human-activity multiplier from ED's own land-use tiles, time-varying by construction"""
+    return ((1.0 + p["lu_past"] * drivers["f_past"]) *
+            (1.0 + p["lu_scnd"] * drivers["f_scnd"])).astype(np.float64)
+
+
 def predict(params):
-    fc = {k: v for k, v in params.items() if k != "gdp_gamma" and k not in _CURE_KEYS}
+    fc = {k: v for k, v in params.items()
+          if k != "gdp_gamma" and k not in _CURE_KEYS and k not in _LU_KEYS}
     with np.errstate(over="ignore", invalid="ignore"):
         rate = fire_C(drivers, fc)
     if CURING and "cure_k" in params:                 # additive grass-curing pathway
@@ -399,6 +439,8 @@ def predict(params):
     rate = rate * land_mask[None, :, :]
     if GDP_TERM and "gdp_gamma" in params:
         rate = rate * gdp_mult(params["gdp_gamma"])[None, :, :]
+    if LANDUSE_TERM and "lu_past" in params:
+        rate = rate * landuse_mult(params)
     return ed_transform(rate)
 
 
@@ -443,6 +485,12 @@ LOG_PARAMS["fire_exp"] = (float(os.environ.get("FIRE_EXP_LO", 1.0)),
 # GDP_TERM: fit the human-suppression strength jointly. Log-sampled so the search
 # concentrates on the small values the data prefers (gamma ~0.15-0.3); the low end
 # (1e-3) is effectively "no term", so the optimizer can turn it off if it does not help.
+if LANDUSE_TERM:
+    # log-sampled from effectively-off (1e-3) so the search can decide the term is
+    # worthless rather than being forced to use it
+    LOG_PARAMS["lu_past"] = (1e-3, 10.0)
+    LOG_PARAMS["lu_scnd"] = (1e-3, 10.0)
+    print("[landuse] LANDUSE_TERM ON: pasture + secondary multiplier from the LUH2 tiles")
 if GDP_TERM:
     LOG_PARAMS["gdp_gamma"] = (float(os.environ.get("GDP_GAMMA_LO", 1e-3)),
                                float(os.environ.get("GDP_GAMMA_HI", 2.0)))
@@ -493,6 +541,10 @@ if RATE_AMP and "fire_amp" not in WARM_START:
 # the base model, then the search grows the human term from there.
 if GDP_TERM and "gdp_gamma" not in WARM_START:
     WARM_START = {**WARM_START, "gdp_gamma": 1e-3}
+# same idea for the land-use term: seed it at effectively off so the warm trial
+# reproduces the model it was warm-started from
+if LANDUSE_TERM:
+    WARM_START = {**{k: 1e-3 for k in _LU_KEYS if k not in WARM_START}, **WARM_START}
 # Seed curing OFF (cure_k~0) so the warm/smoke trial reproduces the base model, then grow it.
 if CURING and "cure_k" not in WARM_START:
     WARM_START = {**WARM_START, "cure_k": 1e-3, "cure_p_min": 180.0, "cure_gpp_ref": 0.3, "cure_agb_crit": 2.5}

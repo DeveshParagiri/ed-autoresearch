@@ -62,6 +62,22 @@ def supp(x, k, c):
     return 1.0 / (1.0 + np.exp(np.clip(k * (x - c), -50, 50)))
 
 
+def trailing_mean(a, w):
+    """causal running mean over the previous w months, the current one included
+
+    The fuel term needs a cell's fuel capacity, which is a multi-year property, but the
+    whole-record mean it used before is a single static field computed from 1997 to 2016.
+    A static field cannot run forward and cannot run back to 1850, so the coupled model
+    needs this instead. Causal by construction, so month t never sees month t+1.
+    """
+    n = a.shape[0]
+    c = np.cumsum(a.astype(np.float64), axis=0)
+    lo = np.maximum(np.arange(n) - w, -1)                  # exclusive lower bound
+    prev = np.where((lo >= 0)[:, None, None], c[np.clip(lo, 0, None)], 0.0)
+    cnt = (np.arange(n) - lo).astype(np.float64)[:, None, None]
+    return ((c - prev) / cnt).astype(np.float32)
+
+
 def hump(x, b, dec):
     b = max(b, 1e-9); dec = max(dec, 1e-9)
     return (1.0 - np.exp(-np.clip(x / b, 0, 500))) * np.exp(-np.clip(x / dec, 0, 500))
@@ -109,7 +125,12 @@ def fire_C(d, p):
     #     kept for back-compat, but the FUEL form is preferred and takes precedence).
     # Default (neither present) = canonical, rate <= 1.
     if "fuel_k" in p:
-        gpp_cell = d["gpp_monthly"].mean(axis=0, keepdims=True)
+        # gpp_fuel, when the loader supplies it, is a trailing multi-year mean and so
+        # carries a time axis. Without it we fall back to the whole-record mean, which
+        # keeps every already-fitted param set reproducing bit-identically.
+        gpp_cell = d.get("gpp_fuel")
+        if gpp_cell is None:
+            gpp_cell = d["gpp_monthly"].mean(axis=0, keepdims=True)
         fuel = gpp_cell / (gpp_cell + p.get("fuel_half", 1.0) + 1e-9)
         rate = rate * (1.0 + p["fuel_k"] * fuel)
     elif "fire_amp" in p:
