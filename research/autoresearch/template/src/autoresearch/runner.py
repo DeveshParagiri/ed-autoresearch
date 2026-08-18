@@ -492,7 +492,12 @@ def _invoke(
 
 def _locked(contract: Mapping[str, Any]) -> list[dict[str, str]]:
     records = [dict(record) for record in contract["protected_files"]]
-    records.append({"path": contract["evaluator"]["path"], "sha256": contract["evaluator"]["sha256"]})
+    evaluator = {
+        "path": contract["evaluator"]["path"],
+        "sha256": contract["evaluator"]["sha256"],
+    }
+    if not any(record["path"] == evaluator["path"] for record in records):
+        records.append(evaluator)
     return records
 
 

@@ -251,6 +251,8 @@ root = Path(os.environ['AUTORESEARCH_RUN_ROOT'])
             record = json.loads(result.stdout)
             self.assertEqual(record["status"], "completed")
             self.assertEqual([item["role"] for item in record["commands"]], ["candidate", "evaluator"])
+            protected_paths = [item["path"] for item in record["protected_files"]]
+            self.assertEqual(len(protected_paths), len(set(protected_paths)))
             run_root = destination / "research" / "experiments" / "experiment.baseline" / "runs" / record["id"]
             self.assertTrue((run_root / "contract.json").is_file())
             self.assertTrue((run_root / "events.jsonl").is_file())
