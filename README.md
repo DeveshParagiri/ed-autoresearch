@@ -37,7 +37,7 @@ ed-fire/
 │   ├── reference/                    pinned conversion code and source notes
 │   └── derived/                      created when a recorded run yields a reusable product
 ├── evals/contracts/
-│   └── burned-area-v1.json           locked burned-area comparison family
+│   └── burned-area-eval-v1.json      locked burned-area evaluation contract
 ├── research/
 │   ├── experiments/
 │   │   └── <experiment-id>/
@@ -119,9 +119,9 @@ The trusted evaluator then removes any candidate-authored official metrics or ca
 
 For the stock experiment, `stage_stock_baseline.py` verifies and stages the pinned native ED file as `work/model/Candidate/burntArea.nc`. `evaluate_burned_area.py` runs full ILAMB evaluations against both GFED products, preserves their scalar databases and logs, writes the metric vector, copies the candidate output into durable artifacts, and generates the same five 1800 × 1200 figures for every candidate under this contract.
 
-## What `burned-area-v1.json` does
+## What `burned-area-eval-v1.json` does
 
-`evals/contracts/burned-area-v1.json` is the machine-enforced definition of one fair comparison family. It pins the two benchmark files, two ILAMB configurations, native ED baseline, trusted evaluator and its hash, candidate-output interface, ILAMB version, period, regions, metric IDs, aggregation rule, five canonical figures, and the fact that promotion is disabled. The runner reads this file before every experiment and snapshots it into the run.
+`evals/contracts/burned-area-eval-v1.json` is the machine-enforced burned-area evaluation contract. It pins the two benchmark files, two ILAMB configurations, native ED baseline, trusted evaluator and its hash, candidate-output interface, ILAMB version, period, regions, metric IDs, aggregation rule, five canonical figures, and the fact that promotion is disabled. The runner reads this file before every experiment and snapshots it into the run.
 
 The contract is not a node, a research diary, or a second copy of `research.md`. `research.md` says what evidence is scientifically acceptable; the contract makes one approved evaluation executable. If a benchmark, period, mask, region, metric, baseline, evaluator, aggregation rule, or figure specification changes, the old contract remains attached to its runs and a new version is created. That is why the filename names the evaluation family rather than the whole project.
 

@@ -14,7 +14,7 @@ Model A through E parameters, fitted values, masks, generated outputs, and expec
 
 ## Starting boundary
 
-The only clean native ED baseline currently available is the pinned TRENDY v14 EDv3 S3 burned-area artifact declared as `benchmark.ed-stock.burned-area`. Its SHA-256 identity is locked in `evals/contracts/burned-area-v1.json`. This workspace does not contain the ED source revision, build configuration, input deck, or command that produced that artifact.
+The only clean native ED baseline currently available is the pinned TRENDY v14 EDv3 S3 burned-area artifact declared as `benchmark.ed-stock.burned-area`. Its SHA-256 identity is locked in `evals/contracts/burned-area-eval-v1.json`. This workspace does not contain the ED source revision, build configuration, input deck, or command that produced that artifact.
 
 The first experiment therefore establishes an evaluation baseline, not source-level reproduction. It can prove that the same stored ED field yields the same recorded ILAMB evidence under a locked environment. It cannot prove that ED itself can be rebuilt or rerun. A mechanistic change requires either the relevant ED fire source and configuration under version control or a clean, reviewable implementation with the same candidate-output interface.
 

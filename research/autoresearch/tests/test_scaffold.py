@@ -54,7 +54,7 @@ status: proposed
 created_at: 2026-08-18T00:00:00Z
 parents: []
 inputs: []
-contract: evals/contracts/baseline-v1.json
+contract: evals/contracts/baseline-eval-v1.json
 execution:
   mode: simulation
   tool: direct
@@ -145,7 +145,10 @@ pixel = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
                 }
             ],
         }
-        self._write_json(destination / "evals" / "contracts" / "baseline-v1.json", contract)
+        self._write_json(
+            destination / "evals" / "contracts" / "baseline-eval-v1.json",
+            contract,
+        )
         subprocess.run(["git", "init", "-q"], cwd=destination, check=True)
         subprocess.run(
             ["git", "config", "user.email", "scaffold-test@example.invalid"],

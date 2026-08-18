@@ -12,7 +12,7 @@ inputs:
   - benchmark.gfed4.ilamb-burned-area
   - benchmark.config.gfed5-burned-area
   - benchmark.config.gfed4-burned-area
-contract: evals/contracts/burned-area-v1.json
+contract: evals/contracts/burned-area-eval-v1.json
 execution:
   mode: mechanistic
   tool: direct

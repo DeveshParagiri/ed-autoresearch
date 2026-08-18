@@ -56,7 +56,7 @@ status: proposed
 created_at: 2026-08-18T00:00:00Z
 parents: []
 inputs: []
-contract: evals/contracts/baseline-v1.json
+contract: evals/contracts/baseline-eval-v1.json
 execution:
   mode: simulation
   tool: direct
@@ -94,7 +94,7 @@ status: proposed
 created_at: 2026-08-18T00:00:00Z
 parents: []
 inputs: []
-contract: evals/contracts/baseline-v1.json
+contract: evals/contracts/baseline-eval-v1.json
 execution:
   mode: mechanistic
   tool: optuna

@@ -19,7 +19,7 @@ research/autoresearch/
 │   ├── data/
 │   │   ├── catalog.toml
 │   │   └── sources.toml
-│   ├── evals/contracts/baseline-v1.json
+│   ├── evals/contracts/baseline-eval-v1.json
 │   ├── research/experiments/experiment.baseline/experiment.md
 │   ├── scripts/
 │   │   ├── check_workspace.py

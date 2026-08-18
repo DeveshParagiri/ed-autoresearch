@@ -30,7 +30,7 @@
   "completed_at": "2026-08-18T17:12:15Z",
   "contract": {
     "id": "contract.ed-fire.burned-area.v1",
-    "path": "evals/contracts/burned-area-v1.json",
+    "path": "evals/contracts/burned-area-eval-v1.json",
     "sha256": "a4b4d12224ae9e075f14876f15c34f49d95357965e9e19e1442c8ec6d2aca059"
   },
   "dirty_worktree": false,

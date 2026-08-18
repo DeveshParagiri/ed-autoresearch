@@ -21,5 +21,5 @@
   "aggregation": "Preserve the complete evidence vector and disclose regressions.",
   "comparison_baselines": [],
   "figures": [],
-  "notes": "Fill, hash, review, and approve this contract before the first recorded experiment."
+  "notes": "Fill, hash, review, and approve this evaluation contract before the first recorded experiment."
 }

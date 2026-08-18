@@ -25,7 +25,7 @@ __PROJECT_SLUG__/
 │   ├── catalog.toml                       stable dataset IDs, roles, paths, and checks
 │   └── sources.toml                       provenance, acquisition, coverage, and limits
 ├── evals/contracts/
-│   └── baseline-v1.json                   draft machine evaluation contract
+│   └── baseline-eval-v1.json              draft machine evaluation contract
 ├── research/experiments/
 │   └── experiment.baseline/
 │       └── experiment.md                  baseline question, plan, result, and decision
@@ -51,7 +51,7 @@ The installer creates `data/inputs/`, `data/benchmarks/`, `data/reference/`, or 
 
 ## What the evaluation contract does
 
-`evals/contracts/baseline-v1.json` is executable policy, not a note and not a graph node. Before activation, replace its placeholders and give the file a name of the form `<evaluation-family>-v<integer>.json`. The contract pins the trusted evaluator, protected benchmark files, development and promotion boundaries, required metrics, comparison baselines, aggregation rule, and canonical figures. A run snapshots the contract and rejects protected-file drift. A material change to ranking or presentation requires a new version rather than editing the comparison family in place.
+`evals/contracts/baseline-eval-v1.json` is executable policy, not a note and not a graph node. Before activation, replace `baseline` with the evaluation family and keep the form `<evaluation-family>-eval-v<integer>.json`. The contract pins the trusted evaluator, protected benchmark files, development and promotion boundaries, required metrics, comparison baselines, aggregation rule, and canonical figures. A run snapshots the contract and rejects protected-file drift. A material change to ranking or presentation requires a new version rather than editing the comparison family in place.
 
 ## Experiments and runs
 

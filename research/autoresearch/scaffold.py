@@ -24,7 +24,7 @@ TEMPLATE_PATHS = {
     "pyproject.toml",
     "data/catalog.toml",
     "data/sources.toml",
-    "evals/contracts/baseline-v1.json",
+    "evals/contracts/baseline-eval-v1.json",
     "research/experiments/experiment.baseline/experiment.md",
     "scripts/check_workspace.py",
     "scripts/install_data.py",

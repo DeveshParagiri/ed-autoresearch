@@ -7,7 +7,7 @@ status: proposed
 created_at: __CREATED_AT__
 parents: []
 inputs: []
-contract: evals/contracts/baseline-v1.json
+contract: evals/contracts/baseline-eval-v1.json
 execution:
   mode: __EXECUTION_MODE__
   tool: direct
