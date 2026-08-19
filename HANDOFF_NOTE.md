@@ -1,17 +1,112 @@
 # HANDOFF NOTE — ED fire submodule, the GMD paper, and the CPA
 
-Last updated **2026-08-13, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
-Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH.**
+Last updated **2026-08-19, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
+Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH** unless the session says otherwise.
 
 ## HOW TO ORIENT IN FIVE MINUTES
 
 1. This file, all of it.
 2. `git log -20 --oneline`.
-3. `cpa/STATUS.md` for the portfolio. **`cpa/` IS NOT IN GIT.** It exists only on the Drive, so
-   `git log` will never show CPA work. `paper_gmd/` IS in git, force-added on this branch.
-4. `paper_gmd/TOPIC_SENTENCES_v3.md` is the paper's live outline. `TOPIC_SENTENCES_COMPLETE.md`
-   is the older working copy, kept for its evidence brackets.
+3. `cpa/STATUS.md` for the portfolio and `cpa/CPA_Presentation_notes.md` for the committee talk.
+   **`cpa/` AND `paper_gmd/` ARE NOT IN GIT.** Both are gitignored, lines 70 and 73. They exist only
+   on the Drive, so `git log` will never show that work. Do not force-add them. History was rewritten
+   once with git-filter-repo to remove them after a `git add -f` put them in.
+4. `paper_gmd/TOPIC_SENTENCES_v3.md` is the paper live outline.
 5. `paper_gmd/references/VERIFIED_CITATIONS.md` before writing any sentence with a citation in it.
+
+---
+
+## 2026-08-19, WINDOWS SESSION. COUPLING CONSISTENCY, THE FUEL TERM, AND THE HUMAN TERM
+
+Three threads ran. Which version can actually go into Lei coupled ED, making the fuel term dynamic,
+and finding a human driver that survives George rule that it must reach 1850.
+
+### 1. WHICH VERSION IS COUPLING CONSISTENT
+
+**`coupledE_fx` / `coupledFW` is the coupling legal version, official ILAMB 0.6532.** Model I is not,
+because a per continent parameter set cannot be carried into a global coupled run without seams. That
+is the same objection that ruled out Model F earlier, and Model I inherits it.
+
+**Model F beats the default coupled scheme on 20 of 20 ILAMB components**, so the direction is right.
+But **both under burn badly, 168 and 177 Mha against 793 observed.** Scored 2001 to 2016 against
+both GFED4 and GFED5 at Lei request. `scripts/prep_coupled_for_ilamb.py` does the slicing.
+
+**A trap that silently drops a model from ILAMB.** The time and time_bounds encodings must share an
+epoch. With different epochs ILAMB builds 193 edges for 192 months and drops the model without an
+error. Both are now written with `days since {y0}-01-01` and calendar noleap.
+
+**I was wrong about the fire cap and Lei corrected me.** I attributed the under burn to a low
+`FIRE_MAX`, from `ED_params.defaults.cfg` on the Drive. That file does not match the run, which
+already used 5.0. `scripts/diag_fire_cap.py` shows the cap is not the binding term, 5.0 and 1.0 both
+give 793 Mha offline. Conceded in the email draft. **Do not diagnose a coupled run from a config file
+on the Drive.**
+
+### 2. THE FUEL TERM IS NOW DYNAMIC
+
+It was a whole record mean, which is a constant in a coupled run and therefore not a fuel term at all.
+It is now a **causal trailing mean over the previous `FUEL_WINDOW` months**, `trailing_mean()` in
+`scripts/reproduce_modelC.py`, default window 60. Causal matters, a centred window would let the model
+see the future.
+
+### 3. THE HUMAN TERM. GDP IS OUT, POPULATION IS IN
+
+**GDP is disqualified.** It does not reach 1850, and George rule for the coupled runs is that a driver
+must. This is worth 793 against 317 Mha, so it is the largest single missing piece and losing it hurts.
+
+**Land use can act as the human term** and is already in the dump, `LANDUSE_TERM=1` in the optimizer.
+If it were used for attribution it would take a new model letter, since it changes one attribute.
+
+**Population density is the replacement.** HYDE, from Lei, 0.5 degree annual 1700 to 2025, gridded not
+national, already used by TRENDY. `scripts/make_population_driver.py` regrids it. Three transformations
+each of which can ruin the field silently, latitude runs north to south in the source, 0.5 to 1 degree
+must be an **area weighted mean because density is intensive**, and annual to monthly is a repeat, not
+an interpolation, because population has no seasonal cycle.
+
+**The July population test was wrong, and it is worth knowing why.** It used NATIONAL AVERAGE density
+and found nothing, p equals 0.93. The population fire relationship is **humped**, so both a linear
+correlation (r = +0.139) and a national average destroy it. The gridded hump fits at a peak of
+9.77 capita per km2, against 10 to 35 in the literature.
+
+`POP_TERM=1` adds `pop_amp`, `pop_peak`, `pop_sig`. Peak is expressed as a DENSITY rather than as a
+position on the log axis, because every parameter is sampled log uniform and a log axis position can
+be negative.
+
+### THE POPULATION RESULT, AND WHY IT IS NOT PROMOTABLE AS IT STANDS
+
+Unconstrained, **official ILAMB 0.6711 against a 0.6554 control**, a real gain. **But burned area went
+to 1179 Mha against 793 observed.** Richard flagged this correctly. It is the paper own thesis
+repeating itself, a higher aggregate score on a physically worse model, which is exactly the Model G
+against Model I result.
+
+**So the run was repeated with `MAG_BAND=1.3`. AT 1432 OF 2500 TRIALS, NOTHING HAS BEATEN THE WARM
+START.** Best is still trial 0 at 0.6094 internal. `logs/opt_coupledPOPmag.log`. Read that as the real
+answer rather than as an unfinished run. **Once the magnitude is held to within 1.3x observed, the
+population term stops buying anything.** The 0.6711 was bought with over burn.
+
+Four earlier population fits were killed at 12, 16, 1165 and 1509 trials. Parameters were recovered
+from the logs into `models/C/params.coupledPOP.k{1..5}.json` and rebuilt by
+`scripts/build_pop_candidates.py`, because the optimizer internal score has been wrong before, 0.607
+internal against 0.6523 official on the last coupling model. **Nothing is believed until ilamb-run.**
+
+### NEW FILES THIS SESSION
+
+| File | What |
+|---|---|
+| `scripts/make_population_driver.py` | HYDE to the model grid, `data_human/pop_density_1deg_2001_2016.npy` |
+| `scripts/build_pop_candidates.py` | rebuild burned area for the five recovered candidates |
+| `scripts/prep_coupled_for_ilamb.py` | slice Lei 8 GB runs into something ILAMB will read |
+| `scripts/diag_fire_cap.py` | the cap test that disproved my own diagnosis |
+| `scripts/reproduce_modelC.py` | `trailing_mean()` added, `gpp_fuel` with a back compatible fallback |
+| `scripts/optimize_modelC_coupled.py` | `FUEL_WINDOW`, `LANDUSE_TERM`, `POP_TERM` |
+
+### WHAT IS LEFT ON THIS THREAD
+
+1. **Let the MAG_BAND run finish**, but the conclusion is already visible. If it ends with trial 0
+   still best, the honest report to Lei is that population does not survive a magnitude constraint.
+2. **Send the Lei email.** Gmail draft `r7041293207578388834`, subject "Model F coupled run, one
+   question before the 24th". Delete the duplicate draft on the BA reconstruction thread. Unlink
+   `gdp_pcap.nc` and `gdp_gamma.nc`, which Gmail turned into URLs.
+3. **PFT dump from Lei**, earliest two weeks from 08-19. Still blocks Model J.
 
 ---
 

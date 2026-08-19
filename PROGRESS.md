@@ -4,6 +4,35 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-19 — coupling consistency, a dynamic fuel term, and population as the human driver
+
+- **`coupledE_fx` / `coupledFW` is the coupling legal version, official ILAMB 0.6532.** Model I is not,
+  a per continent parameter set cannot enter a global coupled run without seams. Same objection that
+  ruled out Model F.
+- **Scored both of Lei coupled runs, 2001 to 2016, against GFED4 and GFED5.** Model F beats the default
+  scheme on 20 of 20 components, but both under burn at 168 and 177 Mha against 793 observed.
+- **ILAMB drops a model silently if time and time_bounds have different epochs.** 193 edges for 192
+  months, no error. Both now written with the same `days since` epoch and calendar noleap.
+- **I blamed the fire cap and was wrong.** The config on the Drive does not match the run, which already
+  used 5.0, and `scripts/diag_fire_cap.py` shows the cap is not binding. Do not diagnose a coupled run
+  from a Drive config file.
+- **The fuel term is dynamic now.** It was a whole record mean, which is a constant in a coupled run.
+  It is a causal trailing mean over `FUEL_WINDOW` months, default 60.
+- **GDP is out**, it does not reach 1850 and George rule for the coupled runs is that a driver must.
+  It was worth 793 against 317 Mha, so this is the largest missing piece.
+- **Population density is the replacement**, HYDE from Lei, gridded, back to 1700, already in TRENDY.
+  The July test that found nothing used NATIONAL AVERAGES, and the population fire relationship is
+  humped, so an average destroys it. Gridded, the hump fits at 9.77 capita per km2 against 10 to 35 in
+  the literature.
+- **Unconstrained it scores 0.6711 official against a 0.6554 control, but burns 1179 Mha against 793.**
+  Richard flagged that this is the paper own thesis repeating itself, a better score on a worse model.
+- **Refitted with MAG_BAND=1.3. At 1432 of 2500 trials nothing has beaten the warm start.** Read that
+  as the answer. Once magnitude is held, the population term stops buying anything.
+- Land use also works as a human term and is already in the dump, `LANDUSE_TERM=1`. Used for
+  attribution it would need a new model letter.
+- New scripts. `make_population_driver.py`, `build_pop_candidates.py`, `prep_coupled_for_ilamb.py`,
+  `diag_fire_cap.py`.
+
 ## 2026-08-13 (day) — the figure and table pass, then back to the CPA
 
 - **Two rules now enforced in the scripts, not in a note.** Draw every figure at final print size, and

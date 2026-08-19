@@ -1,0 +1,17 @@
+{
+ "source": "D:\\population_density_0p5_1700_2025.nc",
+ "source_institution": "PBL Netherlands Environmental Assessment Agency and Utrecht University",
+ "dataset": "HYDE, as supplied for GCB2026",
+ "units": "capita per km2",
+ "years": [
+  2001,
+  2016
+ ],
+ "shape": [
+  192,
+  180,
+  360
+ ],
+ "grid": "1 degree, lat ascending -89.5 to 89.5, lon -179.5 to 179.5",
+ "note": "annual values held constant within each year"
+}

@@ -1,0 +1,59 @@
+{
+ "model": "Model C, coupling-legal, HYDE population hump replacing GDP. Recovered from logs/opt_coupledPOP_tpe.log after the run was interrupted.",
+ "drivers_source": "global_baseline_modelC_inputs_1997-2016.nc",
+ "reference": "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
+ "mechanisms": [
+  "gpp_monthly",
+  "precip",
+  "t_air_ign"
+ ],
+ "n_mechanisms": 3,
+ "n_params": 16,
+ "objective": "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
+ "ed_consistency": {
+  "interpretation": "Model C output is an annual fire rate (yr^-1)",
+  "fire_max_rate": 5.0,
+  "seasonal_transform": true,
+  "transform": "burnt_monthly_frac = 1 - exp(-min(rate, fire_max) / 12)"
+ },
+ "scores_internal": {
+  "overall": 0.6141234798778705
+ },
+ "warm_start_internal": {
+  "bias": 0.6951614555088677,
+  "rmse": 0.3646344853668547,
+  "seas": 0.8057595304709153,
+  "spatial": 0.810641236055001,
+  "overall": 0.6081662385536987
+ },
+ "n_trials": 2500,
+ "runtime_min": 72.17,
+ "params": {
+  "k1": 1.4345087605273544e-05,
+  "D_low": 55091.973732851526,
+  "k2": 1.0994941305061666e-05,
+  "D_high": 714253.9542271186,
+  "fire_exp": 1.0916776547024218,
+  "P_half": 49.907442133042224,
+  "pre_dampen_half": 0.38915987684997655,
+  "gpp_af": 0.0010870933025546264,
+  "gpp_b": 1.2498170894543963e-05,
+  "gpp_d": 0.1020883903561826,
+  "ign_k": 1.8042769805008811,
+  "ign_c": 17.560288285520215,
+  "trop_agb_crit": 10.773475435934301,
+  "trop_k_veg": 0.969217178347059,
+  "pop_amp": 1.9072495301159436,
+  "pop_peak": 1.6446133792710353,
+  "pop_sig": 2.1216759722010305,
+  "fuel_k": 1.1850294962501882,
+  "fuel_half": 1.18427549266035
+ },
+ "provenance": {
+  "log": "logs/opt_coupledPOP_tpe.log",
+  "trial": 992,
+  "sampler": "tpe",
+  "trials_completed": 1509,
+  "note": "run killed before writing; parameters recovered from the log"
+ }
+}

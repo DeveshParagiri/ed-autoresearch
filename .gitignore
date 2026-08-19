@@ -91,3 +91,6 @@ modelC_driver_dumps.zip
 
 # Rendered copy of the findings note, the .md is the source
 GDP_HUMAN_TERM_FINDINGS.html
+
+# regenerable from scripts/make_population_driver.py plus the HYDE source
+data_human/pop_density_1deg_2001_2016.npy

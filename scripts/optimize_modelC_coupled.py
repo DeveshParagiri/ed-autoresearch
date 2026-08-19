@@ -119,6 +119,18 @@ FUEL_WINDOW = int(os.environ.get("FUEL_WINDOW", "0"))
 # gone that objection goes with it. Both coefficients are pro-fire, matching that finding.
 # Caveat kept in view: the GPP driver is already an area-weighted sum over these same
 # tiles, so some of this signal is double-counted and the fit may return near-zero.
+# POP_TERM adds a human-activity multiplier keyed to HYDE gridded population density, the
+# field TRENDY itself uses. It is the coupling-legal replacement for GDP, which George
+# disallowed because it does not reach 1850. This reaches 1700.
+#
+# The form is a hump in log10 density, not a monotonic suppression, because that is what the
+# data shows. Binning GFED5 by population gives mean burned fraction rising from 0.021 in the
+# sparsest cells to 0.097 around 10 to 35 people per km2, then falling to 0.036 in the
+# densest. People both start fires and put them out, and the two effects peak at different
+# densities. A monotonic term cannot represent that, which is why the earlier national-average
+# test found nothing, r of only 0.139 against a relationship that is plainly there.
+POP_TERM = os.environ.get("POP_TERM", "0") == "1"
+_POP_KEYS = ("pop_amp", "pop_peak", "pop_sig")
 LANDUSE_TERM = os.environ.get("LANDUSE_TERM", "0") == "1"
 _LU_KEYS = ("lu_past", "lu_scnd")
 CURING = os.environ.get("CURING", "0") == "1"
@@ -232,6 +244,20 @@ w2_burn   = (w2 * land_mask).astype(np.float64)
 w3_land   = (w3 * land_mask[None, :, :]).astype(np.float64)
 print(f"[setup] land cells (GFED5 burnable): {int(land_mask.sum())} / {land_mask.size} "
       f"({100*land_mask.mean():.1f}%)")
+
+# gridded population density, held as log10 so the hump is fitted in the space it lives in
+if POP_TERM:
+    _pop = np.load(REPO / "data_human" / "pop_density_1deg_2001_2016.npy")
+    _lpop = np.log10(_pop.astype(np.float32) + 0.1)
+    _npop = int((_pop[0] > 0).sum())
+    del _pop
+    print(f"[pop] POP_TERM ON: HYDE density, {_npop} populated cells, "
+          f"log10 range {_lpop.min():.2f} to {_lpop.max():.2f}")
+
+    def pop_mult(p):
+        mu = np.log10(p["pop_peak"] + 0.1)          # peak density -> position on the log axis
+        z = (_lpop - mu) / (p["pop_sig"] + 1e-9)
+        return 1.0 + p["pop_amp"] * np.exp(-0.5 * z * z)
 
 # GDP human-suppression multiplier field (1deg), fit strength gdp_gamma applied in predict()
 if GDP_TERM:
@@ -431,7 +457,8 @@ def landuse_mult(p):
 
 def predict(params):
     fc = {k: v for k, v in params.items()
-          if k != "gdp_gamma" and k not in _CURE_KEYS and k not in _LU_KEYS}
+          if k != "gdp_gamma" and k not in _CURE_KEYS and k not in _LU_KEYS
+          and k not in _POP_KEYS}
     with np.errstate(over="ignore", invalid="ignore"):
         rate = fire_C(drivers, fc)
     if CURING and "cure_k" in params:                 # additive grass-curing pathway
@@ -439,6 +466,8 @@ def predict(params):
     rate = rate * land_mask[None, :, :]
     if GDP_TERM and "gdp_gamma" in params:
         rate = rate * gdp_mult(params["gdp_gamma"])[None, :, :]
+    if POP_TERM and "pop_amp" in params:
+        rate = rate * pop_mult(params)
     if LANDUSE_TERM and "lu_past" in params:
         rate = rate * landuse_mult(params)
     return ed_transform(rate)
@@ -485,6 +514,14 @@ LOG_PARAMS["fire_exp"] = (float(os.environ.get("FIRE_EXP_LO", 1.0)),
 # GDP_TERM: fit the human-suppression strength jointly. Log-sampled so the search
 # concentrates on the small values the data prefers (gamma ~0.15-0.3); the low end
 # (1e-3) is effectively "no term", so the optimizer can turn it off if it does not help.
+if POP_TERM:
+    # amp log-sampled from effectively-off so the search may reject the term. mu and sig are
+    # sampled linearly, since they are positions on a log axis rather than magnitudes. The
+    # data puts the peak near log10 of 1.2, so the range brackets that generously.
+    LOG_PARAMS["pop_amp"] = (1e-3, 20.0)
+    LOG_PARAMS["pop_peak"] = (0.05, 1000.0)     # people per km2 at which the hump peaks
+    LOG_PARAMS["pop_sig"] = (0.25, 2.5)         # width of the hump, in log10 decades
+    print("[pop] fitting a hump in log10 population density, 3 parameters")
 if LANDUSE_TERM:
     # log-sampled from effectively-off (1e-3) so the search can decide the term is
     # worthless rather than being forced to use it
@@ -545,6 +582,10 @@ if GDP_TERM and "gdp_gamma" not in WARM_START:
 # reproduces the model it was warm-started from
 if LANDUSE_TERM:
     WARM_START = {**{k: 1e-3 for k in _LU_KEYS if k not in WARM_START}, **WARM_START}
+# seed the hump at effectively off but positioned where the data says the peak is, so the
+# warm trial reproduces the model it started from and the search begins somewhere sensible
+if POP_TERM:
+    WARM_START = {**{"pop_amp": 1e-3, "pop_peak": 16.0, "pop_sig": 0.8}, **WARM_START}
 # Seed curing OFF (cure_k~0) so the warm/smoke trial reproduces the base model, then grow it.
 if CURING and "cure_k" not in WARM_START:
     WARM_START = {**WARM_START, "cure_k": 1e-3, "cure_p_min": 180.0, "cure_gpp_ref": 0.3, "cure_agb_crit": 2.5}
