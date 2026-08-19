@@ -26,8 +26,14 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
   the literature.
 - **Unconstrained it scores 0.6711 official against a 0.6554 control, but burns 1179 Mha against 793.**
   Richard flagged that this is the paper own thesis repeating itself, a better score on a worse model.
-- **Refitted with MAG_BAND=1.3. At 1432 of 2500 trials nothing has beaten the warm start.** Read that
-  as the answer. Once magnitude is held, the population term stops buying anything.
+- **Refitted with MAG_BAND=1.3, finished and scored with official ILAMB. 0.6601 against a 0.6532
+  control, and 875 Mha against the control 921, observed 793.** Better on both counts.
+- **But `pop_amp` fitted at 0.00272, so the population multiplier changes the fire rate by at most
+  0.27 percent anywhere on Earth. The optimizer switched the term off.** The gain came from the
+  trailing mean fuel terms, not from population. The improvement is real and is not a population
+  result. Held to magnitude, population is selected against rather than merely useless.
+- **I called that run from a partial log and was wrong.** At trial 1432 the warm start was still best,
+  and it was beaten at 1622. Do not judge an optuna run before it finishes, TPE exploits late.
 - Land use also works as a human term and is already in the dump, `LANDUSE_TERM=1`. Used for
   attribution it would need a new model letter.
 - New scripts. `make_population_driver.py`, `build_pop_candidates.py`, `prep_coupled_for_ilamb.py`,

@@ -78,10 +78,35 @@ to 1179 Mha against 793 observed.** Richard flagged this correctly. It is the pa
 repeating itself, a higher aggregate score on a physically worse model, which is exactly the Model G
 against Model I result.
 
-**So the run was repeated with `MAG_BAND=1.3`. AT 1432 OF 2500 TRIALS, NOTHING HAS BEATEN THE WARM
-START.** Best is still trial 0 at 0.6094 internal. `logs/opt_coupledPOPmag.log`. Read that as the real
-answer rather than as an unfinished run. **Once the magnitude is held to within 1.3x observed, the
-population term stops buying anything.** The 0.6711 was bought with over burn.
+**So the run was repeated with `MAG_BAND=1.3`, and it finished at 2500 trials.** Internal 0.6126
+against the warm start 0.6094, **875 Mha, 1.10x observed**, `models/C/params.coupledPOPmag.json`.
+
+**SCORED WITH OFFICIAL ILAMB, `ilamb_out_popmag/`.**
+
+| | Official Overall | Bias | RMSE | Seasonal | Spatial | Mha/yr |
+|---|---|---|---|---|---|---|
+| control, `coupledFW` | 0.6532 | 0.7102 | 0.4655 | 0.8009 | 0.8240 | 921 |
+| `coupledPOPmag` | **0.6601** | 0.7017 | 0.5010 | 0.8250 | 0.7718 | **875** |
+
+So it is better on the score AND closer on magnitude, +0.0069 official and 1.10x against 1.16x.
+
+**BUT READ THE FITTED PARAMETERS, NOT THE SCORE. `pop_amp` came out at 0.00272.** The multiplier is
+`1 + pop_amp * gaussian`, so the population term varies the fire rate by **at most 0.27 percent
+anywhere on Earth**. `pop_peak` fitted at 0.07 capita per km2, which is empty land, not a hump.
+**Given a free hand under a magnitude constraint, the optimizer switched the population term off.**
+
+**So the improvement is real and it is not a population improvement.** It was bought by `fuel_k` and
+`fuel_half`, the trailing mean fuel terms, and by refitting. The honest line for Lei is that the
+dynamic fuel term is worth having and that **population, once magnitude is held, is selected against.**
+The unconstrained 0.6711 at 1179 Mha was bought with over burn.
+
+**Do not promote `coupledPOPmag` as a population model.** If it is promoted at all it is a fuel window
+result, and it should be rerun with `POP_TERM=0` to confirm the population parameters are dead weight
+rather than doing something small through the tail.
+
+**A caution recorded because I got this wrong mid session.** I read the log at trial 1432, saw the
+warm start still winning, and wrote that up as the answer. The warm start was beaten at trial 1622.
+**Do not call an optuna run from a partial log.** TPE exploits late, which is the whole point of it.
 
 Four earlier population fits were killed at 12, 16, 1165 and 1509 trials. Parameters were recovered
 from the logs into `models/C/params.coupledPOP.k{1..5}.json` and rebuilt by
