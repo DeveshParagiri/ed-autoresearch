@@ -661,8 +661,8 @@ def plot_spatial_distribution(
             0.04,
             0.95,
             (
-                f"n = {x.size:,}\nr = {correlation:.2f}\n"
-                f"median bias = {median_bias:+.2f}\nshown = {shown_percent:.1f}%"
+                f"n = {x.size:,}\nr = {correlation:.3f}\n"
+                f"median bias = {median_bias:+.3f}\nshown = {shown_percent:.3f}%"
             ),
             transform=axis.transAxes,
             ha="left",

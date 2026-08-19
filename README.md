@@ -1,8 +1,10 @@
 # ED-Fire autoresearch
 
-This repository is the canonical home for ED-Fire autoresearch. It contains the official ED v3.0 publisher source, dependency sources, input bundle, global simulation, environment guide, evaluation script, every project dataset, the locked ILAMB evaluation, and the research record. The pinned TRENDY v14 EDv3 S3 burned-area artifact has already been evaluated against GFED5 and GFED4.1s over 2001–2016, and two matched runs reproduced its metrics, ILAMB products, and five canonical figures byte for byte. The official source release still does not prove which revision, build, input selection, and command produced that separate TRENDY artifact, so the measured baseline remains an evaluation floor until a source-level control is run. Its result and decision live in `research/experiments/experiment.stock-baseline/experiment.md`.
+ED-Fire autoresearch is a reproducible research project for improving the fire process in the Ecosystem Demography model. The current objective is to find mechanisms and parameters that make ED reproduce GFED5 monthly burned area as closely as possible under a fixed 2001–2016 ILAMB evaluation. GFED4.1s is reported alongside GFED5 as a benchmark-sensitivity check.
 
-The structure is intentionally small. One document defines the science, one records the current handoff, one reusable skill tells an agent how to operate, and the remaining files either identify data, lock an evaluation, execute an experiment, or preserve its evidence. There is no `ar` CLI, separate memory directory, archive, data cache, or UI-owned research state.
+The autoresearch agent works through one declared experiment at a time. Each experiment states its question and controlled change, runs the relevant model or reproduction, evaluates the output with the same locked contract, saves the metrics and figures, and records what the result means for the next experiment. The agent may write new analysis and execution tools, but it cannot alter the benchmarks, evaluator, comparison period, or figure definitions during an experiment.
+
+This repository contains the official ED v3.0 source and inputs, the source and parameters for Models A–I, dataset installation scripts, evaluation contracts, and recorded experiments. Read [`research.md`](research.md) for the scientific rules, [`memory.md`](memory.md) for the current state and next task, and [`research/experiments/`](research/experiments/) for results.
 
 ## What each top-level document owns
 
@@ -39,19 +41,18 @@ ed-fire/
 │   ├── reference/                    pinned conversion code and the official ED release archives
 │   └── derived/                      created when a recorded run yields a reusable product
 ├── model/
+│   ├── README.md                     model A-I record, replay procedure, and scientific limits
+│   ├── registry.toml                 A-I definitions, provenance, results, and caveats
+│   ├── parameter-inventory.csv       checksums for every retained parameter artifact
+│   ├── parameters/                   final sets, trial sets, checkpoints, and top-k records
+│   ├── commit-artifacts/              every model-bearing file version from every remote commit
+│   ├── upstream/                     complete old Git history plus a readable A-C snapshot
+│   ├── reproduced/                   ignored regenerated outputs, ILAMB evidence, and figures
 │   ├── stock-ed/
 │   │   ├── UPSTREAM.toml             publisher identity, hashes, license, and provenance limit
 │   │   ├── Makefile, *.cc, *.h       exact files from the official ED v3.0 source archive
 │   │   ├── external_apps/source_code/ official dependency source tarballs, ignored by Git
 │   │   └── EDv3_inputs               link to the canonical official input bundle under data/
-│   └── other-models/
-│       ├── README.md                 historical replay instructions and scientific boundary
-│       ├── registry.toml             A-I model definitions, provenance, results, and caveats
-│       ├── parameter-inventory.csv   checksums for every retained parameter artifact
-│       ├── parameters/               final sets, trial sets, checkpoints, and top-k records
-│       ├── commit-artifacts/          every model-bearing file version from every remote commit
-│       ├── upstream/                 complete old Git history plus a readable A-C snapshot
-│       └── reproduced/               ignored regenerated outputs, ILAMB evidence, and figures
 ├── evals/contracts/
 │   ├── burned-area-eval-v1.json      preserved contract for completed stock runs
 │   └── burned-area-eval-v2.json      active contract for future candidate runs
@@ -64,17 +65,22 @@ ed-fire/
 │   └── experiments/
 │       └── <experiment-id>/
 │           ├── experiment.md         research record plus curated figure and result links
+│           ├── figures/              current presentation derived from the selected run
 │           └── runs/<run-id>/        immutable evidence from one terminal attempt
 ├── scripts/
-│   ├── check_workspace.py            validate data, contracts, lineage, and runs
+│   ├── check_workspace.py            validate data, contracts, experiment graph, and runs
 │   ├── run_experiment.py             execute one declared experiment and record it
 │   ├── stage_stock_baseline.py       stage the pinned native ED baseline
+│   ├── stage_models_a_i.py            regenerate the thirteen retained model variants
 │   ├── evaluate_burned_area.py       preserved v1 evaluator used by completed stock runs
 │   ├── evaluate_burned_area_v2.py    active ILAMB evaluator for future candidate runs
-│   ├── reproduce_other_models.py     reconstruct and verify the quarantined A-I history
+│   ├── evaluate_models_a_i.py         verify A-I replay evidence and retain all figure suites
+│   ├── reproduce_models.py           reconstruct and verify models A-I
 │   ├── burned_area_figures.py        shared SciencePlots layout for the six canonical images
-│   ├── figure_other_models.py        historical overviews and per-model suites, never candidate evidence
-│   ├── sync_other_model_history.py   expose and verify every commit-derived model artifact
+│   ├── render_experiment_figures.py  refresh current figures from selected-run evidence
+│   ├── render_models_overview.py     readable two-column A-I maps from selected-run evidence
+│   ├── figure_models.py              fixed A-I overviews and per-model figure suites
+│   ├── sync_models.py                expose and verify every commit-derived model artifact
 │   ├── install_all_data.sh            orchestrate public retrieval, deterministic builds, and validation
 │   ├── install_stock_ed.py            verify and install every official ED v3.0 release asset
 │   ├── download_public_data.py        retrieve public GFED and ILAMB source products
@@ -87,7 +93,7 @@ ed-fire/
 ├── src/autoresearch/
 │   ├── __init__.py                    package boundary
 │   ├── catalog.py                     ED-Fire catalog and integrity validation
-│   ├── experiments.py                 experiment parsing, lineage, and event validation
+│   ├── experiments.py                 experiment parsing, parent edges, and event validation
 │   ├── workspace.py                   one combined workspace status report
 │   ├── runner.py                      protected execution and evidence recording
 │   └── optuna_records.py              portable Optuna study and trial export
@@ -95,10 +101,10 @@ ed-fire/
     ├── test_catalog.py                catalog, provenance, and canonical-path integrity cases
     ├── test_experiments.py            experiment-DAG and search declaration cases
     ├── test_optuna_records.py         portable Optuna record cases
-    └── test_other_models.py           historical registry, parameter, and bundle integrity cases
+    └── test_models.py                 model registry, parameter, and bundle integrity cases
 ```
 
-Only experiments form the research DAG. A framing appears as a labeled container only when an `experiment.md` explicitly names it; an experiment with no `framing` field stays at the graph root. Framings do not add lineage edges. A dataset is an input to an experiment, a benchmark is protected evidence, an Optuna trial is part of one run, and a metric or figure is an experiment result. None of those becomes another node type.
+Only experiments form the research DAG. A framing appears as a labeled container only when an `experiment.md` explicitly names it; an experiment with no `framing` field stays at the graph root. Framings do not add parent edges. A dataset is an input to an experiment, a benchmark is protected evidence, an Optuna trial is part of one run, and a metric or figure is an experiment result. None of those becomes another node type.
 
 Meetings do not appear in the graph. Their raw source and structured records stay local and ignored; approved consequences are written into the experiment, framing, charter, memory, or evaluation contract that owns the decision.
 
@@ -106,7 +112,7 @@ When a framing is needed, `research/framings/<framing-id>.md` uses `schema: auto
 
 The tree includes semantic data and run directories that are created only when used. Empty directories are not retained with placeholder files.
 
-The run directory contains `run.json`, the frozen `contract.json`, `metrics.json`, `artifacts.json`, `events.jsonl`, canonical `figures/`, durable `artifacts/`, command and evaluator `logs/`, and disposable `work/`. Interpretation is written back to the experiment record, so the runner does not create a second notes file. A completed `experiment.md` names its selected run and contains human-labeled Markdown references to the figures, results, and outputs chosen for the research reader. When a graph node is selected, the viewer displays that file's front matter as experiment metadata and renders its Markdown body and references. It does not construct another narrative or guess which run files matter. Git ignores only `work/` and `tmp/`; the evidence files are meant to be retained.
+The run directory contains `run.json`, the frozen `contract.json`, `metrics.json`, `artifacts.json`, `events.jsonl`, canonical `figures/`, durable `artifacts/`, command and evaluator `logs/`, and disposable `work/`. Interpretation is written back to the experiment record, so the runner does not create a second notes file. A completed `experiment.md` names its selected run and contains human-labeled Markdown references to the figures, results, and outputs chosen for the research reader. The experiment may keep a current presentation under its own `figures/` directory, but those images must be regenerated from the selected run; metrics and scientific outputs still link to that immutable run. When a graph node is selected, the viewer displays the experiment file's front matter and renders its Markdown body and references. It does not construct another narrative or guess which files matter. Git ignores only `work/` and `tmp/`; the evidence files are meant to be retained.
 
 ## Why there is no cache directory
 
@@ -140,9 +146,13 @@ An experiment begins as `research/experiments/<experiment-id>/experiment.md`. It
 
 The trusted evaluator then removes any candidate-authored official metrics or canonical figures, verifies every protected hash, evaluates the candidate, creates the fixed figure suite, and verifies the protected files again. The recorder validates required metrics and artifacts before marking the run complete. Failed and invalid attempts remain separate run IDs instead of being overwritten.
 
-After interpretation, the agent writes the result, interpretation, and decision into `experiment.md`, sets `selected_run`, and authors an `Evidence` section with relative Markdown embeds for selected figures and links to selected-run metrics and scientific outputs. The fixed document sequence is Question, Rationale, Change, Prediction, Plan, Result, Evidence, Interpretation, Decision, and Revisit when. The document must stand on its own: it explains why the experiment exists or is running, what it tests, what happened when results exist, and what follows from the evidence. Raw logs, disposable work files, and unselected artifacts remain available in the run record but do not enter the research reader automatically.
+After interpretation, the agent writes the result, interpretation, and decision into `experiment.md`, sets `selected_run`, and authors an `Evidence` section with relative Markdown embeds for selected figures and links to selected-run metrics and scientific outputs. A later presentation update may regenerate experiment-level figures from the selected run without changing that run. The fixed document sequence is Question, Rationale, Change, Prediction, Plan, Result, Evidence, Interpretation, Decision, and Revisit when. The document must stand on its own: it explains why the experiment exists or is running, what it tests, what happened when results exist, and what follows from the evidence. Raw logs, disposable work files, and unselected artifacts remain available in the run record but do not enter the research reader automatically.
 
-For the completed stock experiment, `stage_stock_baseline.py` verified and staged the pinned native ED file as `work/model/Candidate/burntArea.nc`, and the v1 evaluator produced its recorded evidence. Future candidate experiments use `evaluate_burned_area_v2.py`. It runs the same ILAMB evaluations against both GFED products, preserves their scalar databases and logs, writes the metric vector, copies the candidate output into durable artifacts, and delegates the six images to the protected SciencePlots renderer.
+For the completed stock experiment, `stage_stock_baseline.py` verified and staged the pinned native ED file as `work/model/Candidate/burntArea.nc`, and the v1 evaluator produced its recorded evidence. `render_experiment_figures.py` can present that selected run with the current six-image renderer while leaving the v1 evidence intact.
+
+The completed A-I reproduction is also a first-class experiment and graph node. `stage_models_a_i.py` regenerated all thirteen variants and their archived replay metrics inside the run, and `evaluate_models_a_i.py` verified the output identities, protected files, 78 canonical figures, thirteen suite manifests, and two overview figures. Its `experiment.md` selects the completed run, summarizes the scientific limitations, embeds the score overview and a readable two-column map presentation, and links all six figures for every model. `render_models_overview.py` can refresh that tall map sheet from the selected run without changing immutable run evidence.
+
+Future candidate experiments use `evaluate_burned_area_v2.py`. It runs the same ILAMB evaluations against both GFED products, preserves their scalar databases and logs, writes the metric vector, copies the candidate output into durable artifacts, and delegates the six images to the protected SciencePlots renderer.
 
 ## Burned-area contracts
 
@@ -171,6 +181,18 @@ Run the declared stock baseline with:
 uv run python scripts/run_experiment.py experiment.stock-baseline
 ```
 
+Regenerate and record Models A-I with their complete standardized figure suites with:
+
+```bash
+uv run --extra historical python scripts/run_experiment.py experiment.models-a-i-reproduction
+```
+
+Refresh the stock experiment's current figure presentation from its selected run with:
+
+```bash
+uv run --extra historical python scripts/render_experiment_figures.py experiment.stock-baseline --label "Staged ED-stock"
+```
+
 Install Optuna only when an approved experiment declares a parameter search:
 
 ```bash
@@ -179,12 +201,14 @@ uv sync --extra optuna
 
 Optuna is a tool inside one scientific experiment, not the research controller. Its objectives, directions, parameter space, sampler, pruner, seed, budget, and selection rule are fixed before the study begins. Every completed, pruned, and failed trial is retained. Under the active contract, a study may maximize the trusted GFED5 Overall score over 2001–2016. The selected parameters must produce the ordinary candidate output and pass through the same evaluator and six-image suite. A later non-adaptive run confirms reproducibility on the same benchmark.
 
-## Historical model replay
+## Models A-I
 
-`model/other-models/` preserves the old `ed-autoresearch` history without admitting it to the active research DAG. The complete Git bundle holds every source file, script, log, figure, and commit on the three remote branches. The visible commit archive materializes 406 versions of all files in the model-bearing directories across 115 commits, including overwritten and deleted A, B, C, combustion, paper, coupled, human-driver, G, H, and I artifacts. Run `python scripts/sync_other_model_history.py` to prove that archive still matches the bundle.
+`model/` contains the ED-Fire work this project is extending. Its registry names the thirteen retained A-I variants, its parameter inventory covers all 303 retained parameter files, and its source bundle preserves every source file, script, log, figure, and commit on the three recovered remote branches. The materialized commit record exposes 406 versions of model-bearing files across 115 commits, including overwritten and deleted A, B, C, combustion, paper, coupled, human-driver, G, H, and I artifacts. Run `python3 scripts/sync_models.py` to prove that the tracked record still matches the bundle.
 
-Run `uv sync --extra historical`, then `uv run --extra historical python scripts/reproduce_other_models.py --models all --evaluate` to regenerate the thirteen named final variants and their ILAMB evidence. `uv run --extra historical python scripts/figure_other_models.py` regenerates the two model-ladder overviews and writes the active v2 six-image SciencePlots suite for Model Ibest under `model/other-models/reproduced/figures/Ibest/`. Pass `--models all` to write the same suite for all thirteen models. The exact coverage, replay status, and limits live in `model/other-models/README.md`; future clean-line candidates use `scripts/evaluate_burned_area_v2.py`.
+The [selected A-I reproduction](research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/run.json) is the durable comparison record. It regenerated all thirteen variants, passed all thirteen replay checks, and retained 78 canonical figures plus two overviews. Run `uv sync --extra historical`, then `uv run --extra historical python scripts/reproduce_models.py --models all --evaluate` only for a disposable direct replay under `model/reproduced/`. `uv run --extra historical python scripts/figure_models.py --models all` directly refreshes the ignored model-level previews. The declared experiment command above is the route for a new recorded attempt. Displayed statistics use three decimal places while the JSON and CSV evidence retain full precision.
+
+These models are our prior work, not a miscellaneous comparison collection. Their mechanisms and parameters may be extended in a new experiment. Their existing outputs are not automatically valid under the active clean-candidate contract because the original generators used benchmark-derived masks or target normalization. The exact coverage, replay result, and per-model limitations live in `model/README.md`.
 
 ## Script names
 
-Executable scripts use lowercase `verb_object.py`. `check_` is read-only, `install_` creates declared local state, `download_` fetches upstream data, `build_` performs a deterministic transformation, `stage_` adapts an existing candidate, `run_` executes a declared workflow, and `evaluate_` produces trusted evidence. The names describe one responsibility; this repository does not add `utils.py`, `helpers.py`, numbered scratch scripts, or another CLI layer.
+Executable scripts use lowercase `verb_object.py`. `check_` is read-only, `install_` creates declared local state, `download_` fetches upstream data, `build_` performs a deterministic transformation, `stage_` adapts an existing candidate, `run_` executes a declared workflow, `evaluate_` produces trusted evidence, and `render_` derives a current presentation from recorded evidence. The names describe one responsibility; this repository does not add `utils.py`, `helpers.py`, numbered scratch scripts, or another CLI layer.

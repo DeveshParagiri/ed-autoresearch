@@ -208,6 +208,54 @@ selected_run: run.20260818T120000Z.example
 
             self.assertTrue(result.ok, result.issues)
 
+    def test_completed_experiment_allows_curated_experiment_figure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            directory = root / "research" / "experiments" / "experiment.completed"
+            run = directory / "runs" / "run.20260818T120000Z.example"
+            (directory / "figures").mkdir(parents=True)
+            run.mkdir(parents=True)
+            (directory / "figures" / "summary.png").write_bytes(b"png")
+            (run / "metrics.json").write_text("{}\n")
+            (root / "research.md").write_text("# Project\n")
+            write_framing(root)
+            (root / "scripts").mkdir()
+            (root / "scripts" / "run_model.py").write_text("print('run')\n")
+            body = EXPERIMENT_BODY.replace(
+                "No recorded evidence yet.",
+                """![Current summary](figures/summary.png)
+
+[Selected metrics](runs/run.20260818T120000Z.example/metrics.json)""",
+            )
+            (directory / "experiment.md").write_text(
+                """---
+schema: autoresearch-experiment/v2
+id: experiment.completed
+title: Completed experiment
+kind: baseline
+status: completed
+created_at: 2026-08-18T00:00:00Z
+framing: framing.test
+parents: []
+inputs: []
+contract: evals/contracts/baseline-eval-v1.json
+execution:
+  mode: mechanistic
+  tool: direct
+  adapter: scripts/run_model.py
+  argv: ["{python}", "scripts/run_model.py"]
+search: null
+selected_run: run.20260818T120000Z.example
+---
+
+"""
+                + body
+            )
+
+            result = validate_experiments(root)
+
+            self.assertTrue(result.ok, result.issues)
+
     def test_completed_experiment_rejects_unlinked_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

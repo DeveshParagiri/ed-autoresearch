@@ -1,0 +1,869 @@
+{
+  "artifacts": [
+    {
+      "bytes": 435830,
+      "kind": "figure",
+      "name": "models-a-i-gfed5-mean-maps.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/figures/models-a-i-gfed5-mean-maps.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "869767f5c36f87a10461a4714de87bde5a70af2f33b790d70a5ddb84ff7a856a"
+    },
+    {
+      "bytes": 126731,
+      "kind": "figure",
+      "name": "models-a-i-gfed5-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/figures/models-a-i-gfed5-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b9aec9133f652e990297872737b124d2d6531436e9379b598d216a487be09521"
+    },
+    {
+      "bytes": 19490,
+      "kind": "artifact",
+      "name": "model-index.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/model-index.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e81c293346db09117ffb2e35c11622ba5c6d6ab2db4fc14038218e9e00183700"
+    },
+    {
+      "bytes": 74263,
+      "kind": "artifact",
+      "name": "models/A-legacy/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "9df5622db605641a5043a723133ab0fd74d839b51371f53b2be01a37b17fbaa5"
+    },
+    {
+      "bytes": 260921,
+      "kind": "artifact",
+      "name": "models/A-legacy/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "a22768647fef96cde14e913a8bbe6ea203be535fb20480029256e5c143d34d8a"
+    },
+    {
+      "bytes": 192853,
+      "kind": "artifact",
+      "name": "models/A-legacy/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e9032f44b4bcc092936a9b8005ab0a4e5f7bbeabf9f4ffe29bc881b47e8ec0cc"
+    },
+    {
+      "bytes": 206030,
+      "kind": "artifact",
+      "name": "models/A-legacy/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "dd9eb08388a7fc1203f5068289b2e99d037ebc44b0c583a6857dee6f056f43ae"
+    },
+    {
+      "bytes": 455763,
+      "kind": "artifact",
+      "name": "models/A-legacy/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "5bfefcd5c1267c8c120473993fcb11a4d3a66f8284574b6d2dc74ec9718a5c38"
+    },
+    {
+      "bytes": 94881,
+      "kind": "artifact",
+      "name": "models/A-legacy/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "bf26c35cdf716c5bc847427ffa576ab371b81d8893dca479d71d6b0b2b1f5eb0"
+    },
+    {
+      "bytes": 4237,
+      "kind": "artifact",
+      "name": "models/A-legacy/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/A-legacy/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "86cd6a73b7efba1a54ed8ab8356af20dc7c294040bf53a20d4fe7b8e8679d85e"
+    },
+    {
+      "bytes": 73997,
+      "kind": "artifact",
+      "name": "models/B-legacy/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f28bf906dada91521a71d86d727201133602d38237d3d17bdd3716cd70573932"
+    },
+    {
+      "bytes": 259993,
+      "kind": "artifact",
+      "name": "models/B-legacy/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "3a0e6443574c870a680f9d58b3680fb770cd644f8bc8fb1bce3cfef4956d9507"
+    },
+    {
+      "bytes": 191370,
+      "kind": "artifact",
+      "name": "models/B-legacy/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "38254a563e5e6625add4d2ce172d9497ffb8b6455bd0be822fe24d37d78ac058"
+    },
+    {
+      "bytes": 219161,
+      "kind": "artifact",
+      "name": "models/B-legacy/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "44f30bfcd5f66dc2c6a0e9b643cfdf006b2650c92abcbb8d70450aa69dea9ea7"
+    },
+    {
+      "bytes": 469558,
+      "kind": "artifact",
+      "name": "models/B-legacy/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ebc31dc076250cc8785d952b36a91e4962a3d6b93f7bae88a7cca1747c83524d"
+    },
+    {
+      "bytes": 95683,
+      "kind": "artifact",
+      "name": "models/B-legacy/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ac7483455ce9e27dfa39f994f5661c4d0e8795f3e29e3b97d09c9ef06543e33e"
+    },
+    {
+      "bytes": 4236,
+      "kind": "artifact",
+      "name": "models/B-legacy/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/B-legacy/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "be0f337bd3dcb06cb3ddf91518d0433d4d428ba63b72534285e18c5da7694316"
+    },
+    {
+      "bytes": 79650,
+      "kind": "artifact",
+      "name": "models/C/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c16778b425ddcbcfe3981bba85815224fc131f0d7696020eef78ea64304f6789"
+    },
+    {
+      "bytes": 277371,
+      "kind": "artifact",
+      "name": "models/C/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "2edb7629a7ad747c05bb8597e1b011db679405d2a9f078cc12256166e6f2280e"
+    },
+    {
+      "bytes": 208090,
+      "kind": "artifact",
+      "name": "models/C/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "38953ab5d482397a49f4a7f69086be0427f3e776a886cf6b822cdf8a2664f8a0"
+    },
+    {
+      "bytes": 222455,
+      "kind": "artifact",
+      "name": "models/C/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7a32f0de6621269700ff284850bd447f366c7104b883e9355a019db0ad4853d5"
+    },
+    {
+      "bytes": 425347,
+      "kind": "artifact",
+      "name": "models/C/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ea6330f992bb2353e590da52b91dd484f3ea700d36e493711d50307632d72d36"
+    },
+    {
+      "bytes": 99888,
+      "kind": "artifact",
+      "name": "models/C/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b330d573a071a2cdee3fcef05d89a176399b4cd9dac6ee765b8cf65615b1b7ff"
+    },
+    {
+      "bytes": 4227,
+      "kind": "artifact",
+      "name": "models/C/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "fe76a1624b012306ebb12f4aba2228f7ad80052ba75d2e4a3792cac5f43a7837"
+    },
+    {
+      "bytes": 79398,
+      "kind": "artifact",
+      "name": "models/C-legacy/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "0f2670bbe9ac0d948cc8a9ad67da9546af35031b90b32e8e63b3063bad7831a5"
+    },
+    {
+      "bytes": 264257,
+      "kind": "artifact",
+      "name": "models/C-legacy/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "d7941a4a061626f926424a2e2e2b562f1b09cc5ee904b2a2200db6b3358e38a4"
+    },
+    {
+      "bytes": 195799,
+      "kind": "artifact",
+      "name": "models/C-legacy/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b3a8ee935d1b891aa855324fe7b125bc29f7a19e458501a79e030717ebd11033"
+    },
+    {
+      "bytes": 212705,
+      "kind": "artifact",
+      "name": "models/C-legacy/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b7c8aa6a55542459d5bbe62b4ad0c452b36761e5fe84816a076a4338bafc44d7"
+    },
+    {
+      "bytes": 485246,
+      "kind": "artifact",
+      "name": "models/C-legacy/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "69a1ca99713e6c392241e07bc9123dc3b98cb82b6aa8797ac24bd46a8be2b078"
+    },
+    {
+      "bytes": 99254,
+      "kind": "artifact",
+      "name": "models/C-legacy/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "19633cd6aed11474a655b62c0478190a399c4633dfa2a382d2272737e3b50e6e"
+    },
+    {
+      "bytes": 4252,
+      "kind": "artifact",
+      "name": "models/C-legacy/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/C-legacy/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "942c2281e650bedb1e7d7ddb057ce341939374cb5f5901c14cd67fe90023de74"
+    },
+    {
+      "bytes": 74371,
+      "kind": "artifact",
+      "name": "models/D/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f1396a5e33042983c3be322a8a84504ff8c18cdbc508e13046139fa1f4c661f2"
+    },
+    {
+      "bytes": 275433,
+      "kind": "artifact",
+      "name": "models/D/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c62f412336b3c4bd2d22182effbe8bf3a3c73b21f94e1fcba9aaf9a7a93f846b"
+    },
+    {
+      "bytes": 207496,
+      "kind": "artifact",
+      "name": "models/D/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "fe3a3527413f7ef09841511fb1cc593ec655336fb111a2db3158e5ca774bce23"
+    },
+    {
+      "bytes": 223244,
+      "kind": "artifact",
+      "name": "models/D/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7f3da57badfef3e72ec3213026519a2681ac30085e847f91160f46baf4ffa3e2"
+    },
+    {
+      "bytes": 428033,
+      "kind": "artifact",
+      "name": "models/D/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e6797d13a786b5a01493e6dea1686c350147917c1869af8d5cc4a71efa7109de"
+    },
+    {
+      "bytes": 95038,
+      "kind": "artifact",
+      "name": "models/D/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c1efa1806109cf7f0eccb843cbbdae1184b1418e2a8b0f9de7f8a4e33fae804c"
+    },
+    {
+      "bytes": 4214,
+      "kind": "artifact",
+      "name": "models/D/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/D/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "019a02f6eb841f995bbfc47a57a72b30646551502b94cfa6a3fd7c725c3d572c"
+    },
+    {
+      "bytes": 73269,
+      "kind": "artifact",
+      "name": "models/E/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b71ab8c1fc832badae6b9192ab9e75c66b9688f11fe4f7ac6348aae4ad9040e3"
+    },
+    {
+      "bytes": 270228,
+      "kind": "artifact",
+      "name": "models/E/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "bab678437fa98bfec5a35314535f0be5db1ceb35baced6cfea29edb0b98b0aaa"
+    },
+    {
+      "bytes": 201790,
+      "kind": "artifact",
+      "name": "models/E/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "3a8c9c17ce6be18ee5e2997bd6c2803e5a494af22c9bae704d409c1e6aed3ca6"
+    },
+    {
+      "bytes": 206381,
+      "kind": "artifact",
+      "name": "models/E/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "554c4cfd20e0d62212252f17af4e3d10ee97421e63e2748592bda9a8dc9e4127"
+    },
+    {
+      "bytes": 527823,
+      "kind": "artifact",
+      "name": "models/E/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f0b71d110830d4c5ddc50286e228c95987a320d1b51b96276519f728f0e0c181"
+    },
+    {
+      "bytes": 95238,
+      "kind": "artifact",
+      "name": "models/E/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c202daa7fe7c02f2aee68f18f004be4dfb83b9fbbfdc85f152342787f7198ded"
+    },
+    {
+      "bytes": 4217,
+      "kind": "artifact",
+      "name": "models/E/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/E/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "fe67e0d0d572ca8c94872aba3ca8b7a1076d89b7d3b3fc8350a0d96648aeed94"
+    },
+    {
+      "bytes": 73569,
+      "kind": "artifact",
+      "name": "models/F/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "13f4f2b67f42b36833332e3ab3ccbfd428b2c12e22dc2622e0c59e94ecc93297"
+    },
+    {
+      "bytes": 271473,
+      "kind": "artifact",
+      "name": "models/F/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "0697966cec294028b5098b0cd8c4d6fd7cf78167ee1fb7988a653b2a4de5acce"
+    },
+    {
+      "bytes": 198437,
+      "kind": "artifact",
+      "name": "models/F/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "87e85782d3e09f5d2b3c0206031df0f2c85db254ad04cd3873c0555a1e40c8a7"
+    },
+    {
+      "bytes": 191049,
+      "kind": "artifact",
+      "name": "models/F/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "79fc27ee3c40439ba0c0d4bc8fdd7079007cf6543ef2b31a4a9627d901c2e912"
+    },
+    {
+      "bytes": 465637,
+      "kind": "artifact",
+      "name": "models/F/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "5e4a6d4b7a1434817dec87c23d5e71bffc7724582691b8244c58b533a7882217"
+    },
+    {
+      "bytes": 94499,
+      "kind": "artifact",
+      "name": "models/F/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b0e273838c746b04d9224a26a9256af90d9b2143029b48ba9c7b6aad176d627d"
+    },
+    {
+      "bytes": 4218,
+      "kind": "artifact",
+      "name": "models/F/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/F/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f5a1327c446dceefb99a73225976ef61b785bcdd77bff444be06a2d16f99d183"
+    },
+    {
+      "bytes": 80621,
+      "kind": "artifact",
+      "name": "models/G/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "4dd844050e91f66b2335a3b28fad8409d9f7c88811e0426615da05d8221e3573"
+    },
+    {
+      "bytes": 280365,
+      "kind": "artifact",
+      "name": "models/G/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "3987b8453eac4e6d4abe82ffac241aa2998c7a50922217d1262a5640f3040e84"
+    },
+    {
+      "bytes": 210611,
+      "kind": "artifact",
+      "name": "models/G/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "4205c2f6cd1b8bc1f6ec883d44e8d9fed16855d6bd615718d16c5263fef8f34e"
+    },
+    {
+      "bytes": 214539,
+      "kind": "artifact",
+      "name": "models/G/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "33d9ee6fbb35dab5103c3670dc266c2413f568ec0961716aee0815bc35a81d4f"
+    },
+    {
+      "bytes": 443063,
+      "kind": "artifact",
+      "name": "models/G/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f33e241e51fdac31e404644007c147554664279dc13526ff51280194b5f9ecda"
+    },
+    {
+      "bytes": 101253,
+      "kind": "artifact",
+      "name": "models/G/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7be225715058f6449a2c577b1f3aec201e9c1894c9837b482b2e21235215409f"
+    },
+    {
+      "bytes": 4226,
+      "kind": "artifact",
+      "name": "models/G/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7f66d3491ecc1a40be3c61a1466b86a31eab455103e9cc5032d18076477f2e61"
+    },
+    {
+      "bytes": 76882,
+      "kind": "artifact",
+      "name": "models/G6/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "793882f13635ddc4e108818250a6b641d56e6aa422564323832183516e95cc71"
+    },
+    {
+      "bytes": 275642,
+      "kind": "artifact",
+      "name": "models/G6/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "d9517af55b7d65336111e8a7557308daa5f07d373a9eaa23cf7c72746626d727"
+    },
+    {
+      "bytes": 205649,
+      "kind": "artifact",
+      "name": "models/G6/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b81bdac2b710c014a209c2e5b384eff149b40123ffbecd1268a10994f4e06ebb"
+    },
+    {
+      "bytes": 203587,
+      "kind": "artifact",
+      "name": "models/G6/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "edda052e4af7ffd41242f09a31490322e4ce960dff69c35475d99ff541ea506f"
+    },
+    {
+      "bytes": 439088,
+      "kind": "artifact",
+      "name": "models/G6/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "2b3ada865e7a54a5d6d9c39774954761ae6ccf4542fdadbd2a5e6287124ed96a"
+    },
+    {
+      "bytes": 98000,
+      "kind": "artifact",
+      "name": "models/G6/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f253d9c171a41659dd028ba5a1084e028821c32bbf6e9090fe0d83ddeea1f2c4"
+    },
+    {
+      "bytes": 4218,
+      "kind": "artifact",
+      "name": "models/G6/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G6/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "68754e607b7607e9b98ed336ed944f783b11aa78ccc2ce741cc89d5853f4ae95"
+    },
+    {
+      "bytes": 76006,
+      "kind": "artifact",
+      "name": "models/G7/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c2580c268b5110928202896d85d7d65177f8f4e0602653c27bd6b7fc2abefef4"
+    },
+    {
+      "bytes": 275325,
+      "kind": "artifact",
+      "name": "models/G7/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "07292c3e5ae0e7e47d62b4a04988757969e811da9be76c84cf406d10d36fc819"
+    },
+    {
+      "bytes": 204947,
+      "kind": "artifact",
+      "name": "models/G7/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e73c6ff6f96ac0bdfadf164c595fed4ffa0fe8a64e0d772b9844c030f82a5624"
+    },
+    {
+      "bytes": 202419,
+      "kind": "artifact",
+      "name": "models/G7/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "be6aace2b69624a2020162eaaf371bc1f36b23759d89eb7eb5484c0deb686f6f"
+    },
+    {
+      "bytes": 441477,
+      "kind": "artifact",
+      "name": "models/G7/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "72eab523547982177547bd090b1adb20f759c1a27e59538d05854f8664257c0f"
+    },
+    {
+      "bytes": 97305,
+      "kind": "artifact",
+      "name": "models/G7/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7276e3b15db91bfbed6d973f2a75b412f15263fdd74eb4c679fa56ce068e9cdd"
+    },
+    {
+      "bytes": 4216,
+      "kind": "artifact",
+      "name": "models/G7/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/G7/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ea97d54d32a48052a57757d1e958ea32295abfdc006a9b54d59ba478a00d35c3"
+    },
+    {
+      "bytes": 73902,
+      "kind": "artifact",
+      "name": "models/H/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "7cb8f50038d73a64cc092f5ee88b4515de94676a61a516573283394619f78ec2"
+    },
+    {
+      "bytes": 269608,
+      "kind": "artifact",
+      "name": "models/H/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ae8f115ecc0a4233bd71c677ff065227ae918aa30d27e783aa9c94ed02486b52"
+    },
+    {
+      "bytes": 201525,
+      "kind": "artifact",
+      "name": "models/H/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c44c3924e09b642b1f68e74a5cb10de5d1c7c02550e1b1c27cc252cba4faa918"
+    },
+    {
+      "bytes": 213419,
+      "kind": "artifact",
+      "name": "models/H/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "3f6ad1f999e54f15023ecf7cd2d95020cceb46d01e0ddfed591b73372b65acc6"
+    },
+    {
+      "bytes": 473321,
+      "kind": "artifact",
+      "name": "models/H/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "19b0c37b63f61e149ae5519f4155af24f9a444210b4f68e0b808db8f0bc3ca42"
+    },
+    {
+      "bytes": 95777,
+      "kind": "artifact",
+      "name": "models/H/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "8f8d31a76f3432f79823d37267470184ccb903877c19b1e82f2e6aeb102438e9"
+    },
+    {
+      "bytes": 4213,
+      "kind": "artifact",
+      "name": "models/H/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/H/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "149aad79c198aedfebd89c85b06088a1f4897b69aa40c179e22063c3e0c539ce"
+    },
+    {
+      "bytes": 73120,
+      "kind": "artifact",
+      "name": "models/I/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "2b525e275b22b5ffca23c77ce6d5486ae6afb2de8c913b0f058f438f75444ba4"
+    },
+    {
+      "bytes": 271090,
+      "kind": "artifact",
+      "name": "models/I/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e5ef7dd4958322f092547d4bb22a2a630fe1c39562957b62af3e1491cc2b71b9"
+    },
+    {
+      "bytes": 202112,
+      "kind": "artifact",
+      "name": "models/I/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "33739f4014323ab94ea57907fe7a71e1fecfee72a6c48b39856a104027f0efdc"
+    },
+    {
+      "bytes": 204396,
+      "kind": "artifact",
+      "name": "models/I/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f5c064255973514d8c46025dec3ec10b2f08de8fc03fba1e7e838cbc8d39647b"
+    },
+    {
+      "bytes": 449040,
+      "kind": "artifact",
+      "name": "models/I/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "b1ecbe4ce75eb28581ce9e5d25c90393f246b8c766b941055e41db42e2ab83b7"
+    },
+    {
+      "bytes": 95882,
+      "kind": "artifact",
+      "name": "models/I/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "88592d2c61a7c3b50197d20f68fd9407dd995280eb56884f22ce8cd0a51caeb3"
+    },
+    {
+      "bytes": 4218,
+      "kind": "artifact",
+      "name": "models/I/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/I/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "c059762261f82cac69abeadc16e9ca799444a138322b7c2deb2a52b52d9c43f3"
+    },
+    {
+      "bytes": 75123,
+      "kind": "artifact",
+      "name": "models/Ibest/01-score-summary.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/01-score-summary.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "f07ab5c40c07fc189f23a219e0ef78ac886e0510aca2f3d57ccdf2305a645f68"
+    },
+    {
+      "bytes": 273675,
+      "kind": "artifact",
+      "name": "models/Ibest/02a-mean-burned-area.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/02a-mean-burned-area.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "2b933b1923c5cd041bb7a917bc16bcc757785be28e1ce185f78a6e5b54f7dc02"
+    },
+    {
+      "bytes": 204492,
+      "kind": "artifact",
+      "name": "models/Ibest/02b-burned-area-differences.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/02b-burned-area-differences.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "3c4c2da9fb431183a0170142ad950c6e1c7d8c46c6bbd4dd698c3668128e227d"
+    },
+    {
+      "bytes": 207925,
+      "kind": "artifact",
+      "name": "models/Ibest/03-seasonal-cycles.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/03-seasonal-cycles.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "8065d339b174496c582580dd7c8802018b3d8da2660decd9f96ad22d478c94e2"
+    },
+    {
+      "bytes": 450648,
+      "kind": "artifact",
+      "name": "models/Ibest/04-spatial-distribution.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/04-spatial-distribution.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "ede07f61e981482329bf6cfafc13c7915d9653abaa0a3ef502637ab6a795c9e3"
+    },
+    {
+      "bytes": 96412,
+      "kind": "artifact",
+      "name": "models/Ibest/05-benchmark-sensitivity.png",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/05-benchmark-sensitivity.png",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "e9cf0c46787e1b180e0dc0e9a82c7f4550c5f42be3843cf0a4f647a1d965b4bc"
+    },
+    {
+      "bytes": 4232,
+      "kind": "artifact",
+      "name": "models/Ibest/suite.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/models/Ibest/suite.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "50ed976bfc60022e4e8d468aeda53c58a105a4678c8da68d867231242f617356"
+    },
+    {
+      "bytes": 1693,
+      "kind": "artifact",
+      "name": "replay-metrics.csv",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/replay-metrics.csv",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "1ba9d58abfebcfb892ddc7e12635d5ea80b8c654446a24f028f849a564fb61b3"
+    },
+    {
+      "bytes": 13558,
+      "kind": "artifact",
+      "name": "replay-verification.json",
+      "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/artifacts/replay-verification.json",
+      "producing_run": "run.20260819T113431Z.96777d94",
+      "related_experiment": "experiment.models-a-i-reproduction",
+      "sha256": "5a9b131f42a7f2bbcd90d0e62e6a9f4208f12bdfec599af67ae3cff7fb74b240"
+    }
+  ],
+  "schema": "research-artifacts/v1"
+}

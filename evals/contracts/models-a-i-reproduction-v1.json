@@ -1,0 +1,179 @@
+{
+  "schema": "autoresearch-contract/v1",
+  "id": "contract.ed-fire.models-a-i-reproduction.v1",
+  "status": "active",
+  "owner": "devparagiri",
+  "approved_by": "devparagiri",
+  "approved_at": "2026-08-19T00:00:00Z",
+  "protected_files": [
+    {
+      "path": "model/registry.toml",
+      "sha256": "3afd22cb27bda791f7ea4708602f7c38477099d439567da4ae6186d727f7ae45"
+    },
+    {
+      "path": "model/parameter-inventory.csv",
+      "sha256": "a3ab7852054b4db7190f5ce4f13cf06ca84e924733c21dc275c216b2ddb3e2b0"
+    },
+    {
+      "path": "scripts/reproduce_models.py",
+      "sha256": "053e7f8e3511e37fdc46e34d0fe9199263aabe148ce51d53b5c5704d67c44df6"
+    },
+    {
+      "path": "scripts/figure_models.py",
+      "sha256": "445cc5e7163a8ef5e938bab644e9ef4a2c563fcce5b9426ca3b1b69c9e2ecef6"
+    },
+    {
+      "path": "scripts/stage_models_a_i.py",
+      "sha256": "a08f6957c853c03df0608044feb7405b9edb4f1c8367608b31650798dce0db8e"
+    },
+    {
+      "path": "scripts/evaluate_models_a_i.py",
+      "sha256": "7111005aa82dc9b943ccee66544fe33771a2c8894d403147be9fbf99614f8b6f"
+    },
+    {
+      "path": "scripts/evaluate_burned_area.py",
+      "sha256": "d628c2dc31dd091606ee094570fc4ad207685b1bb12de93b62b40d185c4d39ce"
+    },
+    {
+      "path": "scripts/evaluate_burned_area_v2.py",
+      "sha256": "b4c239963769b1ee6b7f5f4fd0cb899cd3459899e7d39ae2ab435530f939bd8a"
+    },
+    {
+      "path": "scripts/burned_area_figures.py",
+      "sha256": "581d4f5c87ab555cdc19380cea7cdd110ec8ad4e24a2bca475f7255a111b40af"
+    },
+    {
+      "path": "evals/contracts/burned-area-eval-v2.json",
+      "sha256": "d1d65a5350b3c920d9c177219fc1951e47cc6dbb565b035ec93c65d9b41b1cf3"
+    },
+    {
+      "path": "assets/fonts/BasierSquare-Regular.otf",
+      "sha256": "0c621e44ad72820b0f3e3af5b75b3c2dc656d9072dc9b99965be112459af78ce"
+    },
+    {
+      "path": "assets/fonts/BasierSquare-SemiBold.otf",
+      "sha256": "0a4d3cb400241c00b65babf13dc10af9e467f24efdd0e37dec15eb38508a180d"
+    },
+    {
+      "path": "data/inputs/ecosystem/ed-simulation.nc",
+      "sha256": "15f34eaee68bc4e5b27ca768dc11e4e02370f53ac9230ba7236b801838655eb3"
+    },
+    {
+      "path": "data/inputs/coupled/state-1997-2016.nc",
+      "sha256": "9ce598e7fbde48f4194d9b4783d40652e35ec3f22461a267322b8247a6baff13"
+    },
+    {
+      "path": "data/inputs/coupled/fuel-state-1997-2016.nc",
+      "sha256": "f447837e795ab20408864325a172dae8d88a6a5aba9f5eb5dee1cd6d467e3e82"
+    },
+    {
+      "path": "data/inputs/human/historical/gdp-pcap-grid-1deg.npy",
+      "sha256": "84ab073c42fd447bb47d616661342989bf9b2448c82cc4440e54175374251d3a"
+    },
+    {
+      "path": "data/benchmarks/observations/gfed5-burned-area.nc",
+      "sha256": "46594753a3f111e0ddc5526370708b0648f7f7b67458b42153dc04b7d035051b"
+    },
+    {
+      "path": "data/benchmarks/observations/gfed4.1s-burned-area.nc",
+      "sha256": "1dec2035daf0048be74161e95995202e68138a156e9edba8da8b84b0d05f4095"
+    },
+    {
+      "path": "data/benchmarks/comparison-models/ilamb/EDv3/burntArea.nc",
+      "sha256": "73c07a379ab25a04eb3d55a9ccc7e8671ddac334f2e7bdeeb409aaa59be9caeb"
+    },
+    {
+      "path": "data/benchmarks/configs/gfed5-burned-area.cfg",
+      "sha256": "4dd31a5144e143ed30350f541af1ef720590dc5836d9ad5c321632709a945185"
+    },
+    {
+      "path": "data/benchmarks/configs/gfed4.1s-burned-area.cfg",
+      "sha256": "aeb6bb73e03905dce3bb2680a4cbe67fa8bedb4878993376887458be97a2c72f"
+    }
+  ],
+  "evaluator": {
+    "path": "scripts/evaluate_models_a_i.py",
+    "sha256": "7111005aa82dc9b943ccee66544fe33771a2c8894d403147be9fbf99614f8b6f",
+    "argv": [
+      "{python}",
+      "scripts/evaluate_models_a_i.py"
+    ]
+  },
+  "candidate_output": {
+    "path": "work/models-a-i",
+    "description": "Run-owned replay outputs for all thirteen retained ED-Fire model variants."
+  },
+  "evaluation": {
+    "purpose": "Reproduce the recorded A-I calculations, verify their reported protocol scores, and render each output through one current fixed comparison interface.",
+    "models": [
+      "A-legacy",
+      "B-legacy",
+      "C-legacy",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "G6",
+      "G7",
+      "H",
+      "I",
+      "Ibest"
+    ],
+    "comparison_contract": "contract.ed-fire.burned-area.v2",
+    "display_precision": 3,
+    "machine_precision": "Preserve the raw evaluator values in JSON and CSV artifacts.",
+    "eligibility_boundary": "This is a reproduction of prior work. Target-fed construction in the original generators prevents these existing outputs from being treated as clean candidates without a new experiment and regeneration path."
+  },
+  "development_evaluation": {
+    "definition": "The recorded protocol score is checked for every retained model, and each model is also evaluated against GFED5 and GFED4.1s using the fixed v2 presentation contract."
+  },
+  "promotion_evaluation": {
+    "definition": "No model is promoted by this experiment. It verifies and presents the existing A-I work."
+  },
+  "metrics": [
+    {"id": "models.total", "direction": "diagnostic", "required": true},
+    {"id": "models.replay_verified", "direction": "diagnostic", "required": true},
+    {"id": "models.fully_reproduced", "direction": "diagnostic", "required": true},
+    {"id": "models.partial", "direction": "diagnostic", "required": true},
+    {"id": "models.phase_tie_drift", "direction": "diagnostic", "required": true},
+    {"id": "models.noncomparable", "direction": "diagnostic", "required": true},
+    {"id": "figures.canonical", "direction": "diagnostic", "required": true},
+    {"id": "figures.overviews", "direction": "diagnostic", "required": true},
+    {"id": "protected_files_unchanged", "direction": "diagnostic", "required": true}
+  ],
+  "aggregation": "No aggregate selects a preferred model. Preserve every model’s score vector, replay status, output hash, and six-figure suite.",
+  "comparison_baselines": [
+    "TRENDY v14 EDv3 S3 native burned-area output",
+    "Recorded model-specific replay values"
+  ],
+  "figures": [
+    {
+      "filename": "models-a-i-gfed5-score-summary.png",
+      "description": "GFED5 score components and global annual burned area for all thirteen retained model variants.",
+      "generator": "scripts/figure_models.py",
+      "format": "png",
+      "dimensions": {"width": 1800, "height": 1200},
+      "panels": ["GFED5 ILAMB score components", "Global annual burned area"],
+      "scope": "Models A-I over 2001-2016.",
+      "scale": "Score axis fixed from 0 to 1; magnitude axis fixed from 0 to 1300 Mha per year.",
+      "labels": ["A", "B", "C", "D", "E", "F", "G", "G6", "G7", "H", "I", "Ibest", "GFED5"],
+      "units": "ILAMB score and Mha per year",
+      "required": true
+    },
+    {
+      "filename": "models-a-i-gfed5-mean-maps.png",
+      "description": "GFED5 and all thirteen retained model fields on one fixed burned-area scale.",
+      "generator": "scripts/figure_models.py",
+      "format": "png",
+      "dimensions": {"width": 1800, "height": 1200},
+      "panels": ["GFED5", "Models A-I", "method boundary"],
+      "scope": "Global 0.5 degree fields over 2001-2016.",
+      "scale": "All fields use the fixed v2 range of 0 to 80 percent of grid-cell area per year.",
+      "labels": ["GFED5", "A", "B", "C", "D", "E", "F", "G", "G6", "G7", "H", "I", "Ibest"],
+      "units": "percent of grid-cell area burned per year",
+      "required": true
+    }
+  ],
+  "notes": "The evaluator preserves 78 per-model canonical figures and suite manifests as durable artifacts in addition to the two required overview figures. Figure annotations use three decimals; machine-readable metrics retain full precision."
+}

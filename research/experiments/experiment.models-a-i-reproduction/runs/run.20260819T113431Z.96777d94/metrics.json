@@ -1,0 +1,550 @@
+{
+  "figures": {
+    "canonical": 78,
+    "overviews": 2
+  },
+  "models": {
+    "fully_reproduced": 9,
+    "noncomparable": 1,
+    "partial": 1,
+    "phase_tie_drift": 1,
+    "replay_verified": 13,
+    "total": 13
+  },
+  "protected_files_unchanged": true,
+  "results": {
+    "A-legacy": {
+      "candidate_output_sha256": "963f11566f47747538d521870da8de80e6d632e8671942a4f7a39dfda3b63a14",
+      "display_name": "Model A",
+      "figures": [
+        "models/A-legacy/01-score-summary.png",
+        "models/A-legacy/02a-mean-burned-area.png",
+        "models/A-legacy/02b-burned-area-differences.png",
+        "models/A-legacy/03-seasonal-cycles.png",
+        "models/A-legacy/04-spatial-distribution.png",
+        "models/A-legacy/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "abc_gfed4_1s",
+      "replay_status": "partial",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": -0.00613536,
+          "bias_score": 0.711123,
+          "model_period_mean_percent": 0.32364,
+          "overall_score": 0.652105,
+          "phase_shift_months": 2.11694,
+          "rmse_percent": 0.800306,
+          "rmse_score": 0.490945,
+          "seasonal_cycle_score": 0.800552,
+          "spatial_distribution_score": 0.766962
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": -0.210391,
+          "bias_score": 0.673386,
+          "model_period_mean_percent": 0.297614,
+          "overall_score": 0.62362,
+          "phase_shift_months": 2.15998,
+          "rmse_percent": 0.942621,
+          "rmse_score": 0.487771,
+          "seasonal_cycle_score": 0.807388,
+          "spatial_distribution_score": 0.661784
+        }
+      },
+      "verification": "pass"
+    },
+    "B-legacy": {
+      "candidate_output_sha256": "4332bbd71f1e70561762317829c13c967ab0e4ee36bddc139e55876f2e598792",
+      "display_name": "Model B",
+      "figures": [
+        "models/B-legacy/01-score-summary.png",
+        "models/B-legacy/02a-mean-burned-area.png",
+        "models/B-legacy/02b-burned-area-differences.png",
+        "models/B-legacy/03-seasonal-cycles.png",
+        "models/B-legacy/04-spatial-distribution.png",
+        "models/B-legacy/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "abc_gfed4_1s",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": -0.00322983,
+          "bias_score": 0.706665,
+          "model_period_mean_percent": 0.326546,
+          "overall_score": 0.650866,
+          "phase_shift_months": 2.16562,
+          "rmse_percent": 0.935033,
+          "rmse_score": 0.477999,
+          "seasonal_cycle_score": 0.833706,
+          "spatial_distribution_score": 0.757963
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": -0.209832,
+          "bias_score": 0.674563,
+          "model_period_mean_percent": 0.298173,
+          "overall_score": 0.628163,
+          "phase_shift_months": 2.1903,
+          "rmse_percent": 1.03733,
+          "rmse_score": 0.482804,
+          "seasonal_cycle_score": 0.83015,
+          "spatial_distribution_score": 0.670494
+        }
+      },
+      "verification": "pass"
+    },
+    "C": {
+      "candidate_output_sha256": "b1d01dccd2f1fc3df917d432d03d99a87b20ffa34538a538847e9c48180099bf",
+      "display_name": "Model C, GFED5 refit",
+      "figures": [
+        "models/C/01-score-summary.png",
+        "models/C/02a-mean-burned-area.png",
+        "models/C/02b-burned-area-differences.png",
+        "models/C/03-seasonal-cycles.png",
+        "models/C/04-spatial-distribution.png",
+        "models/C/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.330879,
+          "bias_percent": 0.371391,
+          "bias_score": 0.718077,
+          "model_period_mean_percent": 0.702269,
+          "overall_score": 0.655079,
+          "phase_shift_months": 2.20956,
+          "rmse_percent": 1.10058,
+          "rmse_score": 0.482229,
+          "seasonal_cycle_score": 0.832969,
+          "spatial_distribution_score": 0.759891
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.132242,
+          "bias_score": 0.697665,
+          "model_period_mean_percent": 0.640247,
+          "overall_score": 0.648453,
+          "phase_shift_months": 2.23298,
+          "rmse_percent": 1.14051,
+          "rmse_score": 0.475449,
+          "seasonal_cycle_score": 0.824616,
+          "spatial_distribution_score": 0.769089
+        }
+      },
+      "verification": "pass"
+    },
+    "C-legacy": {
+      "candidate_output_sha256": "5b7aa64a9197836ccf8bcf6c601ec1b028df6bf026dd495042e69bee70c2df88",
+      "display_name": "Model C, GFED4.1s fit",
+      "figures": [
+        "models/C-legacy/01-score-summary.png",
+        "models/C-legacy/02a-mean-burned-area.png",
+        "models/C-legacy/02b-burned-area-differences.png",
+        "models/C-legacy/03-seasonal-cycles.png",
+        "models/C-legacy/04-spatial-distribution.png",
+        "models/C-legacy/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "abc_gfed4_1s",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": -0.00308504,
+          "bias_score": 0.718782,
+          "model_period_mean_percent": 0.326691,
+          "overall_score": 0.671834,
+          "phase_shift_months": 2.10314,
+          "rmse_percent": 0.769143,
+          "rmse_score": 0.512102,
+          "seasonal_cycle_score": 0.839311,
+          "spatial_distribution_score": 0.776872
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": -0.209451,
+          "bias_score": 0.683921,
+          "model_period_mean_percent": 0.298554,
+          "overall_score": 0.644776,
+          "phase_shift_months": 2.09037,
+          "rmse_percent": 0.913407,
+          "rmse_score": 0.505281,
+          "seasonal_cycle_score": 0.82732,
+          "spatial_distribution_score": 0.702075
+        }
+      },
+      "verification": "pass"
+    },
+    "D": {
+      "candidate_output_sha256": "4b402d08cdb60bbb88fd945a4e9fe6cd6d8c1da45c1095a33402f4aa35aebaee",
+      "display_name": "Model D",
+      "figures": [
+        "models/D/01-score-summary.png",
+        "models/D/02a-mean-burned-area.png",
+        "models/D/02b-burned-area-differences.png",
+        "models/D/03-seasonal-cycles.png",
+        "models/D/04-spatial-distribution.png",
+        "models/D/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.330879,
+          "bias_percent": 0.522781,
+          "bias_score": 0.709016,
+          "model_period_mean_percent": 0.853659,
+          "overall_score": 0.629921,
+          "phase_shift_months": 2.17692,
+          "rmse_percent": 1.24766,
+          "rmse_score": 0.471635,
+          "seasonal_cycle_score": 0.787712,
+          "spatial_distribution_score": 0.709606
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.271559,
+          "bias_score": 0.695095,
+          "model_period_mean_percent": 0.779564,
+          "overall_score": 0.641035,
+          "phase_shift_months": 2.19301,
+          "rmse_percent": 1.26586,
+          "rmse_score": 0.466179,
+          "seasonal_cycle_score": 0.791369,
+          "spatial_distribution_score": 0.786354
+        }
+      },
+      "verification": "pass"
+    },
+    "E": {
+      "candidate_output_sha256": "abbc26ace329b1ac46df7b8ab9104930be7748d7ad698bb5e76bec92886373c2",
+      "display_name": "Model E",
+      "figures": [
+        "models/E/01-score-summary.png",
+        "models/E/02a-mean-burned-area.png",
+        "models/E/02b-burned-area-differences.png",
+        "models/E/03-seasonal-cycles.png",
+        "models/E/04-spatial-distribution.png",
+        "models/E/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.239379,
+          "bias_score": 0.717902,
+          "model_period_mean_percent": 0.569155,
+          "overall_score": 0.638919,
+          "phase_shift_months": 2.46234,
+          "rmse_percent": 0.868847,
+          "rmse_score": 0.479472,
+          "seasonal_cycle_score": 0.746971,
+          "spatial_distribution_score": 0.770778
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.0128763,
+          "bias_score": 0.751445,
+          "model_period_mean_percent": 0.520881,
+          "overall_score": 0.664619,
+          "phase_shift_months": 2.38743,
+          "rmse_percent": 0.946597,
+          "rmse_score": 0.475271,
+          "seasonal_cycle_score": 0.745543,
+          "spatial_distribution_score": 0.875564
+        }
+      },
+      "verification": "pass"
+    },
+    "F": {
+      "candidate_output_sha256": "ee8c7759da96085f62eeafb9016455cc50fa31f72d41150451f35a83c0ad7aaf",
+      "display_name": "Model F",
+      "figures": [
+        "models/F/01-score-summary.png",
+        "models/F/02a-mean-burned-area.png",
+        "models/F/02b-burned-area-differences.png",
+        "models/F/03-seasonal-cycles.png",
+        "models/F/04-spatial-distribution.png",
+        "models/F/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced-but-noncomparable",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.330879,
+          "bias_percent": 0.216089,
+          "bias_score": 0.745824,
+          "model_period_mean_percent": 0.546968,
+          "overall_score": 0.682889,
+          "phase_shift_months": 2.44246,
+          "rmse_percent": 0.752678,
+          "rmse_score": 0.524514,
+          "seasonal_cycle_score": 0.799206,
+          "spatial_distribution_score": 0.820387
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": -0.0057199,
+          "bias_score": 0.753049,
+          "model_period_mean_percent": 0.502286,
+          "overall_score": 0.678305,
+          "phase_shift_months": 2.36563,
+          "rmse_percent": 0.878187,
+          "rmse_score": 0.511981,
+          "seasonal_cycle_score": 0.774486,
+          "spatial_distribution_score": 0.840026
+        }
+      },
+      "verification": "pass"
+    },
+    "G": {
+      "candidate_output_sha256": "75f6b7b557ce95a936cc42854058fdd96953b46be113b194c5ef83220fdbdc94",
+      "display_name": "Model G, five regions",
+      "figures": [
+        "models/G/01-score-summary.png",
+        "models/G/02a-mean-burned-area.png",
+        "models/G/02b-burned-area-differences.png",
+        "models/G/03-seasonal-cycles.png",
+        "models/G/04-spatial-distribution.png",
+        "models/G/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.370297,
+          "bias_score": 0.716151,
+          "model_period_mean_percent": 0.700073,
+          "overall_score": 0.66141,
+          "phase_shift_months": 2.04884,
+          "rmse_percent": 0.969267,
+          "rmse_score": 0.500765,
+          "seasonal_cycle_score": 0.835123,
+          "spatial_distribution_score": 0.754249
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.13331,
+          "bias_score": 0.742971,
+          "model_period_mean_percent": 0.641314,
+          "overall_score": 0.681804,
+          "phase_shift_months": 2.02549,
+          "rmse_percent": 1.02966,
+          "rmse_score": 0.488513,
+          "seasonal_cycle_score": 0.84192,
+          "spatial_distribution_score": 0.847104
+        }
+      },
+      "verification": "pass"
+    },
+    "G6": {
+      "candidate_output_sha256": "03100fe29f5d9f90de207c910b6d12fa1375823426676885b8c619c50100b547",
+      "display_name": "Model G6",
+      "figures": [
+        "models/G6/01-score-summary.png",
+        "models/G6/02a-mean-burned-area.png",
+        "models/G6/02b-burned-area-differences.png",
+        "models/G6/03-seasonal-cycles.png",
+        "models/G6/04-spatial-distribution.png",
+        "models/G6/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.328967,
+          "bias_score": 0.71907,
+          "model_period_mean_percent": 0.658743,
+          "overall_score": 0.664849,
+          "phase_shift_months": 1.96029,
+          "rmse_percent": 0.903131,
+          "rmse_score": 0.503189,
+          "seasonal_cycle_score": 0.838347,
+          "spatial_distribution_score": 0.76045
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.0952321,
+          "bias_score": 0.747339,
+          "model_period_mean_percent": 0.603237,
+          "overall_score": 0.684781,
+          "phase_shift_months": 1.93145,
+          "rmse_percent": 0.976528,
+          "rmse_score": 0.491287,
+          "seasonal_cycle_score": 0.843674,
+          "spatial_distribution_score": 0.85032
+        }
+      },
+      "verification": "pass"
+    },
+    "G7": {
+      "candidate_output_sha256": "c5cac9a66d235085e8b52aa6a764be88642c0282e79a081546f786e843048175",
+      "display_name": "Model G7",
+      "figures": [
+        "models/G7/01-score-summary.png",
+        "models/G7/02a-mean-burned-area.png",
+        "models/G7/02b-burned-area-differences.png",
+        "models/G7/03-seasonal-cycles.png",
+        "models/G7/04-spatial-distribution.png",
+        "models/G7/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.330726,
+          "bias_score": 0.720997,
+          "model_period_mean_percent": 0.660502,
+          "overall_score": 0.667373,
+          "phase_shift_months": 1.98,
+          "rmse_percent": 0.896171,
+          "rmse_score": 0.50609,
+          "seasonal_cycle_score": 0.840585,
+          "spatial_distribution_score": 0.763101
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.0969599,
+          "bias_score": 0.748123,
+          "model_period_mean_percent": 0.604965,
+          "overall_score": 0.686201,
+          "phase_shift_months": 1.94696,
+          "rmse_percent": 0.970195,
+          "rmse_score": 0.493611,
+          "seasonal_cycle_score": 0.845441,
+          "spatial_distribution_score": 0.85022
+        }
+      },
+      "verification": "pass"
+    },
+    "H": {
+      "candidate_output_sha256": "d3cbf9d5b50f60e4493586450187ce0609ed251cdb1ee87c34acbc4fa2be1518",
+      "display_name": "Model H",
+      "figures": [
+        "models/H/01-score-summary.png",
+        "models/H/02a-mean-burned-area.png",
+        "models/H/02b-burned-area-differences.png",
+        "models/H/03-seasonal-cycles.png",
+        "models/H/04-spatial-distribution.png",
+        "models/H/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced-with-phase-tie-drift",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.330879,
+          "bias_percent": 0.250356,
+          "bias_score": 0.727233,
+          "model_period_mean_percent": 0.581235,
+          "overall_score": 0.674711,
+          "phase_shift_months": 2.15129,
+          "rmse_percent": 0.900396,
+          "rmse_score": 0.51622,
+          "seasonal_cycle_score": 0.850552,
+          "spatial_distribution_score": 0.763332
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.02214,
+          "bias_score": 0.72584,
+          "model_period_mean_percent": 0.530145,
+          "overall_score": 0.681881,
+          "phase_shift_months": 2.09317,
+          "rmse_percent": 0.945892,
+          "rmse_score": 0.520087,
+          "seasonal_cycle_score": 0.835265,
+          "spatial_distribution_score": 0.808126
+        }
+      },
+      "verification": "pass"
+    },
+    "I": {
+      "candidate_output_sha256": "d7d3773d30eec821e67abf636cba2beb50902faaf864c70fe22106d574588e5d",
+      "display_name": "Model I",
+      "figures": [
+        "models/I/01-score-summary.png",
+        "models/I/02a-mean-burned-area.png",
+        "models/I/02b-burned-area-differences.png",
+        "models/I/03-seasonal-cycles.png",
+        "models/I/04-spatial-distribution.png",
+        "models/I/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.224954,
+          "bias_score": 0.735879,
+          "model_period_mean_percent": 0.55473,
+          "overall_score": 0.669434,
+          "phase_shift_months": 2.03254,
+          "rmse_percent": 0.825738,
+          "rmse_score": 0.489337,
+          "seasonal_cycle_score": 0.809663,
+          "spatial_distribution_score": 0.822955
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": -0.000260296,
+          "bias_score": 0.755177,
+          "model_period_mean_percent": 0.507745,
+          "overall_score": 0.676542,
+          "phase_shift_months": 2.00668,
+          "rmse_percent": 0.92116,
+          "rmse_score": 0.479849,
+          "seasonal_cycle_score": 0.820001,
+          "spatial_distribution_score": 0.847834
+        }
+      },
+      "verification": "pass"
+    },
+    "Ibest": {
+      "candidate_output_sha256": "cec3354e692bee75ec9a0f49ef35fd979253aff40a2d718fd2935936456d7fe7",
+      "display_name": "Model Ibest",
+      "figures": [
+        "models/Ibest/01-score-summary.png",
+        "models/Ibest/02a-mean-burned-area.png",
+        "models/Ibest/02b-burned-area-differences.png",
+        "models/Ibest/03-seasonal-cycles.png",
+        "models/Ibest/04-spatial-distribution.png",
+        "models/Ibest/05-benchmark-sensitivity.png"
+      ],
+      "protocol": "coupled_gfed5",
+      "replay_status": "reproduced-exploratory-hybrid",
+      "scores": {
+        "gfed4_1s": {
+          "benchmark_period_mean_percent": 0.329776,
+          "bias_percent": 0.23288,
+          "bias_score": 0.735665,
+          "model_period_mean_percent": 0.562655,
+          "overall_score": 0.669338,
+          "phase_shift_months": 2.02398,
+          "rmse_percent": 0.840014,
+          "rmse_score": 0.487991,
+          "seasonal_cycle_score": 0.809796,
+          "spatial_distribution_score": 0.82525
+        },
+        "gfed5": {
+          "benchmark_period_mean_percent": 0.508005,
+          "bias_percent": 0.00712975,
+          "bias_score": 0.756125,
+          "model_period_mean_percent": 0.515135,
+          "overall_score": 0.676603,
+          "phase_shift_months": 1.98281,
+          "rmse_percent": 0.929326,
+          "rmse_score": 0.479257,
+          "seasonal_cycle_score": 0.821985,
+          "spatial_distribution_score": 0.846391
+        }
+      },
+      "verification": "pass"
+    }
+  }
+}

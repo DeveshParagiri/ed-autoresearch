@@ -1,0 +1,173 @@
+$ /Users/devparagiri/Research/ed-fire/.venv/bin/python3 scripts/reproduce_models.py --models all --output /Users/devparagiri/Research/ed-fire/research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i --evaluate
+
+Searching for model results in /Users/devparagiri/Research/ed-fire/research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/abc-gfed4.1s/models
+
+                                         A-legacy
+                                         B-legacy
+                                         C-legacy
+
+Parsing config file /Users/devparagiri/Research/ed-fire/data/benchmarks/configs/gfed4.1s-burned-area.cfg...
+
+                              BurnedArea/GFED4.1S[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                              BurnedArea/GFED4.1S A-legacy             [92mCompleted[0m  0:00:12
+                              BurnedArea/GFED4.1S B-legacy             [92mCompleted[0m  0:00:12
+                              BurnedArea/GFED4.1S C-legacy             [92mCompleted[0m  0:00:12
+
+Finishing post-processing which requires collectives...
+
+                              BurnedArea/GFED4.1S A-legacy             [92mCompleted[0m  0:00:03
+                              BurnedArea/GFED4.1S B-legacy             [92mCompleted[0m  0:00:02
+                              BurnedArea/GFED4.1S C-legacy             [92mCompleted[0m  0:00:02
+
+Completed in  0:00:45
+
+
+Searching for model results in /Users/devparagiri/Research/ed-fire/research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/coupled-gfed5/models
+
+                                                C
+                                                D
+                                                E
+                                                F
+                                                G
+                                               G6
+                                               G7
+                                                H
+                                                I
+                                            Ibest
+
+Parsing config file /Users/devparagiri/Research/ed-fire/data/benchmarks/configs/gfed5-burned-area.cfg...
+
+                                 BurnedArea/GFED5[92m Initialized[0m
+
+Running model-confrontation pairs...
+
+                                 BurnedArea/GFED5 C                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 D                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 E                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 F                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 G                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 G6                   [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 G7                   [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 H                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 I                    [92mCompleted[0m  0:00:12
+                                 BurnedArea/GFED5 Ibest                [92mCompleted[0m  0:00:13
+
+Finishing post-processing which requires collectives...
+
+                                 BurnedArea/GFED5 C                    [92mCompleted[0m  0:00:03
+                                 BurnedArea/GFED5 D                    [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 E                    [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 F                    [92mCompleted[0m  0:00:03
+                                 BurnedArea/GFED5 G                    [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 G6                   [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 G7                   [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 H                    [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 I                    [92mCompleted[0m  0:00:02
+                                 BurnedArea/GFED5 Ibest                [92mCompleted[0m  0:00:02
+
+Completed in  0:02:27
+
+Parameter inventory verified: model/parameter-inventory.csv
+Loading GFED4.1s-era drivers...
+Generating A-legacy...
+Generating B-legacy...
+Generating C-legacy...
+Loading coupled-refit drivers...
+Generating C...
+Generating D...
+Generating E...
+Generating F...
+Generating G...
+Generating G6...
+Generating G7...
+Generating H...
+Generating I...
+Generating Ibest...
+Running ILAMB for abc-gfed4.1s (3 models)...
+Running ILAMB for coupled-gfed5 (10 models)...
+Replay verified: research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/metrics.csv
+$ /Users/devparagiri/Research/ed-fire/.venv/bin/python3 scripts/figure_models.py --models all --replay-root /Users/devparagiri/Research/ed-fire/research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i --output /Users/devparagiri/Research/ed-fire/research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/models-a-i-gfed5-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/models-a-i-gfed5-mean-maps.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/A-legacy/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/B-legacy/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C-legacy/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/C/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/D/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/E/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/F/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G6/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/G7/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/H/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/I/05-benchmark-sensitivity.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/01-score-summary.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/02a-mean-burned-area.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/02b-burned-area-differences.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/03-seasonal-cycles.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/04-spatial-distribution.png
+research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/figures/Ibest/05-benchmark-sensitivity.png
+Model figures reproduce prior work; target-fed outputs are not clean-candidate evidence.

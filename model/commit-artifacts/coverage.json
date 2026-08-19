@@ -1,0 +1,35 @@
+{
+  "audited_refs": {
+    "coupled-refit-gfed5": {
+      "ref": "refs/remotes/origin/coupled-refit-gfed5",
+      "tip": "11ee71418e597e977a4d49f6fda166e20c098e9f"
+    },
+    "main": {
+      "ref": "refs/remotes/origin/main",
+      "tip": "222b8569268a65566de0073a5f84dcbb2028da12"
+    },
+    "modelD-paper-params": {
+      "ref": "refs/remotes/origin/modelD-paper-params",
+      "tip": "32d283ff595d6653dfd84c076f418a82074b0d26"
+    }
+  },
+  "boundary": "The archive covers every committed file in the model-bearing directories above at every distinct path/blob version. Full source outside those directories, scripts, logs, and commit metadata remain in the complete Git bundle. Uncommitted outputs cannot be recovered from Git, and optimizer trials are not mislabeled as separate named models.",
+  "commit_count": 115,
+  "coverage_complete": true,
+  "history_bundle": "model/upstream/ed-autoresearch.bundle",
+  "history_bundle_sha256": "b473e74814fbd3fce63a6c7b7c52304f80aa2de727086838595cb209b46c2a83",
+  "json_attempt_record_count": 366,
+  "materialized_file_count": 406,
+  "path_blob_version_count": 406,
+  "schema_version": 1,
+  "selector": [
+    "models/**",
+    "configs/**",
+    "data_human/**",
+    "patches/**",
+    "HPC_AFRICA_HANDOFF/reference/**"
+  ],
+  "source_path_count": 381,
+  "source_repository": "https://github.com/DeveshParagiri/ed-autoresearch",
+  "unique_blob_count": 373
+}

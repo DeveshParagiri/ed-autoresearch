@@ -232,6 +232,7 @@ def _evidence_issues(
     local_links: list[tuple[bool, str]] = []
     experiment_root = experiment.path.parent.resolve()
     selected_prefix = f"runs/{selected_run}/"
+    curated_figure_prefix = "figures/"
 
     for match in MARKDOWN_LINK.finditer(evidence):
         is_image = match.group(1) == "!"
@@ -246,7 +247,9 @@ def _evidence_issues(
                 ValidationIssue("error", "invalid-evidence-link", experiment_id, target)
             )
             continue
-        if not target.startswith(selected_prefix):
+        selected_run_link = target.startswith(selected_prefix)
+        curated_figure = is_image and target.startswith(curated_figure_prefix)
+        if not selected_run_link and not curated_figure:
             issues.append(
                 ValidationIssue(
                     "error",
@@ -278,10 +281,13 @@ def _evidence_issues(
                 "error",
                 "missing-evidence-figure",
                 experiment_id,
-                "completed experiments must embed a selected-run figure",
+                "completed experiments must embed a selected-run or curated figure",
             )
         )
-    if not any(not is_image for is_image, _ in local_links):
+    if not any(
+        not is_image and target.startswith(selected_prefix)
+        for is_image, target in local_links
+    ):
         issues.append(
             ValidationIssue(
                 "error",

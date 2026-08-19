@@ -1,0 +1,129 @@
+{
+  "candidate_output": {
+    "path": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/coupled-gfed5/models/H/burntArea.nc",
+    "sha256": "d3cbf9d5b50f60e4493586450187ce0609ed251cdb1ee87c34acbc4fa2be1518"
+  },
+  "contract": {
+    "id": "contract.ed-fire.burned-area.v2",
+    "path": "evals/contracts/burned-area-eval-v2.json",
+    "sha256": "d1d65a5350b3c920d9c177219fc1951e47cc6dbb565b035ec93c65d9b41b1cf3"
+  },
+  "display_name": "Model H",
+  "eligible_under_active_candidate_contract": false,
+  "evaluation": "research/experiments/experiment.models-a-i-reproduction/runs/run.20260819T113431Z.96777d94/work/models-a-i/standardized-evaluations/H/0fbe548773537f70",
+  "figures": [
+    {
+      "filename": "01-score-summary.png",
+      "height": 1200,
+      "sha256": "7cb8f50038d73a64cc092f5ee88b4515de94676a61a516573283394619f78ec2",
+      "width": 1800
+    },
+    {
+      "filename": "02a-mean-burned-area.png",
+      "height": 1200,
+      "sha256": "ae8f115ecc0a4233bd71c677ff065227ae918aa30d27e783aa9c94ed02486b52",
+      "width": 1800
+    },
+    {
+      "filename": "02b-burned-area-differences.png",
+      "height": 800,
+      "sha256": "c44c3924e09b642b1f68e74a5cb10de5d1c7c02550e1b1c27cc252cba4faa918",
+      "width": 1800
+    },
+    {
+      "filename": "03-seasonal-cycles.png",
+      "height": 1200,
+      "sha256": "3f6ad1f999e54f15023ecf7cd2d95020cceb46d01e0ddfed591b73372b65acc6",
+      "width": 1800
+    },
+    {
+      "filename": "04-spatial-distribution.png",
+      "height": 1200,
+      "sha256": "19b0c37b63f61e149ae5519f4155af24f9a444210b4f68e0b808db8f0bc3ca42",
+      "width": 1800
+    },
+    {
+      "filename": "05-benchmark-sensitivity.png",
+      "height": 1200,
+      "sha256": "8f8d31a76f3432f79823d37267470184ccb903877c19b1e82f2e6aeb102438e9",
+      "width": 1800
+    }
+  ],
+  "model_id": "H",
+  "protocol": "coupled_gfed5",
+  "schema": "ed-fire-model-figure-suite/v1",
+  "scores": {
+    "Candidate": {
+      "gfed4_1s": {
+        "benchmark_period_mean_percent": 0.330879,
+        "bias_percent": 0.250356,
+        "bias_score": 0.727233,
+        "model_period_mean_percent": 0.581235,
+        "overall_score": 0.674711,
+        "phase_shift_months": 2.15129,
+        "rmse_percent": 0.900396,
+        "rmse_score": 0.51622,
+        "seasonal_cycle_score": 0.850552,
+        "spatial_distribution_score": 0.763332
+      },
+      "gfed5": {
+        "benchmark_period_mean_percent": 0.508005,
+        "bias_percent": 0.02214,
+        "bias_score": 0.72584,
+        "model_period_mean_percent": 0.530145,
+        "overall_score": 0.681881,
+        "phase_shift_months": 2.09317,
+        "rmse_percent": 0.945892,
+        "rmse_score": 0.520087,
+        "seasonal_cycle_score": 0.835265,
+        "spatial_distribution_score": 0.808126
+      }
+    },
+    "ED-stock": {
+      "gfed4_1s": {
+        "benchmark_period_mean_percent": 0.32711,
+        "bias_percent": -0.208603,
+        "bias_score": 0.68067,
+        "model_period_mean_percent": 0.118507,
+        "overall_score": 0.477503,
+        "phase_shift_months": 3.2245,
+        "rmse_percent": 0.643489,
+        "rmse_score": 0.488924,
+        "seasonal_cycle_score": 0.43859,
+        "spatial_distribution_score": 0.290408
+      },
+      "gfed5": {
+        "benchmark_period_mean_percent": 0.487444,
+        "bias_percent": -0.380519,
+        "bias_score": 0.621668,
+        "model_period_mean_percent": 0.106925,
+        "overall_score": 0.43741,
+        "phase_shift_months": 2.78413,
+        "rmse_percent": 0.869637,
+        "rmse_score": 0.466119,
+        "seasonal_cycle_score": 0.467363,
+        "spatial_distribution_score": 0.16578
+      }
+    }
+  },
+  "style": [
+    "science",
+    "no-latex",
+    "bright"
+  ],
+  "typography": {
+    "family": "Basier Square",
+    "files": [
+      {
+        "path": "assets/fonts/BasierSquare-Regular.otf",
+        "sha256": "0c621e44ad72820b0f3e3af5b75b3c2dc656d9072dc9b99965be112459af78ce",
+        "weight": "regular"
+      },
+      {
+        "path": "assets/fonts/BasierSquare-SemiBold.otf",
+        "sha256": "0a4d3cb400241c00b65babf13dc10af9e467f24efdd0e37dec15eb38508a180d",
+        "weight": "semibold"
+      }
+    ]
+  }
+}

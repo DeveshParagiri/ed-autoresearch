@@ -1,8 +1,11 @@
-# Historical provenance is checksum-verified byte for byte.
-model/other-models/commit-artifacts/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
-model/other-models/parameters/** -text
-model/other-models/upstream/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
-model/other-models/parameter-inventory.csv -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+# Model provenance is checksum-verified byte for byte.
+model/commit-artifacts/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+model/parameters/** -text
+model/upstream/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+model/parameter-inventory.csv -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 
 # Publisher source is retained exactly as released, including its whitespace.
 model/stock-ed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+
+# Recorded execution logs are evidence and must not be normalized on checkout.
+research/experiments/**/runs/**/logs/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab

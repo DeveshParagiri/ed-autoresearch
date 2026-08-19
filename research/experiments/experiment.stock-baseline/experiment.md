@@ -44,42 +44,58 @@ Expected evidence is the staged candidate hash, both complete ILAMB score vector
 
 # Result
 
-Three terminal runs completed. The initial run, `run.20260818T170639Z.ed6f7759`, established the result at revision `8cda0eff2c520570f9c0c73f04533936ae63c0f6`. After removing a duplicate evaluator entry from run-lock bookkeeping, `run.20260818T171022Z.bc08c8d2` and `run.20260818T171220Z.a7122045` repeated the experiment at the identical revision `d1518e88f03c371303bd06d9ff767d6ea1ee3358`. Both commands exited successfully, protected hashes passed before and after evaluation, the worktree remained unchanged, and no failure was recorded.
+Three terminal attempts completed. The [initial attempt](runs/run.20260818T170639Z.ed6f7759/run.json) established the result. A bookkeeping repair then removed a duplicated evaluator lock. The [first matched repeat](runs/run.20260818T171022Z.bc08c8d2/run.json) and [selected repeat](runs/run.20260818T171220Z.a7122045/run.json) reproduced the result from the same code state. Both commands exited successfully, protected hashes passed before and after evaluation, the worktree remained unchanged, and no failure was recorded.
 
-The matched runs produced byte-identical `metrics.json` files with SHA-256 `053901e8c5f0d5552c593582f3d7d5bc28b5322a1313c811b6eddece0f8d52bd`. Their staged candidate files were byte-identical to the pinned native ED artifact with SHA-256 `73c07a379ab25a04eb3d55a9ccc7e8671ddac334f2e7bdeeb409aaa59be9caeb`. Both ILAMB scalar databases, both score files, and all five canonical figures also matched byte for byte. Each figure is 1800 × 1200 and was visually checked for complete panels, readable labels, consistent scales, and obvious rendering failures. The run-specific `evaluation.json` files differ only where they record each attempt's unique absolute working paths.
+The repeats produced byte-identical metrics, staged candidates, ILAMB scalar databases, score files, and all five canonical figures. Their run records retain the exact checksums. Each figure is 1800 × 1200 and was visually checked for complete panels, readable labels, consistent scales, and obvious rendering failures. The evaluation records differ only where they record each attempt's unique absolute working paths.
 
 Because the candidate is the pinned stock file by construction, the candidate and ED-stock evidence vectors are identical. This is the intended control rather than a model improvement.
 
 | Metric | GFED5 | GFED4.1s |
 | --- | ---: | ---: |
-| Benchmark-period mean burned area (%) | 0.487444 | 0.327110 |
-| Model-period mean burned area (%) | 0.106925 | 0.118507 |
-| Bias (%) | -0.380519 | -0.208603 |
-| Bias score | 0.621668 | 0.680670 |
-| RMSE (%) | 0.869637 | 0.643489 |
-| RMSE score | 0.466119 | 0.488924 |
-| Seasonal-cycle score | 0.467363 | 0.438590 |
-| Spatial-distribution score | 0.165780 | 0.290408 |
-| Overall score | 0.437410 | 0.477503 |
-| Phase shift (months) | 2.784130 | 3.224500 |
+| Benchmark-period mean burned area (%) | 0.487 | 0.327 |
+| Model-period mean burned area (%) | 0.107 | 0.119 |
+| Bias (%) | -0.381 | -0.209 |
+| Bias score | 0.622 | 0.681 |
+| RMSE (%) | 0.870 | 0.643 |
+| RMSE score | 0.466 | 0.489 |
+| Seasonal-cycle score | 0.467 | 0.439 |
+| Spatial-distribution score | 0.166 | 0.290 |
+| Overall score | 0.437 | 0.478 |
+| Phase shift (months) | 2.784 | 3.225 |
 
-The overall score changes by -0.040093 when the benchmark changes from GFED4.1s to GFED5. The stock field underestimates the global mean under both products, and spatial distribution is the weakest scalar component, especially against GFED5. Those are research targets for a future mechanism; they are not reasons to alter the locked evaluator.
+The overall score changes by -0.040 when the benchmark changes from GFED4.1s to GFED5. The stock field underestimates the global mean under both products, and spatial distribution is the weakest scalar component, especially against GFED5. Those are research targets for a future mechanism; they are not reasons to alter the locked evaluator.
 
 # Evidence
 
-The selected record is the final matched repeat, `run.20260818T171220Z.a7122045`. These are the curated scientific outputs for the experiment reader; the run directory retains the complete provenance record.
+The [selected repeat](runs/run.20260818T171220Z.a7122045/run.json) supplies the evidence below. Its run directory retains the complete provenance record.
 
 ## Figures
 
-![GFED5 and GFED4.1s score summary](runs/run.20260818T171220Z.a7122045/figures/01-score-summary.png)
+These six figures were regenerated from the selected run's unchanged metrics and model artifact with the current v2 SciencePlots renderer. The selected run still retains the five byte-matched v1 figures produced during execution. Run `uv run --extra historical python scripts/render_experiment_figures.py experiment.stock-baseline --label "Staged ED-stock"` to refresh this presentation.
 
-![Mean burned-area fields and differences](runs/run.20260818T171220Z.a7122045/figures/02-mean-burned-area.png)
+![GFED5 and GFED4.1s score summary](figures/01-score-summary.png)
 
-![Global and regional seasonal cycles](runs/run.20260818T171220Z.a7122045/figures/03-seasonal-cycles.png)
+The staged candidate and ED-stock bars are identical by construction. The lower panel gives the benchmark and model period means on each ILAMB comparison intersection.
 
-![Cell-level spatial distributions](runs/run.20260818T171220Z.a7122045/figures/04-spatial-distribution.png)
+![Mean burned-area fields](figures/02a-mean-burned-area.png)
 
-![Benchmark and regional sensitivity](runs/run.20260818T171220Z.a7122045/figures/05-benchmark-sensitivity.png)
+The two benchmark fields sit above ED-stock and the staged copy used as the candidate. The bottom maps are identical, and all four panels use the same fixed scale.
+
+![Stock ED burned-area differences from GFED4.1s and GFED5](figures/02b-burned-area-differences.png)
+
+These maps show stock ED minus each benchmark. Blue marks less burning than the benchmark and red marks more burning, with one fixed diverging scale.
+
+![Global and regional seasonal cycles](figures/03-seasonal-cycles.png)
+
+The ED-stock and staged-candidate curves overlap exactly. Fixed regional scales keep the same comparison shape available for later candidates.
+
+![Cell-level spatial distributions](figures/04-spatial-distribution.png)
+
+The upper and lower rows repeat because the candidate is ED-stock. Each panel compares annual burned area on benchmark fire cells and reports correlation, median bias, and the fraction shown inside the fixed window.
+
+![Benchmark and regional sensitivity](figures/05-benchmark-sensitivity.png)
+
+The top panels match because both refer to the same stock field. The lower-right panel is zero everywhere because the staged candidate introduces no change from native ED.
 
 ## Results and outputs
 

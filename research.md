@@ -10,7 +10,7 @@ The project is trying to improve the fire process used by Ecosystem Demography w
 
 A candidate is ranked by its declared GFED5 objective. The result must also say what mechanism changed, predict where and when its effect should appear, compare the full evidence vector with stock ED, disclose component or regional regressions, survive a matched rerun, and distinguish model behavior from data, implementation, numerical, or optimization failure. Those diagnostics explain the score and expose tradeoffs; they do not replace the declared objective after results are known.
 
-Historical Models A through I, including the legacy and GFED5 versions of C and the exploratory Ibest hybrid, are excluded from the clean research line. Their equations, parameter sets, trial artifacts, and score claims are retained for provenance, but they cannot seed the baseline, an optimizer, or an undeclared candidate.
+Models A through I, including the GFED4.1s and GFED5 versions of C and the exploratory Ibest hybrid, are this project’s existing model-development record. Their equations, parameter sets, optimizer artifacts, and results may motivate or initialize a new experiment. Their previously generated outputs do not become active-contract candidates automatically: any extension must declare what it reuses, remove prohibited benchmark-fed construction, regenerate the candidate from declared inputs, and pass through the trusted evaluator.
 
 ## Starting boundary
 
@@ -18,11 +18,11 @@ The clean native comparison baseline is the pinned TRENDY v14 EDv3 S3 burned-are
 
 Those two facts must not be conflated. The publisher archive has no Git metadata, and no recovered record connects its source revision, build, input selection, or command to the TRENDY v14 artifact. The completed first experiment therefore establishes an evaluation baseline, not source-level reproduction. The next technical control must compile and run the official release with its declared inputs, preserve the exact environment and command, and compare its output with both the publisher simulation and the pinned TRENDY baseline before any modified fire mechanism is treated as a descendant of stock ED.
 
-## Historical replay boundary
+## Models A-I
 
-The old `ed-autoresearch` history and all recovered Model A-I parameter artifacts are quarantined under `model/other-models/`. The replay exists to establish what was actually tried and whether its archived values can be regenerated. It does not create descendants of `experiment.stock-baseline`.
+The source history, parameter artifacts, replay code, results, and figure tooling for Models A-I live directly under `model/`. They are part of the same research program. The reproduction experiment establishes what was tried, which values regenerate, and which limitations survived from the original implementation. A later scientific experiment can extend one of these models by naming it in the experiment rationale and implementing a candidate that satisfies the active contract.
 
-The exclusion is methodological. The A, B, and legacy C generator uses GFED4.1s fire presence as a spatial output mask and recomputes a scale factor from the GFED4.1s mean. Coupled Models C, D, F, and H use GFED5 fire presence to define generation or fitting support. Models E, G, G6, G7, I, and Ibest inherit a GFED4.1s fire-presence output mask. Model F also pins global burned-area magnitude directly to GFED5. These workflows feed benchmark fields or statistics into candidate construction. Ordinary parameter optimization against metrics returned by the trusted GFED5 evaluator is allowed. Quarantine follows from the target-fed construction steps.
+The boundary is methodological, not genealogical. The A, B, and GFED4.1s C generator uses GFED4.1s fire presence as a spatial output mask and recomputes a scale factor from the GFED4.1s mean. Coupled Models C, D, F, and H use GFED5 fire presence to define generation or fitting support. Models E, G, G6, G7, I, and Ibest inherit a GFED4.1s fire-presence output mask. Model F also pins global burned-area magnitude directly to GFED5. Those existing outputs therefore do not satisfy the active clean-candidate contract. Ordinary parameter optimization against metrics returned by the trusted GFED5 evaluator remains valid; candidate-generation code itself may not consume benchmark fields or target statistics.
 
 Model A remains a partial reconstruction because its exact frozen LAI preprocessing artifact and generated NetCDF were not committed. Model H reproduces all nonseasonal scores, but its seasonal phase calculation is sensitive to platform-level floating-point ties; that numerical drift is recorded rather than hidden by changing the evaluator. The registry and replay evidence own the exact values.
 
@@ -66,7 +66,7 @@ Missing values, ocean cells, physical zeros, and unobserved cells must remain di
 
 ## Experiment record and branch memory
 
-A framing records one durable research question, its scope, current position, and reopening boundary. It appears as a labeled graph container only when an experiment explicitly names it. Framings are optional. Unframed experiments remain at the graph root, and ordinary experiment lineage needs no framing record.
+A framing records one durable research question, its scope, current position, and reopening boundary. It appears as a labeled graph container only when an experiment explicitly names it. Framings are optional. Unframed experiments remain at the graph root, and ordinary parent relationships need no framing record.
 
 Only experiments form the research DAG. A parent edge means that the child directly extends, repairs, replicates, ablates, combines, or reopens an earlier experimental state, including edges that cross framing containers. Datasets, benchmarks, hypotheses, metrics, figures, findings, and optimizer trials remain attached to experiments.
 
@@ -106,7 +106,7 @@ The first required control is a stock evaluation at one committed revision, foll
 
 After that control, the first decision is not “run Optuna.” The evidence must be inspected for benchmark-product sensitivity, mask behavior, regional failures, and evaluator consistency. The official ED release must then pass a source-level build-and-run control, or its mismatch with the publisher and TRENDY outputs must be characterized explicitly. Only then should the first model change isolate one interpretable process and state its predicted regional and seasonal signature before execution.
 
-Coupled transfer, fire emissions, new inputs, and parameter search become descendants only when their prerequisite interface and control exist. Historical Models A through I remain outside this sequence.
+Coupled transfer, fire emissions, new inputs, and parameter search become experiment descendants only when their prerequisite interface and control exist. Models A through I remain available as prior mechanisms, parameters, and evidence, but extending one requires a declared experiment and a clean regeneration path rather than treating its existing output as a new result.
 
 ## Open questions
 

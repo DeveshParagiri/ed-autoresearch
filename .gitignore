@@ -11,7 +11,7 @@ build/
 model/stock-ed/external_apps/
 model/stock-ed/EDv3_inputs
 model/stock-ed/ED_outputs/
-model/other-models/reproduced/
+model/reproduced/
 
 # Large project-local data and generated scientific products stay outside Git.
 data/inputs/*
