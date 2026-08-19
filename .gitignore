@@ -8,9 +8,18 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+model/stock-ed/external_apps/
+model/stock-ed/EDv3_inputs
+model/stock-ed/ED_outputs/
+model/other-models/reproduced/
 
-# Local data links and generated scientific products are machine-specific.
+# Large project-local data and generated scientific products stay outside Git.
 data/inputs/*
+!data/inputs/human/
+data/inputs/human/*
+!data/inputs/human/historical/
+data/inputs/human/historical/*
+!data/inputs/human/historical/gdp-pcap-grid-1deg.npy
 data/benchmarks/*
 data/reference/*
 data/derived/*
@@ -22,3 +31,6 @@ data/benchmarks/configs/*
 # Run contents are durable when deliberately recorded, but transient work is not.
 research/experiments/*/runs/*/work/
 research/experiments/*/runs/*/tmp/
+
+# Meeting transcripts, exports, and private records never enter public Git history.
+/research/meetings/private/

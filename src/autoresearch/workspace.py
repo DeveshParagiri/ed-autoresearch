@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .catalog import load_catalog, validate_catalog
+from .catalog import load_catalog, validate_catalog, validate_sources
 from .experiments import load_experiments, validate_experiments
 from .runner import runnable_experiments, validate_contracts, validate_runs
 
@@ -37,6 +37,7 @@ def _memory_issues(project_root: Path) -> list[dict[str, str]]:
 
 def status(project_root: Path) -> dict[str, Any]:
     data = validate_catalog(project_root)
+    source_issues = validate_sources(project_root)
     research = validate_experiments(project_root)
     experiment_records = experiments(project_root)
     inputs = input_ids(project_root)
@@ -49,7 +50,7 @@ def status(project_root: Path) -> dict[str, Any]:
             "subject": issue.item_id,
             "message": issue.message,
         }
-        for issue in (*data.issues, *research.issues)
+        for issue in (*data.issues, *source_issues, *research.issues)
     ]
     issues.extend(issue.as_dict() for issue in (*contract_issues, *run_issues))
     issues.extend(_memory_issues(project_root))
@@ -58,6 +59,7 @@ def status(project_root: Path) -> dict[str, Any]:
     return {
         "status": "ok" if errors == 0 else "error",
         "datasets": data.dataset_count,
+        "framings": research.framing_count,
         "experiments": research.experiment_count,
         "runs": run_count,
         "runnable_experiments": list(

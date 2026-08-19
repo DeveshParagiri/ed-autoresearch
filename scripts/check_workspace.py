@@ -28,7 +28,8 @@ def main() -> int:
             )
         print(
             f"status={report['status']} datasets={report['datasets']} "
-            f"experiments={report['experiments']} runs={report['runs']} "
+            f"framings={report['framings']} experiments={report['experiments']} "
+            f"runs={report['runs']} "
             f"runnable={len(report['runnable_experiments'])} "
             f"errors={report['errors']} warnings={report['warnings']}"
         )

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Autoresearch"
-  short_description: "Run persistent, evidence-backed research"
-  default_prompt: __DEFAULT_PROMPT_YAML__

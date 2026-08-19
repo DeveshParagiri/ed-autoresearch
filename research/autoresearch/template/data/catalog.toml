@@ -1,6 +1,0 @@
-schema = "data-catalog/v1"
-datasets = []
-
-# Add one [[datasets]] record per installed or required data asset.
-# A record should declare id, category, role, required_for, path, kind,
-# required, description, and deterministic checks where practical.

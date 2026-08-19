@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,23 @@ import yaml
 from .catalog import ValidationIssue
 
 
-EXPERIMENT_SCHEMA = "autoresearch-experiment/v1"
+FRAMING_SCHEMA = "autoresearch-framing/v1"
+FRAMING_STATUSES = {"active", "paused", "closed"}
+REQUIRED_FRAMING_FIELDS = {
+    "schema",
+    "id",
+    "title",
+    "status",
+    "created_at",
+}
+REQUIRED_FRAMING_BODY_SECTIONS = (
+    "# Question",
+    "# Scope",
+    "# Current position",
+    "# Revisit when",
+)
+
+EXPERIMENT_SCHEMA = "autoresearch-experiment/v2"
 EXPERIMENT_STATUSES = {"proposed", "running", "completed", "paused", "closed", "invalid"}
 EXECUTION_MODES = {"mechanistic", "simulation", "hybrid"}
 REQUIRED_EXPERIMENT_FIELDS = {
@@ -27,13 +44,25 @@ REQUIRED_EXPERIMENT_FIELDS = {
 }
 REQUIRED_BODY_SECTIONS = (
     "# Question",
+    "# Rationale",
     "# Change",
     "# Prediction",
     "# Plan",
     "# Result",
+    "# Evidence",
+    "# Interpretation",
     "# Decision",
     "# Revisit when",
 )
+TERMINAL_EVIDENCE_STATUSES = {"completed", "closed"}
+MARKDOWN_LINK = re.compile(r"(!?)\[[^\]]+\]\(([^)\s]+)(?:\s+[^)]*)?\)")
+
+
+@dataclass(frozen=True)
+class Framing:
+    path: Path
+    metadata: dict[str, Any]
+    body: str
 
 
 @dataclass(frozen=True)
@@ -45,6 +74,7 @@ class Experiment:
 
 @dataclass(frozen=True)
 class ExperimentValidation:
+    framing_count: int
     experiment_count: int
     issues: tuple[ValidationIssue, ...]
 
@@ -63,6 +93,7 @@ class ExperimentValidation:
     def as_dict(self) -> dict[str, Any]:
         return {
             "status": "ok" if self.ok else "error",
+            "framings": self.framing_count,
             "experiments": self.experiment_count,
             "errors": self.error_count,
             "warnings": self.warning_count,
@@ -79,7 +110,7 @@ def safe_relative_path(value: Any) -> bool:
     )
 
 
-def parse_experiment(path: Path) -> Experiment:
+def _parse_markdown_record(path: Path) -> tuple[dict[str, Any], str]:
     lines = path.read_text().splitlines()
     if not lines or lines[0].strip() != "---":
         raise ValueError("missing opening YAML front-matter delimiter")
@@ -95,7 +126,76 @@ def parse_experiment(path: Path) -> Experiment:
     created_at = metadata.get("created_at")
     if not isinstance(created_at, str) and hasattr(created_at, "isoformat"):
         metadata["created_at"] = created_at.isoformat()
-    return Experiment(path, metadata, "\n".join(lines[closing + 1 :]).strip())
+    return metadata, "\n".join(lines[closing + 1 :]).strip()
+
+
+def parse_framing(path: Path) -> Framing:
+    metadata, body = _parse_markdown_record(path)
+    return Framing(path, metadata, body)
+
+
+def parse_experiment(path: Path) -> Experiment:
+    metadata, body = _parse_markdown_record(path)
+    return Experiment(path, metadata, body)
+
+
+def load_framings(project_root: Path) -> tuple[dict[str, Framing], list[ValidationIssue]]:
+    root = project_root / "research" / "framings"
+    if not root.is_dir():
+        return {}, []
+
+    framings: dict[str, Framing] = {}
+    issues: list[ValidationIssue] = []
+    for path in sorted(root.glob("*.md")):
+        try:
+            framing = parse_framing(path)
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            issues.append(ValidationIssue("error", "invalid-framing", path.name, str(exc)))
+            continue
+        metadata = framing.metadata
+        framing_id = metadata.get("id")
+        missing = sorted(REQUIRED_FRAMING_FIELDS - metadata.keys())
+        if missing or not isinstance(framing_id, str) or not framing_id:
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    "invalid-framing-fields",
+                    path.name,
+                    ", ".join(missing) or repr(framing_id),
+                )
+            )
+            continue
+        if framing_id != path.stem:
+            issues.append(
+                ValidationIssue("error", "framing-file-mismatch", framing_id, path.name)
+            )
+        if framing_id in framings:
+            issues.append(ValidationIssue("error", "duplicate-framing-id", framing_id, str(path)))
+            continue
+        framings[framing_id] = framing
+
+    for framing_id, framing in framings.items():
+        metadata = framing.metadata
+        if metadata.get("schema") != FRAMING_SCHEMA:
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-framing-schema", framing_id, repr(metadata.get("schema"))
+                )
+            )
+        for field in ("title", "created_at"):
+            if not isinstance(metadata.get(field), str) or not metadata[field].strip():
+                issues.append(ValidationIssue("error", "invalid-framing-field", framing_id, field))
+        if metadata.get("status") not in FRAMING_STATUSES:
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-framing-status", framing_id, repr(metadata.get("status"))
+                )
+            )
+        for heading in REQUIRED_FRAMING_BODY_SECTIONS:
+            if heading not in framing.body:
+                issues.append(ValidationIssue("error", "missing-framing-section", framing_id, heading))
+
+    return framings, issues
 
 
 def experiment_directories(project_root: Path) -> tuple[Path, ...]:
@@ -105,15 +205,105 @@ def experiment_directories(project_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(path for path in root.iterdir() if path.is_dir()))
 
 
+def _section_body(body: str, heading: str) -> str:
+    lines = body.splitlines()
+    try:
+        start = next(index for index, line in enumerate(lines) if line.strip() == heading) + 1
+    except StopIteration:
+        return ""
+    end = next(
+        (
+            index
+            for index, line in enumerate(lines[start:], start=start)
+            if line.startswith("# ")
+        ),
+        len(lines),
+    )
+    return "\n".join(lines[start:end]).strip()
+
+
+def _evidence_issues(
+    experiment_id: str,
+    experiment: Experiment,
+    selected_run: str,
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    evidence = _section_body(experiment.body, "# Evidence")
+    local_links: list[tuple[bool, str]] = []
+    experiment_root = experiment.path.parent.resolve()
+    selected_prefix = f"runs/{selected_run}/"
+
+    for match in MARKDOWN_LINK.finditer(evidence):
+        is_image = match.group(1) == "!"
+        target = match.group(2).strip("<>")
+        if target.startswith(("#", "mailto:")) or "://" in target:
+            continue
+        target = target.split("#", 1)[0].split("?", 1)[0]
+        if not target:
+            continue
+        if not safe_relative_path(target):
+            issues.append(
+                ValidationIssue("error", "invalid-evidence-link", experiment_id, target)
+            )
+            continue
+        if not target.startswith(selected_prefix):
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    "evidence-outside-selected-run",
+                    experiment_id,
+                    target,
+                )
+            )
+            continue
+        linked = experiment_root / target
+        resolved = linked.resolve()
+        try:
+            resolved.relative_to(experiment_root)
+        except ValueError:
+            issues.append(
+                ValidationIssue("error", "evidence-link-escape", experiment_id, target)
+            )
+            continue
+        if not linked.is_file() or linked.is_symlink():
+            issues.append(
+                ValidationIssue("error", "missing-evidence-link", experiment_id, target)
+            )
+            continue
+        local_links.append((is_image, target))
+
+    if not any(is_image for is_image, _ in local_links):
+        issues.append(
+            ValidationIssue(
+                "error",
+                "missing-evidence-figure",
+                experiment_id,
+                "completed experiments must embed a selected-run figure",
+            )
+        )
+    if not any(not is_image for is_image, _ in local_links):
+        issues.append(
+            ValidationIssue(
+                "error",
+                "missing-evidence-result",
+                experiment_id,
+                "completed experiments must link a selected-run result or output",
+            )
+        )
+    return issues
+
+
 def load_experiments(project_root: Path) -> tuple[dict[str, Experiment], list[ValidationIssue]]:
+    framings, framing_issues = load_framings(project_root)
     root = project_root / "research" / "experiments"
     if not root.is_dir():
         return {}, [
+            *framing_issues,
             ValidationIssue("error", "missing-experiments", "research/experiments", str(root))
         ]
 
     experiments: dict[str, Experiment] = {}
-    issues: list[ValidationIssue] = []
+    issues: list[ValidationIssue] = list(framing_issues)
     for directory in experiment_directories(project_root):
         path = directory / "experiment.md"
         if not path.is_file():
@@ -173,6 +363,16 @@ def load_experiments(project_root: Path) -> tuple[dict[str, Experiment], list[Va
                 )
             )
 
+        framing_id = metadata.get("framing")
+        if framing_id is not None and (
+            not isinstance(framing_id, str) or framing_id not in framings
+        ):
+            issues.append(
+                ValidationIssue(
+                    "error", "unknown-experiment-framing", experiment_id, repr(framing_id)
+                )
+            )
+
         parents = metadata.get("parents")
         if not isinstance(parents, list) or not all(isinstance(value, str) for value in parents):
             issues.append(ValidationIssue("error", "invalid-experiment-parents", experiment_id, repr(parents)))
@@ -224,6 +424,42 @@ def load_experiments(project_root: Path) -> tuple[dict[str, Experiment], list[Va
         for heading in REQUIRED_BODY_SECTIONS:
             if heading not in experiment.body:
                 issues.append(ValidationIssue("error", "missing-experiment-section", experiment_id, heading))
+
+        selected_run = metadata.get("selected_run")
+        selected_run_valid = selected_run is None or (
+            isinstance(selected_run, str)
+            and selected_run.startswith("run.")
+            and Path(selected_run).name == selected_run
+        )
+        if not selected_run_valid:
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-selected-run", experiment_id, repr(selected_run)
+                )
+            )
+        status = metadata.get("status")
+        if status in TERMINAL_EVIDENCE_STATUSES and selected_run is None:
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    "missing-selected-run",
+                    experiment_id,
+                    f"status is {status}",
+                )
+            )
+        elif isinstance(selected_run, str) and selected_run_valid:
+            selected_directory = experiment.path.parent / "runs" / selected_run
+            if not selected_directory.is_dir():
+                issues.append(
+                    ValidationIssue(
+                        "error",
+                        "unknown-selected-run",
+                        experiment_id,
+                        selected_run,
+                    )
+                )
+            elif status in TERMINAL_EVIDENCE_STATUSES:
+                issues.extend(_evidence_issues(experiment_id, experiment, selected_run))
 
     issues.extend(_cycle_issues(experiments))
     return experiments, issues
@@ -306,9 +542,10 @@ def validate_experiments(project_root: Path) -> ExperimentValidation:
         issues.append(
             ValidationIssue("error", "missing-charter", "research.md", str(project_root / "research.md"))
         )
+    framings, _ = load_framings(project_root)
     experiments, experiment_issues = load_experiments(project_root)
     issues.extend(experiment_issues)
-    return ExperimentValidation(len(experiments), tuple(issues))
+    return ExperimentValidation(len(framings), len(experiments), tuple(issues))
 
 
 def validate_event_log(path: Path) -> tuple[ValidationIssue, ...]:

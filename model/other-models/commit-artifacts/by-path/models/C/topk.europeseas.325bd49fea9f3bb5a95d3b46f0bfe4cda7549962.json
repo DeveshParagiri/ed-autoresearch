@@ -1,0 +1,80 @@
+[
+  {
+    "rank": 1,
+    "trial": 642,
+    "internal_overall": 0.4098,
+    "spatial_taylor": 0.5981,
+    "spatial_r": 0.2095,
+    "spatial_sigma": 1.1107,
+    "fp_score": 0.9988,
+    "pred_lm_ratio": 0.8701,
+    "fire_amp": 1.166,
+    "params_json": "models/C/params.europeseas.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1178,
+    "internal_overall": 0.404,
+    "spatial_taylor": 0.587,
+    "spatial_r": 0.174,
+    "spatial_sigma": 0.9932,
+    "fp_score": 0.999,
+    "pred_lm_ratio": 0.7693,
+    "fire_amp": 1.417,
+    "params_json": "models/C/params.europeseas.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 760,
+    "internal_overall": 0.4551,
+    "spatial_taylor": 0.5745,
+    "spatial_r": 0.1632,
+    "spatial_sigma": 1.1174,
+    "fp_score": 0.9867,
+    "pred_lm_ratio": 0.9838,
+    "fire_amp": 2.519,
+    "params_json": "models/C/params.europeseas.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 851,
+    "internal_overall": 0.4321,
+    "spatial_taylor": 0.5688,
+    "spatial_r": 0.1876,
+    "spatial_sigma": 1.2313,
+    "fp_score": 0.9991,
+    "pred_lm_ratio": 0.9071,
+    "fire_amp": 1.166,
+    "params_json": "models/C/params.europeseas.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 1097,
+    "internal_overall": 0.4894,
+    "spatial_taylor": 0.5654,
+    "spatial_r": 0.169,
+    "spatial_sigma": 0.833,
+    "fp_score": 0.9815,
+    "pred_lm_ratio": 0.7712,
+    "fire_amp": 1.572,
+    "params_json": "models/C/params.europeseas.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k5"
+  },
+  {
+    "rank": 6,
+    "trial": 862,
+    "internal_overall": 0.4426,
+    "spatial_taylor": 0.5416,
+    "spatial_r": 0.1535,
+    "spatial_sigma": 1.2868,
+    "fp_score": 0.9996,
+    "pred_lm_ratio": 0.8373,
+    "fire_amp": 2.818,
+    "params_json": "models/C/params.europeseas.k6.json",
+    "model_dir": "ilamb/MODELS_TOPK_europeseas/ED-ModelC-europeseas-k6"
+  }
+]

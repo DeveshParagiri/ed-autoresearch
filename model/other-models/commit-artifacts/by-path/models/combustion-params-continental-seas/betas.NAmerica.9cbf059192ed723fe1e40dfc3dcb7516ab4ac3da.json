@@ -1,0 +1,20 @@
+{
+  "ba_model": "ED-ModelC-continental",
+  "region": "N.America",
+  "baseline_overall_globalbetas": 0.5457142453207027,
+  "best_overall": 0.6204860663281707,
+  "best_params": {
+    "beta_leaf": 0.03075931118918554,
+    "beta_fine": 0.4977707753684253,
+    "beta_coarse": 0.547828744572809,
+    "beta_litter": 0.6622667662635757,
+    "D_REF": 108.04941465236959
+  },
+  "scores": {
+    "bias": 0.9993956274970102,
+    "rmse": 0.32296463076588466,
+    "seas": 0.5424588322639465,
+    "spat": 0.5357370491792883,
+    "overall": 0.6204860663281707
+  }
+}

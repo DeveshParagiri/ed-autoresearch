@@ -1,0 +1,67 @@
+[
+  {
+    "rank": 1,
+    "trial": 898,
+    "internal_overall": 0.5475,
+    "spatial_taylor": 0.6744,
+    "spatial_r": 0.3568,
+    "spatial_sigma": 0.9262,
+    "fp_score": 0.9298,
+    "pred_lm_ratio": 1.0838,
+    "fire_amp": 2.781,
+    "params_json": "models/C/params.boreal.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_boreal/ED-ModelC-boreal-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 981,
+    "internal_overall": 0.531,
+    "spatial_taylor": 0.6713,
+    "spatial_r": 0.3453,
+    "spatial_sigma": 0.9568,
+    "fp_score": 0.9329,
+    "pred_lm_ratio": 1.0652,
+    "fire_amp": 2.781,
+    "params_json": "models/C/params.boreal.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_boreal/ED-ModelC-boreal-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 936,
+    "internal_overall": 0.5283,
+    "spatial_taylor": 0.6678,
+    "spatial_r": 0.3454,
+    "spatial_sigma": 0.9178,
+    "fp_score": 0.9355,
+    "pred_lm_ratio": 1.0219,
+    "fire_amp": 2.781,
+    "params_json": "models/C/params.boreal.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_boreal/ED-ModelC-boreal-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 1020,
+    "internal_overall": 0.5681,
+    "spatial_taylor": 0.6597,
+    "spatial_r": 0.3798,
+    "spatial_sigma": 0.8087,
+    "fp_score": 0.9528,
+    "pred_lm_ratio": 0.9037,
+    "fire_amp": 3.212,
+    "params_json": "models/C/params.boreal.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_boreal/ED-ModelC-boreal-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 957,
+    "internal_overall": 0.5669,
+    "spatial_taylor": 0.6485,
+    "spatial_r": 0.3787,
+    "spatial_sigma": 0.7801,
+    "fp_score": 0.9546,
+    "pred_lm_ratio": 0.8684,
+    "fire_amp": 3.212,
+    "params_json": "models/C/params.boreal.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_boreal/ED-ModelC-boreal-k5"
+  }
+]

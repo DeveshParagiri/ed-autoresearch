@@ -1,0 +1,20 @@
+{
+  "ba_model": "ED-ModelC-continental",
+  "region": "SEAsia",
+  "baseline_overall_globalbetas": 0.5749832959239015,
+  "best_overall": 0.6608819019420711,
+  "best_params": {
+    "beta_leaf": 0.2615694427233774,
+    "beta_fine": 0.852322661032441,
+    "beta_coarse": 0.9923646905215703,
+    "beta_litter": 0.005237025369372409,
+    "D_REF": 544.3621048112217
+  },
+  "scores": {
+    "bias": 0.9996148680844738,
+    "rmse": 0.3192352752630279,
+    "seas": 0.7416247725486755,
+    "spat": 0.5859663524087473,
+    "overall": 0.6608819019420711
+  }
+}

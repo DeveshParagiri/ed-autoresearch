@@ -65,12 +65,35 @@ checks = [{ type = "glob_count", pattern = "EDv3_S3_*.nc", expected = 4 }]
 id = "input.ed.simulation"
 category = "inputs/ecosystem"
 role = "coupled-context"
-required_for = ["coupled-validation"]
+required_for = ["stock-source-reproduction", "coupled-validation"]
 path = "data/inputs/ecosystem/ed-simulation.nc"
 kind = "file"
-required = false
-description = "ED global simulation output used by offline and coupled comparisons."
-min_bytes = 1000000000
+required = true
+description = "Official ED v3.0 global simulation output published with the model release."
+checks = [
+  { type = "file_size", path = ".", bytes = 1627975319 },
+  { type = "file_sha256", path = ".", sha256 = "15f34eaee68bc4e5b27ca768dc11e4e02370f53ac9230ba7236b801838655eb3" },
+]
+
+[[datasets]]
+id = "input.ed-v3.official-run-deck"
+category = "inputs/stock-ed"
+role = "reconstruction-source"
+required_for = ["stock-source-reproduction"]
+path = "data/inputs/stock-ed/EDv3_inputs"
+kind = "directory"
+required = true
+description = "Official ED v3.0 forcing, static, and configuration input bundle from the publisher release."
+checks = [
+  { type = "glob_count", pattern = "climate/*.nc", expected = 39 },
+  { type = "glob_count", pattern = "co2/*.nc", expected = 15 },
+  { type = "glob_count", pattern = "crop_calendar/*.nc", expected = 1 },
+  { type = "glob_count", pattern = "fire/*.nc", expected = 22 },
+  { type = "glob_count", pattern = "gridspecs/*.nc", expected = 1 },
+  { type = "glob_count", pattern = "lu/*.nc", expected = 1 },
+  { type = "glob_count", pattern = "premech/*.nc", expected = 39 },
+  { type = "glob_count", pattern = "soil/*.nc", expected = 2 },
+]
 
 [[datasets]]
 id = "input.hybrid-vegetation"
@@ -115,6 +138,20 @@ kind = "directory"
 required = false
 description = "Human-driver fields currently prepared for coupled fire experiments."
 checks = [{ type = "glob_count", pattern = "*.nc", expected = 2 }]
+
+[[datasets]]
+id = "input.human.historical-gdp-pcap-1deg"
+category = "inputs/human"
+role = "reconstruction-source"
+required_for = ["historical-model-replay"]
+path = "data/inputs/human/historical/gdp-pcap-grid-1deg.npy"
+kind = "file"
+required = false
+description = "Exact 1-degree GDP-per-capita grid consumed by historical Models F and H."
+checks = [
+  { type = "file_size", path = ".", bytes = 518528 },
+  { type = "file_sha256", path = ".", sha256 = "84ab073c42fd447bb47d616661342989bf9b2448c82cc4440e54175374251d3a" },
+]
 
 [[datasets]]
 id = "input.candidate.cveg"
@@ -365,7 +402,7 @@ required_for = ["external-model-comparison"]
 path = "data/benchmarks/comparison-models/ilamb"
 kind = "directory"
 required = false
-description = "ILAMB-ready external model burned-area outputs, excluding experimental Model A through E artifacts."
+description = "ILAMB-ready external model burned-area outputs, excluding historical experimental Models A through I."
 checks = [{ type = "glob_count", pattern = "*/burntArea.nc", expected = 12 }]
 
 [[datasets]]
@@ -430,3 +467,40 @@ kind = "directory"
 required = false
 description = "ILAMB data conversion and validation source repository."
 checks = [{ type = "glob_count", pattern = "*.toml", expected = 1 }]
+
+[[datasets]]
+id = "reference.ed-v3.source"
+category = "reference/model-source"
+role = "reference-tool"
+required_for = ["stock-source-reproduction"]
+path = "model/stock-ed"
+kind = "directory"
+required = true
+description = "Exact official ED v3.0 publisher source tree, kept as the immutable stock reference."
+checks = [
+  { type = "glob_count", pattern = "*.cc", expected = 24 },
+  { type = "glob_count", pattern = "*.h", expected = 17 },
+  { type = "glob_count", pattern = "*.cfg", expected = 6 },
+  { type = "glob_count", pattern = "external_apps/source_code/*.tar.gz", expected = 6 },
+  { type = "file_sha256", path = "fire.cc", sha256 = "7d0fd7a0f0d3a119aa535b6cc9939a43befe243a4f419f3347eb4137a13d337f" },
+  { type = "file_sha256", path = "Makefile", sha256 = "094e60a72297333649e8f2a742cbb9f39885dd0492fb44d74c319b567f34c555" },
+]
+
+[[datasets]]
+id = "reference.ed-v3.release"
+category = "reference"
+role = "reference-tool"
+required_for = ["stock-source-reproduction"]
+path = "data/reference/ed-v3-release"
+kind = "directory"
+required = true
+description = "Publisher archives, environment guide, and evaluation script for the official ED v3.0 release."
+checks = [
+  { type = "file_size", path = "archives/EDv3_code.zip", bytes = 186932 },
+  { type = "file_size", path = "archives/EDv3_dependencies.zip", bytes = 38591525 },
+  { type = "file_size", path = "archives/EDv3_inputs.zip", bytes = 15299859096 },
+  { type = "file_size", path = "archives/EDv3_env_setup.pdf", bytes = 108439 },
+  { type = "file_size", path = "archives/EDv3_evaluation.zip", bytes = 16607 },
+  { type = "file_size", path = "archives/EDv3_simulation.zip", bytes = 1576948578 },
+  { type = "file_size", path = "evaluation/ED_global_evaluation.py", bytes = 93589 },
+]

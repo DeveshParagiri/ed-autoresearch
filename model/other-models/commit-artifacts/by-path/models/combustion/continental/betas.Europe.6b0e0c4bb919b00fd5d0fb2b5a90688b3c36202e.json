@@ -1,0 +1,20 @@
+{
+  "ba_model": "ED-ModelC-continental",
+  "region": "Europe",
+  "baseline_overall_globalbetas": 0.5197016298159253,
+  "best_overall": 0.5740549324205559,
+  "best_params": {
+    "beta_leaf": 0.7660461264764972,
+    "beta_fine": 0.6990290896895752,
+    "beta_coarse": 0.9374392234924745,
+    "beta_litter": 0.9997251841319927,
+    "D_REF": 159.7404766400374
+  },
+  "scores": {
+    "bias": 0.9998107741317026,
+    "rmse": 0.22233556002246935,
+    "seas": 0.7409615516662598,
+    "spat": 0.25907537454873236,
+    "overall": 0.5740549324205559
+  }
+}

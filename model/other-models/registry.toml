@@ -1,0 +1,250 @@
+schema_version = 1
+upstream_repository = "https://github.com/DeveshParagiri/ed-autoresearch"
+history_bundle = "model/other-models/upstream/ed-autoresearch.bundle"
+history_bundle_tip = "11ee71418e597e977a4d49f6fda166e20c098e9f"
+parameter_count_coupled_gfed5 = 300
+
+[protocols.abc_gfed4_1s]
+benchmark = "GFED4.1s"
+period = "2001-2016"
+ilamb_version = "2.7.3 replay; archived run version was not pinned"
+source_commit = "bffdba5716aaf702d1eeffdb40a2480f34561799"
+score_correction_commit = "48dc681b2a71453c97146151c062e83ea76cf5a6"
+archived_reproducer_commit = "9d346449731a4cf73f2a0787e0439571fbaf7e2a"
+admissible_for_current_research = false
+reasons = [
+  "The generator masks cells using GFED4.1s fire presence.",
+  "The generator rescales every output to the GFED4.1s mean.",
+  "The archived prose misstates the native ILAMB aggregation formula.",
+  "The exact Model A preprocessing artifact and generated NetCDF were not committed.",
+]
+
+[protocols.coupled_gfed5]
+benchmark = "GFED5"
+period = "2001-2016"
+ilamb_version = "2.7.3"
+branch_tip = "11ee71418e597e977a4d49f6fda166e20c098e9f"
+admissible_for_current_research = false
+reasons = [
+  "C, D, F, and H use a GFED5 fire-presence mask in generation or fitting.",
+  "E, G, G6, G7, I, and Ibest use a GFED4.1s fire-presence mask inherited from the assembly path.",
+  "F pins global burned area to GFED5 by construction.",
+  "These values reproduce development history; they are not clean descendants of stock ED.",
+]
+
+[[models]]
+id = "A-legacy"
+display_name = "Model A"
+protocol = "abc_gfed4_1s"
+parameter_files = ["model/other-models/parameters/abc-gfed4.1s/A.json"]
+mechanisms = 8
+parameters = 27
+reported_overall = 0.6574
+replayed_overall = 0.6521
+replay_status = "partial"
+note = "The equation and parameters are recovered. The original generated NetCDF and exact LAI preprocessing artifact are absent; the replay uses period-mean LAI from the canonical ED frozen simulation."
+
+[[models]]
+id = "B-legacy"
+display_name = "Model B"
+protocol = "abc_gfed4_1s"
+parameter_files = ["model/other-models/parameters/abc-gfed4.1s/B.json"]
+mechanisms = 5
+parameters = 17
+reported_overall = 0.6506
+replayed_overall = 0.6509
+replay_status = "reproduced"
+
+[[models]]
+id = "C-legacy"
+display_name = "Model C, GFED4.1s fit"
+protocol = "abc_gfed4_1s"
+parameter_files = ["model/other-models/parameters/abc-gfed4.1s/C.json"]
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6733
+replayed_overall = 0.6718
+replay_status = "reproduced"
+
+[[models]]
+id = "C"
+display_name = "Model C, GFED5 refit"
+protocol = "coupled_gfed5"
+source_commit = "9d346449731a4cf73f2a0787e0439571fbaf7e2a"
+parameter_files = ["model/other-models/parameters/coupled-gfed5/params.nsga2.json"]
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6485
+replayed_overall = 0.648453
+reported_mha_per_year = 1001.0
+replayed_mha_per_year = 1000.984
+replay_status = "reproduced"
+
+[[models]]
+id = "D"
+display_name = "Model D"
+protocol = "coupled_gfed5"
+source_commit = "3fb01b4a06f1eddc8f9ac0ed73788ab6ee8f57bb"
+parameter_files = ["model/other-models/parameters/coupled-gfed5/params.paperD.k1.json"]
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6411
+replayed_overall = 0.641035
+reported_mha_per_year = 1219.0
+replayed_mha_per_year = 1218.699
+replay_status = "reproduced"
+
+[[models]]
+id = "E"
+display_name = "Model E"
+protocol = "coupled_gfed5"
+source_commit = "fab21e9d466ee0c48cfc611d8c05a4def38fb64d"
+parameter_files = [
+  "model/other-models/parameters/coupled-gfed5/params.spatial.k1.json",
+  "model/other-models/parameters/coupled-gfed5/params.africafuel.json",
+  "model/other-models/parameters/coupled-gfed5/params.boreal.json",
+  "model/other-models/parameters/coupled-gfed5/params.samerica.json",
+  "model/other-models/parameters/coupled-gfed5/params.seasia.json",
+  "model/other-models/parameters/coupled-gfed5/params.europe.json",
+]
+mechanisms = 5
+parameters = 16
+reported_overall = 0.6646
+replayed_overall = 0.664619
+reported_mha_per_year = 816.0
+replayed_mha_per_year = 815.606
+replay_status = "reproduced"
+
+[[models]]
+id = "F"
+display_name = "Model F"
+protocol = "coupled_gfed5"
+source_commit = "53742a646122ec91630bb212e931e9d8ac35897c"
+parameter_files = [
+  "model/other-models/parameters/coupled-gfed5/params.coupledE_gdp.json",
+  "model/other-models/parameters/coupled-gfed5/gdp_regional_gamma.json",
+]
+mechanisms = 6
+parameters = 16
+reported_overall = 0.6783
+replayed_overall = 0.678304
+reported_mha_per_year = 785.0
+replayed_mha_per_year = 785.227
+replay_status = "reproduced-but-noncomparable"
+note = "The ED-dump-climate replay uses saved regional GDP coefficients and a saved global scale that pins magnitude to GFED5."
+
+[[models]]
+id = "G"
+display_name = "Model G, five regions"
+protocol = "coupled_gfed5"
+source_commit = "aa3f8ff447cb109eceadbcf57f9932e29071f120"
+parameter_pattern = "model/other-models/parameters/coupled-gfed5/params.G_*.json"
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6818
+replayed_overall = 0.681804
+reported_mha_per_year = 1002.0
+replayed_mha_per_year = 1002.424
+replay_status = "reproduced"
+
+[[models]]
+id = "G6"
+display_name = "Model G6"
+protocol = "coupled_gfed5"
+source_commit = "d2403d4477076187d97b4870a580e8764041710a"
+parameter_pattern = "model/other-models/parameters/coupled-gfed5/params.G_*.json"
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6848
+replayed_overall = 0.684781
+reported_mha_per_year = 943.0
+replayed_mha_per_year = 943.213
+replay_status = "reproduced"
+
+[[models]]
+id = "G7"
+display_name = "Model G7"
+protocol = "coupled_gfed5"
+source_commit = "d2403d4477076187d97b4870a580e8764041710a"
+parameter_pattern = "model/other-models/parameters/coupled-gfed5/params.G_*.json"
+mechanisms = 3
+parameters = 12
+reported_overall = 0.6862
+replayed_overall = 0.686201
+reported_mha_per_year = 946.0
+replayed_mha_per_year = 945.842
+replay_status = "reproduced"
+
+[[models]]
+id = "H"
+display_name = "Model H"
+protocol = "coupled_gfed5"
+source_commit = "d2403d4477076187d97b4870a580e8764041710a"
+parameter_files = ["model/other-models/parameters/coupled-gfed5/params.H.json"]
+mechanisms = 4
+parameters = 13
+reported_overall = 0.6819
+replayed_overall = 0.682103
+reported_mha_per_year = 830.0
+replayed_mha_per_year = 829.570767
+replay_status = "reproduced-with-phase-tie-drift"
+note = "The recovered source reproduces all nonseasonal scores. Platform-level floating-point differences flip a small number of equal-month phase ties: archived Seasonal 0.835265 and Overall 0.681881; macOS replay Seasonal 0.836376 and Overall 0.682103."
+
+[[models]]
+id = "I"
+display_name = "Model I"
+protocol = "coupled_gfed5"
+source_commit = "53582d73a70c373a9a1774003f8d735935631f8f"
+parameter_pattern = "model/other-models/parameters/coupled-gfed5/params.Gtrop_*.json"
+mechanisms = 4
+parameters = 14
+reported_overall = 0.6765
+replayed_overall = 0.676542
+reported_mha_per_year = 794.0
+replayed_mha_per_year = 794.284
+replay_status = "reproduced"
+
+[[models]]
+id = "Ibest"
+display_name = "Model Ibest"
+protocol = "coupled_gfed5"
+source_commit = "53582d73a70c373a9a1774003f8d735935631f8f"
+parameter_patterns = [
+  "model/other-models/parameters/coupled-gfed5/params.G_*.json",
+  "model/other-models/parameters/coupled-gfed5/params.Gtrop_*.json",
+]
+mechanisms = 4
+parameters = 14
+reported_overall = 0.6766
+replayed_overall = 0.676603
+reported_mha_per_year = 806.0
+replayed_mha_per_year = 805.814
+replay_status = "reproduced-exploratory-hybrid"
+
+[[trial_families]]
+id = "global-c-refits"
+patterns = ["params.json", "params.nsga2.json", "params.spatial*.json", "params.seasonal*.json", "params.tropfix*.json", "params.PRE-*.json", "params.chk*.json"]
+
+[[trial_families]]
+id = "continental-e-and-validation"
+patterns = ["params.africa*.json", "params.boreal*.json", "params.samerica*.json", "params.seasia*.json", "params.europe*.json", "params.namerica*.json", "params.australia*.json"]
+
+[[trial_families]]
+id = "coupled-dump-and-human-term"
+patterns = ["params.coupledE*.json", "params.coupledFW*.json", "gdp_regional_gamma.json"]
+
+[[trial_families]]
+id = "regional-g"
+patterns = ["params.G_*.json", "topk.G_*.json"]
+
+[[trial_families]]
+id = "global-h"
+patterns = ["params.H*.json", "topk.H.json"]
+
+[[trial_families]]
+id = "regional-i"
+patterns = ["params.Gtrop_*.json", "topk.Gtrop_*.json"]
+
+[[trial_families]]
+id = "optimizer-checkpoints"
+patterns = ["*.k1.json", "*.k2.json", "*.k3.json", "*.k4.json", "*.k5.json", "*.k6.json", "*.k7.json", "*.k8.json", "topk.*.json"]

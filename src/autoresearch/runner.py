@@ -536,7 +536,7 @@ def run_experiment(
     project_root = project_root.resolve()
     inputs = experiment.get("inputs")
     execution = experiment.get("execution")
-    if experiment.get("schema") != "autoresearch-experiment/v1" or experiment.get("id") != experiment_id:
+    if experiment.get("schema") != "autoresearch-experiment/v2" or experiment.get("id") != experiment_id:
         raise RunError(f"invalid experiment record: {experiment_id}")
     if not command:
         raise RunError("candidate command cannot be empty")

@@ -1,0 +1,102 @@
+--- /Users/devparagiri/Research/ED/data/ed-source/code/belowgrnd.cc	2021-08-23 10:56:09
++++ src/belowgrnd.cc	2026-03-20 15:56:26
+@@ -570,61 +570,50 @@
+    soil_temp = currents->sdata->temp_average;
+ #endif /* MIAMI_LU */
+ 
+-   /* EFFECT OF TEMPERATURE   */
+-   /* from ben's century code */
+-    double Td=0;
+-if (0)
+-{
+-   double Tmax = 45.0;
+-   double Topt = 35.0;
+-   double tshr = 0.2; 
+-   double tshl = 2.63;
+-   double t1 = (Tmax - soil_temp) / (Tmax - Topt);
+-   double t2 = exp( (tshr / tshl) * (1. - pow(t1, tshl)) );
+-   Td = pow(t1, tshr) * t2; // rate multiplier due to temp
+-}
+-else
++   /* EFFECT OF TEMPERATURE */
++   /* Lloyd-Taylor (1994) Functional Ecology 8:315-323 */
++   /* Arrhenius-derived response that flattens near freezing, */
++   /* replacing Q10 which overestimates temperature sensitivity at low T. */
++   /* Optimized against HWSD soil carbon and Hashimoto Rh observations. */
++    double Td = 0;
+ {
+-    double q10 = 1.5;
+-    double R0 = 0.40;
+-
+-    double Rh_freezing_crit = 0.0;
+-    if(currents->sdata->soil_temp1[time_period]>Rh_freezing_crit)
+-        Td += R0*pow(q10, (currents->sdata->soil_temp1[time_period]-25.0)/10.0);
+-    else
+-        Td += 0.0;
+-
+-    if(currents->sdata->soil_temp2[time_period]>Rh_freezing_crit)
+-        Td += R0*pow(q10, (currents->sdata->soil_temp2[time_period]-25.0)/10.0);
+-    else
+-        Td += 0.0;
+-
+-    if(currents->sdata->soil_temp3[time_period]>Rh_freezing_crit)
+-        Td += R0*pow(q10, (currents->sdata->soil_temp3[time_period]-25.0)/10.0);
+-    else
+-        Td += 0.0;
+-
+-    if(currents->sdata->soil_temp1[time_period]<Rh_freezing_crit)
+-        Td = 0.0;
+-
+-    Td/=3.0;
++    double R0 = 1.93;         /* base decomposition rate */
++    double E0 = 243.5;        /* activation energy parameter (K) */
++    double T_freeze = 3.6;    /* effective freezing threshold (C) */
+ 
++    /* average Lloyd-Taylor response across 3 soil temperature layers */
++    double soil_temps[3] = {
++        currents->sdata->soil_temp1[time_period],
++        currents->sdata->soil_temp2[time_period],
++        currents->sdata->soil_temp3[time_period]
++    };
++
++    for (int i = 0; i < 3; i++) {
++        if (soil_temps[i] > T_freeze) {
++            double denom = soil_temps[i] + 46.02;
++            if (denom > 0.1)
++                Td += R0 * exp(E0 * (1.0/56.02 - 1.0/denom));
++        }
++    }
++    Td /= 3.0;
+ }
+    
+ 
+-   /*EFFECT OF MOISTURE*/
+-   double Wd;        /* rate reduction due to mositure */   
++   /* EFFECT OF MOISTURE */
++   /* Log-parabolic response (Moyano et al. 2013, Biogeosciences 10:3961) */
++   /* Smooth Gaussian in log-space with optimum at theta_opt. */
++   /* Replaces piecewise linear (Linn & Doran 1984) which had hard breakpoints. */
++   /* sigma=3.7 indicates weak moisture modulation at global scale, */
++   /* consistent with Bond-Lamberty & Thomson (2010). */
++   double Wd;
+ #if defined ED
+-   /*Linn and Doran, 1984, Soil Sci. Amer. J. 48:1267-1272*/
+-   /*This differs from the Century Wd*/
+-   /*gets rid of PET, and rainfall in Wd term*/
+-   if (theta <= 0.3) {
+-      Wd = 0.2;
+-   } else if (theta <= 0.6) {
+-      Wd = theta / 0.6;
+-   } else {
+-      Wd = 0.6 / (1.2 * theta);
+-   }
++{
++    double theta_opt = 0.19;   /* optimal soil moisture for decomposition */
++    double sigma = 3.70;       /* width of log-parabolic response */
++    double theta_safe = (theta > 0.01) ? theta : 0.01;
++    double log_ratio = log(theta_safe / theta_opt);
++    Wd = exp(-log_ratio * log_ratio / (2.0 * sigma * sigma));
++}
+ 
+ 
+    return (Td * Wd);

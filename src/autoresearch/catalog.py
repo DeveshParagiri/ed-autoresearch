@@ -26,6 +26,26 @@ VALID_DATASET_ROLES = {
     "reference-tool",
     "supporting-source",
 }
+REQUIRED_SOURCE_STRING_FIELDS = {
+    "acquisition",
+    "source_name",
+    "version",
+    "retrieval",
+    "time_coverage",
+    "spatial_coverage",
+    "units",
+    "preprocessing",
+    "limitations",
+    "license",
+    "integrity",
+}
+PUBLIC_SOURCE_ACQUISITIONS = {
+    "derived-public-source",
+    "git",
+    "ilamb-reference",
+    "ilamb-reference-and-lab-seed",
+    "official-download",
+}
 
 
 @dataclass(frozen=True)
@@ -92,6 +112,145 @@ def load_catalog(project_root: Path) -> dict[str, Any]:
     return catalog
 
 
+def validate_sources(project_root: Path) -> tuple[ValidationIssue, ...]:
+    manifest_path = project_root / "data" / "sources.toml"
+    try:
+        with manifest_path.open("rb") as handle:
+            manifest = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return (
+            ValidationIssue("error", "invalid-sources", "data/sources.toml", str(exc)),
+        )
+
+    issues: list[ValidationIssue] = []
+    if manifest.get("schema") != "data-sources/v1":
+        issues.append(
+            ValidationIssue(
+                "error",
+                "invalid-source-schema",
+                "data/sources.toml",
+                repr(manifest.get("schema")),
+            )
+        )
+    store = manifest.get("store")
+    if not isinstance(store, dict) or store.get("default_relative_to_project") != ".":
+        issues.append(
+            ValidationIssue(
+                "error",
+                "noncanonical-data-root",
+                "data/sources.toml",
+                "the project root must be the canonical data root",
+            )
+        )
+    if isinstance(store, dict) and "environment_variable" in store:
+        issues.append(
+            ValidationIssue(
+                "error",
+                "external-data-root",
+                "data/sources.toml",
+                "external data-root environment variables are not supported",
+            )
+        )
+
+    catalog_by_id = {
+        item["id"]: item
+        for item in load_catalog(project_root).get("datasets", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    source_ids: set[str] = set()
+    records = manifest.get("sources", [])
+    if not isinstance(records, list):
+        return tuple(
+            issues
+            + [
+                ValidationIssue(
+                    "error",
+                    "invalid-source-records",
+                    "data/sources.toml",
+                    "sources must be a list",
+                )
+            ]
+        )
+
+    for source in records:
+        if not isinstance(source, dict):
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-source", "data/sources.toml", repr(source)
+                )
+            )
+            continue
+        item_id = source.get("id")
+        if not isinstance(item_id, str) or not item_id:
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-source-id", "data/sources.toml", repr(item_id)
+                )
+            )
+            continue
+        if item_id in source_ids:
+            issues.append(
+                ValidationIssue("error", "duplicate-source-id", item_id, "duplicate ID")
+            )
+            continue
+        source_ids.add(item_id)
+        for field in REQUIRED_SOURCE_STRING_FIELDS:
+            value = source.get(field)
+            if not isinstance(value, str) or not value.strip():
+                issues.append(
+                    ValidationIssue("error", "invalid-source-field", item_id, field)
+                )
+        experiments = source.get("experiments")
+        if not isinstance(experiments, list) or not all(
+            isinstance(value, str) and value for value in experiments
+        ):
+            issues.append(
+                ValidationIssue(
+                    "error", "invalid-source-experiments", item_id, repr(experiments)
+                )
+            )
+        source_url = source.get("source_url")
+        if source.get("acquisition") in PUBLIC_SOURCE_ACQUISITIONS and (
+            not isinstance(source_url, str) or not source_url.strip()
+        ):
+            issues.append(
+                ValidationIssue("error", "missing-source-url", item_id, "source_url")
+            )
+        source_path = source.get("source_path")
+        catalog_item = catalog_by_id.get(item_id)
+        if source.get("acquisition") == "repository":
+            if source_path is not None:
+                issues.append(
+                    ValidationIssue(
+                        "error",
+                        "unexpected-source-path",
+                        item_id,
+                        repr(source_path),
+                    )
+                )
+        elif catalog_item is not None and source_path != catalog_item.get("path"):
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    "noncanonical-source-path",
+                    item_id,
+                    f"expected {catalog_item.get('path')!r}, found {source_path!r}",
+                )
+            )
+
+    catalog_ids = set(catalog_by_id)
+    if catalog_ids != source_ids:
+        issues.append(
+            ValidationIssue(
+                "error",
+                "source-coverage",
+                "data/sources.toml",
+                f"missing={sorted(catalog_ids - source_ids)} extra={sorted(source_ids - catalog_ids)}",
+            )
+        )
+    return tuple(issues)
+
+
 def _missing_issue(item_id: str, required: bool, location: Path) -> ValidationIssue:
     return ValidationIssue(
         severity="error" if required else "warning",
@@ -151,6 +310,17 @@ def validate_catalog(project_root: Path) -> CatalogValidation:
         if not isinstance(relative_location, str) or not relative_location:
             issues.append(
                 ValidationIssue("error", "invalid-path", item_id, "dataset path is missing")
+            )
+            continue
+        declared_path = Path(relative_location)
+        if declared_path.is_absolute() or ".." in declared_path.parts:
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    "invalid-path",
+                    item_id,
+                    f"dataset path must stay inside the project: {relative_location!r}",
+                )
             )
             continue
         location = project_root / relative_location

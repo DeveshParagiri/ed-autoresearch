@@ -1,0 +1,44 @@
+[
+  {
+    "rank": 1,
+    "trial": 1103,
+    "internal_overall": 0.5975,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9628,
+    "pred_lm_ratio": 1.1544,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_SEAsia.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_SEAsia/ED-ModelC-G_SEAsia-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1396,
+    "internal_overall": 0.5637,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9693,
+    "pred_lm_ratio": 1.0774,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_SEAsia.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_SEAsia/ED-ModelC-G_SEAsia-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1495,
+    "internal_overall": 0.5474,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9783,
+    "pred_lm_ratio": 0.8585,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_SEAsia.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_SEAsia/ED-ModelC-G_SEAsia-k3"
+  }
+]

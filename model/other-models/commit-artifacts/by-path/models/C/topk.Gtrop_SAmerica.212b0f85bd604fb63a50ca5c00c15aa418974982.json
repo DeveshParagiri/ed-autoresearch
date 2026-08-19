@@ -1,0 +1,72 @@
+[
+  {
+    "rank": 1,
+    "trial": 1486,
+    "internal_overall": 0.6376,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9472,
+    "pred_lm_ratio": 1.1673,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_SAmerica.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_SAmerica/ED-ModelC-Gtrop_SAmerica-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1482,
+    "internal_overall": 0.6342,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9575,
+    "pred_lm_ratio": 1.042,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_SAmerica.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_SAmerica/ED-ModelC-Gtrop_SAmerica-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1155,
+    "internal_overall": 0.6247,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9646,
+    "pred_lm_ratio": 0.7886,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_SAmerica.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_SAmerica/ED-ModelC-Gtrop_SAmerica-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 1375,
+    "internal_overall": 0.6192,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9711,
+    "pred_lm_ratio": 0.9115,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_SAmerica.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_SAmerica/ED-ModelC-Gtrop_SAmerica-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 1157,
+    "internal_overall": 0.6179,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9713,
+    "pred_lm_ratio": 1.0381,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.Gtrop_SAmerica.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_Gtrop_SAmerica/ED-ModelC-Gtrop_SAmerica-k5"
+  }
+]

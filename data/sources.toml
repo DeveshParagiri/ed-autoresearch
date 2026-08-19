@@ -1,13 +1,12 @@
 schema = "data-sources/v1"
 
 [store]
-environment_variable = "ED_FIRE_SOURCE_ROOT"
-default_relative_to_project = "../ED"
-description = "Canonical large-data store. Project paths in data/catalog.toml resolve to this store through symlinks."
+default_relative_to_project = "."
+description = "Canonical assets live at the project paths in data/catalog.toml. Legacy workspaces may link to these paths, but they are not data stores."
 
 [[sources]]
 id = "input.crujra.processed"
-source_path = "data/crujra"
+source_path = "data/inputs/climate/crujra-processed"
 acquisition = "lab-seed"
 source_name = "ED-Fire processed CRUJRA archive"
 version = "CRUJRA v3.5, processed for the 2001-2016 monthly offline workflow"
@@ -23,7 +22,7 @@ experiments = []
 
 [[sources]]
 id = "input.crujra.source"
-source_path = "data/observations/crujra"
+source_path = "data/inputs/climate/crujra-source"
 acquisition = "derived-lab-artifact"
 source_name = "Annual CRUJRA climate preprocessing outputs"
 version = "CRUJRA v3.5, 2001-2016 annual files"
@@ -39,7 +38,7 @@ experiments = []
 
 [[sources]]
 id = "input.cru-ts.archive"
-source_path = "data/archive/cru_ts"
+source_path = "data/inputs/climate/cru-ts-archive"
 acquisition = "licensed-source"
 source_name = "Climatic Research Unit Time-Series 4.09"
 source_url = "https://catalogue.ceda.ac.uk/uuid/9cf07e92afaa405da4f40b6733f362d3/"
@@ -56,7 +55,7 @@ experiments = []
 
 [[sources]]
 id = "input.ed.static"
-source_path = "data/ed_static"
+source_path = "data/inputs/ecosystem/ed-static"
 acquisition = "lab-seed"
 source_name = "Processed ED natural and secondary vegetation structure"
 version = "Processed ED vegetation structure arrays"
@@ -72,7 +71,7 @@ experiments = []
 
 [[sources]]
 id = "input.trendy-v14-ed"
-source_path = "data/trendy_v14_ed_vars"
+source_path = "data/inputs/ecosystem/trendy-v14-ed"
 acquisition = "trendy-member-data"
 source_name = "TRENDY v14 EDv3 S3 ecosystem fields"
 version = "TRENDY v14 ED S3 fields"
@@ -88,23 +87,41 @@ experiments = []
 
 [[sources]]
 id = "input.ed.simulation"
-source_path = "data/ed-simulation/EDv3_global_simulation_1981_2016.nc"
-acquisition = "lab-seed"
-source_name = "EDv3 global simulation archive"
-version = "EDv3 global simulation, 1981-2016"
-retrieval = "Import the archived ED simulation from a complete ED-Fire seed root."
+source_path = "data/inputs/ecosystem/ed-simulation.nc"
+acquisition = "official-download"
+source_name = "ED v3.0 global simulation release"
+source_url = "https://zenodo.org/records/6901510"
+version = "ED v3.0 global simulation, 1981-2016"
+retrieval = "python scripts/install_stock_ed.py --only simulation"
 time_coverage = "1981 through 2016"
 spatial_coverage = "Global grid encoded in the NetCDF file"
 units = "Variable-specific NetCDF units"
-preprocessing = "The archived simulation is linked without project-side transformation."
-limitations = "The producing ED revision, run configuration, forcing identity, and scheduler record have not been recovered into this workspace."
-license = "Project-generated ED output; upstream model and forcing terms apply."
-integrity = "Catalog requires a file larger than 1 GB; an exact checksum is not yet pinned."
+preprocessing = "The publisher NetCDF member is retained byte-for-byte; the release-layout path links to the canonical ecosystem input path."
+limitations = "The publisher record does not identify a Git revision or prove that this simulation produced the separate TRENDY v14 stock burned-area artifact."
+license = "CC BY 4.0"
+integrity = "Publisher archive MD5 5d02c8a2827063ebf109e6df5130ea88; extracted NetCDF SHA-256 15f34eaee68bc4e5b27ca768dc11e4e02370f53ac9230ba7236b801838655eb3."
+experiments = []
+
+[[sources]]
+id = "input.ed-v3.official-run-deck"
+source_path = "data/inputs/stock-ed/EDv3_inputs"
+acquisition = "official-download"
+source_name = "ED v3.0 official input bundle"
+source_url = "https://zenodo.org/records/6901510"
+version = "ED v3.0 publisher input archive"
+retrieval = "python scripts/install_stock_ed.py --only inputs"
+time_coverage = "Forcing and scenario coverage encoded in the released files"
+spatial_coverage = "Global model grid and source-specific grids encoded in the bundle"
+units = "Variable-specific units declared by the released files and ED configuration"
+preprocessing = "The installer verifies the publisher archive and extracts it unchanged under data/inputs/stock-ed."
+limitations = "The publisher archive has no Git revision or scheduler record, so it enables release reproduction but does not by itself prove the exact TRENDY v14 production setup."
+license = "CC BY 4.0 for the release record; bundled upstream forcing terms must also be respected."
+integrity = "Publisher archive size 15,299,859,096 bytes and MD5 40e96db270117fe1e2933b0bd49fc003 are enforced by scripts/install_stock_ed.py."
 experiments = []
 
 [[sources]]
 id = "input.hybrid-vegetation"
-source_path = "data/hybrid_vegetation.npz"
+source_path = "data/inputs/ecosystem/hybrid-vegetation.npz"
 acquisition = "derived-lab-artifact"
 source_name = "ED-Fire hybrid vegetation assembly"
 version = "Current offline hybrid vegetation assembly"
@@ -113,14 +130,14 @@ time_coverage = "Prepared for the 2001-2016 offline period"
 spatial_coverage = "Global project grid encoded in the NumPy archive"
 units = "Variable-specific; inspect array names and producing code before scientific use"
 preprocessing = "Unknown in this workspace; the file combines vegetation fields for an earlier offline workflow."
-limitations = "The producing code, exact upstream variables, and relation to prior Model A-E work have not been established. It cannot define the new stock baseline."
+limitations = "The producing code, exact upstream variables, and relation to the historical Model A-I work have not been established. It cannot define the new stock baseline."
 license = "Derived project artifact; upstream data terms apply."
 integrity = "Catalog requires a file larger than 1 MB; an exact checksum is not yet pinned."
 experiments = []
 
 [[sources]]
 id = "input.coupled.state"
-source_path = "global_baseline_modelC_inputs_1997-2016.nc"
+source_path = "data/inputs/coupled/state-1997-2016.nc"
 acquisition = "derived-lab-artifact"
 source_name = "Archived coupled ED state dump"
 version = "Coupled ED state dump, 1997-2016"
@@ -136,7 +153,7 @@ experiments = []
 
 [[sources]]
 id = "input.coupled.fuel-state"
-source_path = "global_baseline_modelCfuel_inputs_1997-2016.nc"
+source_path = "data/inputs/coupled/fuel-state-1997-2016.nc"
 acquisition = "derived-lab-artifact"
 source_name = "Archived coupled ED fuel-state dump"
 version = "Coupled ED fuel-state dump, 1997-2016"
@@ -152,7 +169,7 @@ experiments = []
 
 [[sources]]
 id = "input.human.coupling"
-source_path = "data_human/coupling_inputs"
+source_path = "data/inputs/human/coupling"
 acquisition = "lab-seed"
 source_name = "Prepared GDP coupling fields"
 version = "GDP coupling inputs used by the current human-ignition branch"
@@ -167,8 +184,25 @@ integrity = "Two NetCDF files are required by the catalog count check; per-file 
 experiments = []
 
 [[sources]]
+id = "input.human.historical-gdp-pcap-1deg"
+source_path = "data/inputs/human/historical/gdp-pcap-grid-1deg.npy"
+acquisition = "historical-project-artifact"
+source_name = "World Bank GDP per capita raster used by the coupled GFED5 branch"
+source_url = "https://data.worldbank.org/indicator/NY.GDP.PCAP.CD"
+version = "Mean current-US-dollar GDP per capita over 2001-2020"
+retrieval = "Restore the tracked checksummed file at its canonical path; the historical Git bundle preserves its construction code and provenance notes."
+time_coverage = "Static mean of annual World Bank values from 2001 through 2020"
+spatial_coverage = "Global 1 degree grid, 180 by 360"
+units = "current US dollars per person"
+preprocessing = "Country means were joined to Natural Earth 50m polygons, rasterized at 0.5 degree, block-averaged to 1 degree, and missing cells filled from the nearest represented country."
+limitations = "This is a static, country-level proxy with nearest-country extrapolation. It is retained only to replay historical Models F and H and is not an approved input for the clean research line."
+license = "World Bank and Natural Earth source terms apply."
+integrity = "Exact file size 518,528 bytes and SHA-256 84ab073c42fd447bb47d616661342989bf9b2448c82cc4440e54175374251d3a."
+experiments = []
+
+[[sources]]
 id = "input.candidate.cveg"
-source_path = "data/observations/cveg"
+source_path = "data/inputs/candidate-drivers/cveg"
 acquisition = "trendy-member-data"
 source_name = "TRENDY v14 EDv3 S3 vegetation carbon"
 version = "EDv3 S3 vegetation carbon"
@@ -184,7 +218,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.fluxcom-gpp"
-source_path = "data/observations/fluxcom"
+source_path = "data/inputs/candidate-drivers/fluxcom-gpp"
 acquisition = "ilamb-reference-and-lab-seed"
 source_name = "FLUXCOM global GPP and FLUXNET2015 GPP references"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/gpp/"
@@ -201,7 +235,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.gleam-et"
-source_path = "data/observations/gleam"
+source_path = "data/inputs/candidate-drivers/gleam-et"
 acquisition = "ilamb-reference"
 source_name = "GLEAM v3.3a evapotranspiration"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/evspsbl/"
@@ -218,7 +252,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.modis-et"
-source_path = "data/observations/modis_et"
+source_path = "data/inputs/candidate-drivers/modis-et"
 acquisition = "ilamb-reference"
 source_name = "MODIS evapotranspiration ILAMB reference"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/evspsbl/"
@@ -235,7 +269,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.modis-lai"
-source_path = "data/observations/modis_lai"
+source_path = "data/inputs/candidate-drivers/modis-lai"
 acquisition = "ilamb-reference"
 source_name = "MODIS leaf-area index ILAMB reference"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/lai/"
@@ -252,7 +286,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.cropland-lai"
-source_path = "data/observations/lai_cv_cropland_proxy.npy"
+source_path = "data/inputs/candidate-drivers/lai-cropland-proxy.npy"
 acquisition = "derived-lab-artifact"
 source_name = "Cropland LAI coefficient-of-variation proxy"
 version = "Cropland LAI coefficient-of-variation proxy"
@@ -268,7 +302,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.lightning"
-source_path = "data/observations/lightning"
+source_path = "data/inputs/candidate-drivers/lightning"
 acquisition = "lab-seed"
 source_name = "LIS/OTD high-resolution monthly lightning climatology"
 source_url = "https://ghrc.nsstc.nasa.gov/uso/ds_docs/lis_climatology/lisotd_climatology_dataset.html"
@@ -285,7 +319,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.population"
-source_path = "data/observations/population"
+source_path = "data/inputs/candidate-drivers/population"
 acquisition = "licensed-source"
 source_name = "Gridded Population of the World v4 revision 11"
 source_url = "https://sedac.ciesin.columbia.edu/data/collection/gpw-v4"
@@ -302,7 +336,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.dai-runoff"
-source_path = "data/observations/dai_runoff"
+source_path = "data/inputs/candidate-drivers/dai-runoff"
 acquisition = "ilamb-reference"
 source_name = "Dai and Trenberth global runoff reference"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/mrro/Dai/"
@@ -319,7 +353,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.lora-runoff"
-source_path = "data/observations/lora_runoff"
+source_path = "data/inputs/candidate-drivers/lora-runoff"
 acquisition = "ilamb-reference"
 source_name = "Linear Optimal Runoff Aggregate v1.0"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/mrro/LORA/"
@@ -336,7 +370,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.hwsd-soil"
-source_path = "data/observations/hwsd"
+source_path = "data/inputs/candidate-drivers/hwsd-soil"
 acquisition = "ilamb-reference-and-lab-seed"
 source_name = "HWSD and HWSD2 soil-carbon references"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/cSoil/"
@@ -353,7 +387,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.ncscd-soil"
-source_path = "data/observations/ncscd"
+source_path = "data/inputs/candidate-drivers/ncscd-soil"
 acquisition = "ilamb-reference"
 source_name = "Northern Circumpolar Soil Carbon Database v2.2"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/cSoil/NCSCDV22/"
@@ -370,7 +404,7 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.soil-respiration"
-source_path = "data/observations/soil_respiration"
+source_path = "data/inputs/candidate-drivers/soil-respiration"
 acquisition = "ilamb-reference"
 source_name = "Hashimoto et al. 2015 heterotrophic respiration"
 source_url = "https://www.ilamb.org/ILAMB-Data/"
@@ -387,13 +421,13 @@ experiments = []
 
 [[sources]]
 id = "input.candidate.luh2"
-source_path = "data/luh2/GCB2026"
+source_path = "data/inputs/candidate-drivers/luh2"
 acquisition = "official-download"
 source_name = "Land-Use Harmonization 2 for Global Carbon Budget 2026"
 source_url = "https://zenodo.org/records/20932027"
 version = "LUH2-GCB2026 v1"
 license = "License not stated on the Zenodo record; inspect source terms before redistribution"
-retrieval = "python scripts/download_luh2_gcb2026.py --output-dir SOURCE_ROOT/data/luh2/GCB2026"
+retrieval = "python scripts/download_luh2_gcb2026.py --output-dir data/inputs/candidate-drivers/luh2"
 time_coverage = "States and management cover 850-2026; transitions cover 850-2025"
 spatial_coverage = "Global 0.25 degree grid"
 units = "Fractions, transition rates, and management variables as declared in the LUH2 NetCDF files"
@@ -404,13 +438,13 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed5.ilamb-burned-area"
-source_path = "ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc"
+source_path = "data/benchmarks/observations/gfed5-burned-area.nc"
 acquisition = "derived-public-source"
 source_name = "GFED5 burned-area reference for ILAMB"
 source_url = "https://zenodo.org/records/7668424"
 version = "GFED5 burned area v0.1, 2001-2020, project ILAMB conversion at 0.5 degree"
 license = "CC BY 4.0"
-retrieval = "python scripts/build_gfed5_burned_area.py --input-dir SOURCE_ROOT/data/gfed5 --output SOURCE_ROOT/ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc"
+retrieval = "python scripts/build_gfed5_burned_area.py --input-dir data/benchmarks/source/gfed5-monthly --output data/benchmarks/observations/gfed5-burned-area.nc"
 time_coverage = "2001-01 through 2020-12, monthly"
 spatial_coverage = "Global 0.5 degree grid, 360 by 720"
 units = "Percent of grid-cell area burned per month"
@@ -421,12 +455,12 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed4.ilamb-burned-area"
-source_path = "ilamb/DATA/burntArea/GFED4.1s/burntArea.nc"
+source_path = "data/benchmarks/observations/gfed4.1s-burned-area.nc"
 acquisition = "ilamb-reference"
 source_name = "GFED4.1s burned-area ILAMB reference"
 source_url = "https://www.ilamb.org/ILAMB-Data/DATA/burntArea/GFED4.1S/burntArea.nc"
 version = "GFED4.1s ILAMB reference, 1997-2016"
-retrieval = "python scripts/download_public_data.py --source-root SOURCE_ROOT --only gfed4-ilamb"
+retrieval = "python scripts/download_public_data.py --only gfed4-ilamb"
 time_coverage = "1997-01 through 2016-12, monthly"
 spatial_coverage = "Global 0.5 degree grid, 360 by 720"
 units = "Percent of grid-cell area burned per month"
@@ -438,12 +472,12 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed4.source"
-source_path = "data/gfed/4.1"
+source_path = "data/benchmarks/source/gfed4.1s"
 acquisition = "official-download"
 source_name = "GFED4.1s annual HDF5 source files"
 source_url = "https://www.geo.vu.nl/~gwerf/GFED/GFED4/"
 version = "GFED4.1s, 2001-2016 annual HDF5 subset"
-retrieval = "python scripts/download_public_data.py --source-root SOURCE_ROOT --only gfed4-source"
+retrieval = "python scripts/download_public_data.py --only gfed4-source"
 time_coverage = "2001 through 2016, monthly fields stored in annual files"
 spatial_coverage = "Global 0.25 degree source grid"
 units = "Variable-specific GFED4.1s HDF5 units"
@@ -455,13 +489,13 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed5.annual-source"
-source_path = "data/gfed/5"
+source_path = "data/benchmarks/source/gfed5-annual"
 acquisition = "official-download"
 source_name = "GFED5.1 monthly emissions archive subset"
 source_url = "https://zenodo.org/records/16794692"
 version = "GFED5.1 monthly emissions, 2000-2016 subset of the 1997-2022 archive"
 license = "CC BY 4.0"
-retrieval = "python scripts/download_public_data.py --source-root SOURCE_ROOT --only gfed5-emissions"
+retrieval = "python scripts/download_public_data.py --only gfed5-emissions"
 time_coverage = "2000 through 2016, monthly fields stored in annual files; emissions conversion uses 2001-2016"
 spatial_coverage = "Global 1 degree grid for 2000 and 0.25 degree grid from 2001 onward"
 units = "Monthly carbon emissions in grams of carbon per grid cell for the C field used here; other variables retain publisher units."
@@ -472,13 +506,13 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed5.monthly-source"
-source_path = "data/gfed5"
+source_path = "data/benchmarks/source/gfed5-monthly"
 acquisition = "official-download"
 source_name = "GFED5 burned-area v0.1 source files"
 source_url = "https://zenodo.org/records/7668424"
 version = "GFED5 burned area v0.1, 1997-2020 monthly files"
 license = "CC BY 4.0"
-retrieval = "python scripts/download_public_data.py --source-root SOURCE_ROOT --only gfed5-burned-area"
+retrieval = "python scripts/download_public_data.py --only gfed5-burned-area"
 time_coverage = "1997-01 through 2020-12, monthly"
 spatial_coverage = "Global 1 degree grid for 1997-2000 and 0.25 degree grid for 2001-2020"
 units = "Burned area in km2, with product-specific category fields; burnable area in km2"
@@ -489,7 +523,7 @@ experiments = []
 
 [[sources]]
 id = "benchmark.trendy-v14.comparison-models"
-source_path = "data/trendy_v14"
+source_path = "data/benchmarks/comparison-models/trendy-v14"
 acquisition = "trendy-member-data"
 source_name = "TRENDY v14 S3 burned-area comparison outputs"
 version = "TRENDY v14 S3 burned-area outputs for 13 models"
@@ -505,7 +539,7 @@ experiments = []
 
 [[sources]]
 id = "benchmark.trendy-v13.comparison-models"
-source_path = "data/trendy_v13"
+source_path = "data/benchmarks/comparison-models/trendy-v13"
 acquisition = "trendy-member-data"
 source_name = "TRENDY v13 JULES burned-area output"
 version = "TRENDY v13 JULES S3 burned-area output"
@@ -521,7 +555,7 @@ experiments = []
 
 [[sources]]
 id = "benchmark.ilamb.comparison-models"
-source_path = "ilamb/MODELS"
+source_path = "data/benchmarks/comparison-models/ilamb"
 acquisition = "derived-trendy-member-data"
 source_name = "Selected ILAMB-ready TRENDY burned-area outputs"
 version = "ILAMB-ready TRENDY comparison outputs"
@@ -531,14 +565,14 @@ time_coverage = "Model-specific periods encoded in twelve burntArea.nc files"
 spatial_coverage = "ILAMB-readable model grids encoded in each file"
 units = "Burned-area units encoded in each model file"
 preprocessing = "Authorized TRENDY outputs were converted into twelve model directories accepted by ILAMB."
-limitations = "The conversion procedure and producing run are not yet reconstructed here. Experimental ED Model A-E directories are excluded."
+limitations = "The conversion procedure and producing run are not yet reconstructed here. Historical experimental ED Model A-I directories are excluded."
 license = "Derived TRENDY member data; consortium terms apply."
 integrity = "Twelve selected model directories with one burntArea.nc each are required by the catalog count check."
 experiments = []
 
 [[sources]]
 id = "benchmark.ed-stock.burned-area"
-source_path = "ilamb/MODELS/EDv3/burntArea.nc"
+source_path = "data/benchmarks/comparison-models/ilamb/EDv3/burntArea.nc"
 acquisition = "derived-trendy-member-data"
 source_name = "TRENDY v14 EDv3 S3 native burned-area output"
 version = "TRENDY v14 EDv3 S3, project ILAMB conversion"
@@ -599,13 +633,13 @@ experiments = []
 
 [[sources]]
 id = "benchmark.gfed5.ilamb-emissions"
-source_path = "ilamb_ref_official/DATA/fFire/GFED5/fFire.nc"
+source_path = "data/benchmarks/observations/gfed5-fire-emissions.nc"
 acquisition = "derived-public-source"
 source_name = "GFED5.1 fire-carbon-emissions reference for ILAMB"
 source_url = "https://zenodo.org/records/16794692"
 version = "GFED5.1 monthly carbon emissions, 2001-2016, project ILAMB conversion at 0.5 degree"
 license = "CC BY 4.0"
-retrieval = "python scripts/build_gfed5_fire_emissions.py --source SOURCE_ROOT/data/gfed/5 --burned-area-mask SOURCE_ROOT/ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc --output SOURCE_ROOT/ilamb_ref_official/DATA/fFire/GFED5/fFire.nc"
+retrieval = "python scripts/build_gfed5_fire_emissions.py --source data/benchmarks/source/gfed5-annual --burned-area-mask data/benchmarks/observations/gfed5-burned-area.nc --output data/benchmarks/observations/gfed5-fire-emissions.nc"
 time_coverage = "2001-01 through 2016-12, monthly"
 spatial_coverage = "Global 0.5 degree grid, 360 by 720"
 units = "kg C m-2 s-1"
@@ -616,17 +650,51 @@ experiments = []
 
 [[sources]]
 id = "reference.ilamb-data-tools"
-source_path = "data/observations/ILAMB-Data"
+source_path = "data/reference/ilamb-data-tools"
 acquisition = "git"
 source_name = "RUBISCO ILAMB-Data conversion repository"
 source_url = "https://github.com/rubisco-sfa/ILAMB-Data.git"
 version = "commit ccfa789f187ebc2a72386d65df65151c52f4c928"
 license = "Repository license not stated; inspect upstream before redistribution"
-retrieval = "python scripts/download_public_data.py --source-root SOURCE_ROOT --only ilamb-tools"
+retrieval = "python scripts/download_public_data.py --only ilamb-tools"
 time_coverage = "Not applicable; source-code repository"
 spatial_coverage = "Not applicable; source-code repository"
 units = "Not applicable; source-code repository"
 preprocessing = "The installer clones the upstream repository and checks out the pinned detached commit."
 limitations = "The repository contains conversion scripts, not observation files. Its upstream license is not stated in the checked-out repository."
 integrity = "Pinned Git commit ccfa789f187ebc2a72386d65df65151c52f4c928."
+experiments = []
+
+[[sources]]
+id = "reference.ed-v3.source"
+source_path = "model/stock-ed"
+acquisition = "official-download"
+source_name = "Ecosystem Demography model ED v3.0 source"
+source_url = "https://zenodo.org/records/6901510"
+version = "ED v3.0 publisher source archive"
+retrieval = "python scripts/install_stock_ed.py --only source"
+time_coverage = "Not applicable to source code"
+spatial_coverage = "Global model implementation"
+units = "Not applicable to source code"
+preprocessing = "The installer verifies the publisher archive and extracts its 50 non-metadata source and configuration files unchanged."
+limitations = "The archive has no Git metadata and is not proven to be the exact revision or configuration that produced the TRENDY v14 stock artifact."
+license = "CC BY 4.0"
+integrity = "Publisher archive size 186,932 bytes and MD5 0dc5c1d26d9f2fcd965812af44df6c83; every extracted file is compared with its archive member."
+experiments = []
+
+[[sources]]
+id = "reference.ed-v3.release"
+source_path = "data/reference/ed-v3-release"
+acquisition = "official-download"
+source_name = "Global evaluation of the Ecosystem Demography model ED v3.0 release"
+source_url = "https://zenodo.org/records/6901510"
+version = "Zenodo record 6901510, DOI 10.5281/zenodo.6901510"
+retrieval = "python scripts/install_stock_ed.py --only all"
+time_coverage = "Not applicable to source and documentation; the included simulation covers 1981-2016."
+spatial_coverage = "Global model release"
+units = "Not applicable to source and documentation"
+preprocessing = "Publisher files are retained under archives after exact size and MD5 verification; small runtime materials are extracted into their declared project paths."
+limitations = "The release does not include Git metadata or identify the exact source revision and command that produced the project TRENDY v14 stock benchmark."
+license = "CC BY 4.0"
+integrity = "All six publisher file sizes and MD5 values are pinned in scripts/install_stock_ed.py; catalog checks pin every archive size and the evaluation-script size."
 experiments = []

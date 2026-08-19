@@ -1,0 +1,20 @@
+{
+  "ba_model": "ED-ModelC-continental",
+  "region": "Africa",
+  "baseline_overall_globalbetas": 0.5177698869333905,
+  "best_overall": 0.6353633247258825,
+  "best_params": {
+    "beta_leaf": 0.02065330956173769,
+    "beta_fine": 0.050207055770413976,
+    "beta_coarse": 0.007067111190297189,
+    "beta_litter": 0.8350885618286968,
+    "D_REF": 110.5809745622207
+  },
+  "scores": {
+    "bias": 0.9996273775050576,
+    "rmse": 0.3102355326070387,
+    "seas": 0.6803981065750122,
+    "spat": 0.5120560215560904,
+    "overall": 0.6353633247258825
+  }
+}

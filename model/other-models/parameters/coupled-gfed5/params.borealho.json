@@ -1,0 +1,52 @@
+{
+  "model": "Model C (coupled-consistent retune; drivers + GPP from Lei's ED dump; GFED5 target)",
+  "drivers_source": "global_baseline_modelC_inputs_1997-2016.nc",
+  "reference": "GFED5 (ilamb_ref_official/DATA/burntArea/GFED5/burntArea.nc)",
+  "mechanisms": [
+    "gpp_monthly",
+    "precip",
+    "t_air_ign"
+  ],
+  "n_mechanisms": 3,
+  "n_params": 15,
+  "objective": "ILAMB Overall (Bias + 2*RMSE + Seas + Spatial) / 5 against GFED5 monthly fraction",
+  "ed_consistency": {
+    "interpretation": "Model C output is an annual fire rate (yr^-1)",
+    "fire_max_rate": 5.0,
+    "seasonal_transform": true,
+    "transform": "burnt_monthly_frac = 1 - exp(-min(rate, fire_max) / 12)"
+  },
+  "scores_internal": {
+    "bias": 0.6398529259708862,
+    "rmse": 0.3706595772042025,
+    "seas": 0.7729078077984657,
+    "spatial": 0.6167319489864382,
+    "overall": 0.554162367432839
+  },
+  "warm_start_internal": {
+    "bias": 0.5928432987583099,
+    "rmse": 0.3623517140983256,
+    "seas": 0.7057629922078718,
+    "spatial": 0.5162190226569298,
+    "overall": 0.5079057483639525
+  },
+  "n_trials": 1000,
+  "runtime_min": 15.87,
+  "params": {
+    "k1": 0.006079905434073396,
+    "D_low": 43.2326421037033,
+    "k2": 0.0012030178871154666,
+    "D_high": 31301.15118850836,
+    "fire_exp": 1.7505406131449859,
+    "P_half": 436.4516946807792,
+    "pre_dampen_half": 75.10418138777538,
+    "gpp_af": 0.2204465010099918,
+    "gpp_b": 0.00014164588046678954,
+    "gpp_d": 0.7698760608299932,
+    "ign_k": 4.869640941520899,
+    "ign_c": 11.903394335305014,
+    "trop_agb_crit": 1.8023542850487386,
+    "trop_k_veg": 6.963655030926962,
+    "fire_amp": 3.7523365308330816
+  }
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "rank": 1,
+    "trial": 551,
+    "internal_overall": 0.5905,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9884,
+    "pred_lm_ratio": 0.8645,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_NAmerica.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_NAmerica/ED-ModelC-G_NAmerica-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1429,
+    "internal_overall": 0.5837,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9897,
+    "pred_lm_ratio": 0.9006,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_NAmerica.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_NAmerica/ED-ModelC-G_NAmerica-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 1445,
+    "internal_overall": 0.5812,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9906,
+    "pred_lm_ratio": 0.884,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_NAmerica.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_NAmerica/ED-ModelC-G_NAmerica-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 1443,
+    "internal_overall": 0.5735,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9922,
+    "pred_lm_ratio": 0.7904,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.G_NAmerica.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_G_NAmerica/ED-ModelC-G_NAmerica-k4"
+  }
+]

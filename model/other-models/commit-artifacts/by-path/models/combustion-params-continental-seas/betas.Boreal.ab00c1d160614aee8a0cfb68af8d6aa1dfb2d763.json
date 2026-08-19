@@ -1,0 +1,20 @@
+{
+  "ba_model": "ED-ModelC-continental",
+  "region": "Boreal",
+  "baseline_overall_globalbetas": 0.40773810765091206,
+  "best_overall": 0.5009771402901461,
+  "best_params": {
+    "beta_leaf": 0.9923660212066402,
+    "beta_fine": 0.9819218756472098,
+    "beta_coarse": 0.9983300317930587,
+    "beta_litter": 0.9976353532554534,
+    "D_REF": 119.80172740014672
+  },
+  "scores": {
+    "bias": 0.6066297515868824,
+    "rmse": 0.3487733766545423,
+    "seas": 0.7097972631454468,
+    "spat": 0.3852593221125803,
+    "overall": 0.5009771402901461
+  }
+}

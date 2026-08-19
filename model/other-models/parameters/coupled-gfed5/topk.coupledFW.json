@@ -1,0 +1,72 @@
+[
+  {
+    "rank": 1,
+    "trial": 0,
+    "internal_overall": 0.6082,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9198,
+    "pred_lm_ratio": 1.1621,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.coupledFW.k1.json",
+    "model_dir": "ilamb/MODELS_TOPK_coupledFW/ED-ModelC-coupledFW-k1"
+  },
+  {
+    "rank": 2,
+    "trial": 1682,
+    "internal_overall": 0.604,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9722,
+    "pred_lm_ratio": 0.7447,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.coupledFW.k2.json",
+    "model_dir": "ilamb/MODELS_TOPK_coupledFW/ED-ModelC-coupledFW-k2"
+  },
+  {
+    "rank": 3,
+    "trial": 2384,
+    "internal_overall": 0.604,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9722,
+    "pred_lm_ratio": 0.7447,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.coupledFW.k3.json",
+    "model_dir": "ilamb/MODELS_TOPK_coupledFW/ED-ModelC-coupledFW-k3"
+  },
+  {
+    "rank": 4,
+    "trial": 2492,
+    "internal_overall": 0.6004,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9742,
+    "pred_lm_ratio": 0.6733,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.coupledFW.k4.json",
+    "model_dir": "ilamb/MODELS_TOPK_coupledFW/ED-ModelC-coupledFW-k4"
+  },
+  {
+    "rank": 5,
+    "trial": 2363,
+    "internal_overall": 0.5965,
+    "spatial_taylor": 0.0,
+    "spatial_r": 0.0,
+    "spatial_sigma": 0.0,
+    "spatial_seas": 0.0,
+    "fp_score": 0.9794,
+    "pred_lm_ratio": 0.6866,
+    "fire_amp": 1.0,
+    "params_json": "models/C/params.coupledFW.k5.json",
+    "model_dir": "ilamb/MODELS_TOPK_coupledFW/ED-ModelC-coupledFW-k5"
+  }
+]

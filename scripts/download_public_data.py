@@ -125,8 +125,8 @@ def extract_selected(archive: Path, destination: Path, pattern: re.Pattern[str])
     return count
 
 
-def install_gfed4_source(source_root: Path) -> None:
-    output = source_root / "data" / "gfed" / "4.1"
+def install_gfed4_source(project_root: Path) -> None:
+    output = project_root / "data" / "benchmarks" / "source" / "gfed4.1s"
     for year, (size, sha256) in GFED4_FILES.items():
         name = f"GFED4.1s_{year}.hdf5"
         download(
@@ -137,8 +137,8 @@ def install_gfed4_source(source_root: Path) -> None:
         )
 
 
-def install_gfed5_emissions(source_root: Path) -> None:
-    output = source_root / "data" / "gfed" / "5"
+def install_gfed5_emissions(project_root: Path) -> None:
+    output = project_root / "data" / "benchmarks" / "source" / "gfed5-annual"
     expected_files = [output / f"GFED5.1_monthly_{year}.nc" for year in range(2000, 2017)]
     if all(path.is_file() and path.stat().st_size > 1_000_000 for path in expected_files):
         print(f"verified existing 17-file GFED5.1 subset in {output}")
@@ -161,8 +161,8 @@ def install_gfed5_emissions(source_root: Path) -> None:
         raise RuntimeError(f"expected 17 GFED5.1 emissions files, found {count}")
 
 
-def install_gfed5_burned_area(source_root: Path) -> None:
-    output = source_root / "data" / "gfed5"
+def install_gfed5_burned_area(project_root: Path) -> None:
+    output = project_root / "data" / "benchmarks" / "source" / "gfed5-monthly"
     existing = list(output.glob("BA??????.nc"))
     if len(existing) == 288 and all(path.stat().st_size > 100_000 for path in existing):
         print(f"verified existing 288-file GFED5 burned-area set in {output}")
@@ -188,10 +188,14 @@ def install_gfed5_burned_area(source_root: Path) -> None:
     )
 
 
-def install_gfed4_ilamb(source_root: Path) -> None:
+def install_gfed4_ilamb(project_root: Path) -> None:
     download(
         GFED4_ILAMB_URL,
-        source_root / "ilamb" / "DATA" / "burntArea" / "GFED4.1s" / "burntArea.nc",
+        project_root
+        / "data"
+        / "benchmarks"
+        / "observations"
+        / "gfed4.1s-burned-area.nc",
         expected_size=497_712_890,
         expected=DigestSpec(
             "sha256", "1dec2035daf0048be74161e95995202e68138a156e9edba8da8b84b0d05f4095"
@@ -199,8 +203,8 @@ def install_gfed4_ilamb(source_root: Path) -> None:
     )
 
 
-def install_ilamb_tools(source_root: Path) -> None:
-    destination = source_root / "data" / "observations" / "ILAMB-Data"
+def install_ilamb_tools(project_root: Path) -> None:
+    destination = project_root / "data" / "reference" / "ilamb-data-tools"
     if destination.exists() and not (destination / ".git").is_dir():
         raise RuntimeError(f"refusing to replace non-git path: {destination}")
     if not destination.exists():
@@ -241,8 +245,14 @@ INSTALLERS = {
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--source-root", type=Path, required=True)
+    parser = argparse.ArgumentParser(
+        description="Download public ED-Fire data into its canonical project paths."
+    )
+    parser.add_argument(
+        "--project-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[1],
+    )
     parser.add_argument(
         "--only",
         choices=("all", *INSTALLERS),
@@ -254,12 +264,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    source_root = args.source_root.expanduser().resolve()
-    source_root.mkdir(parents=True, exist_ok=True)
+    project_root = args.project_root.expanduser().resolve()
+    project_root.mkdir(parents=True, exist_ok=True)
     selected = INSTALLERS if args.only == "all" else {args.only: INSTALLERS[args.only]}
     for name, installer in selected.items():
         print(f"installing {name}")
-        installer(source_root)
+        installer(project_root)
     return 0
 
 

@@ -1,5 +1,5 @@
 ---
-schema: autoresearch-experiment/v1
+schema: autoresearch-experiment/v2
 id: experiment.stock-baseline
 title: Establish the stock ED fire baseline
 kind: baseline
@@ -19,11 +19,16 @@ execution:
   adapter: scripts/stage_stock_baseline.py
   argv: ["{python}", "scripts/stage_stock_baseline.py"]
 search: null
+selected_run: run.20260818T171220Z.a7122045
 ---
 
 # Question
 
 Can the pinned native ED burned-area output produce a reproducible comparison against GFED5 and GFED4.1s without using Model A through E assets?
+
+# Rationale
+
+This control was required before proposing another fire mechanism because the project needed one trusted evaluation floor, one fixed candidate interface, and evidence that the same committed state produces the same metrics and figures. Without it, a later score change could not be separated from evaluator, staging, or presentation drift.
 
 # Change
 
@@ -59,6 +64,38 @@ Because the candidate is the pinned stock file by construction, the candidate an
 | Phase shift (months) | 2.784130 | 3.224500 |
 
 The overall score changes by -0.040093 when the benchmark changes from GFED4.1s to GFED5. The stock field underestimates the global mean under both products, and spatial distribution is the weakest scalar component, especially against GFED5. Those are research targets for a future mechanism; they are not reasons to alter the locked evaluator.
+
+# Evidence
+
+The selected record is the final matched repeat, `run.20260818T171220Z.a7122045`. These are the curated scientific outputs for the experiment reader; the run directory retains the complete provenance record.
+
+## Figures
+
+![GFED5 and GFED4.1s score summary](runs/run.20260818T171220Z.a7122045/figures/01-score-summary.png)
+
+![Mean burned-area fields and differences](runs/run.20260818T171220Z.a7122045/figures/02-mean-burned-area.png)
+
+![Global and regional seasonal cycles](runs/run.20260818T171220Z.a7122045/figures/03-seasonal-cycles.png)
+
+![Cell-level spatial distributions](runs/run.20260818T171220Z.a7122045/figures/04-spatial-distribution.png)
+
+![Benchmark and regional sensitivity](runs/run.20260818T171220Z.a7122045/figures/05-benchmark-sensitivity.png)
+
+## Results and outputs
+
+[Complete metric vector](runs/run.20260818T171220Z.a7122045/metrics.json)
+
+[Evaluation record](runs/run.20260818T171220Z.a7122045/artifacts/evaluation.json)
+
+[GFED5 ILAMB scores](runs/run.20260818T171220Z.a7122045/artifacts/ilamb/gfed5/scores.csv)
+
+[GFED4.1s ILAMB scores](runs/run.20260818T171220Z.a7122045/artifacts/ilamb/gfed4_1s/scores.csv)
+
+[Evaluated stock burned-area field](runs/run.20260818T171220Z.a7122045/artifacts/model-output/burntArea.nc)
+
+# Interpretation
+
+The matched repeats show that the pinned stock field can be staged and evaluated deterministically under the preserved v1 contract. They establish a reliable comparison floor and expose the stock field's largest measured weaknesses, but they do not establish source-level reproducibility because the producing ED revision, build, input selection, and command remain unknown.
 
 # Decision
 

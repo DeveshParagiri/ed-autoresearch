@@ -1,0 +1,52 @@
+{
+  "model": "Model C (ED-coupled-consistent retune; rank #1 at 0.6713)",
+  "mechanisms": [
+    "gpp_monthly",
+    "precip",
+    "t_air_ign"
+  ],
+  "n_mechanisms": 3,
+  "n_params": 12,
+  "objective": "ILAMB-aligned (mass-weighted; phase-shift seasonal; Taylor spatial)",
+  "ed_consistency": {
+    "interpretation": "Model C output = annual fire rate (yr^-1).",
+    "transform": "monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12",
+    "fire_max_rate_offline": 5.0,
+    "max_observed_raw_rate_yr-1": 0.999,
+    "cells_above_0.2_yr-1_pct": 2.5,
+    "ed_default_fire_max_disturbance_rate": 0.2,
+    "coupled_ask": "set fire_max_disturbance_rate = 1.0 in ED_params.defaults.cfg"
+  },
+  "scores_real_ilamb_global": {
+    "Bias Score": 0.728,
+    "RMSE Score": 0.506,
+    "Seasonal Cycle Score": 0.846,
+    "Spatial Distribution Score": 0.771,
+    "Overall Score": 0.6713,
+    "rank": 1,
+    "comparators": "CLASSIC=0.6665 (#2), CLM6=0.6606 (#3), EDv3-stock=0.4026 (#11)"
+  },
+  "scores_internal_optuna": {
+    "bias": 0.7071,
+    "rmse": 0.3791,
+    "seas": 0.8506,
+    "spatial": 0.7544,
+    "overall": 0.6728
+  },
+  "n_trials": 2500,
+  "runtime_min": 44.58,
+  "params": {
+    "k1": 0.02128012643297453,
+    "D_low": 33.107928264466416,
+    "k2": 0.0032479995010666245,
+    "D_high": 3020.3711370643746,
+    "fire_exp": 0.5746291131439772,
+    "P_half": 3.1845074798114754,
+    "pre_dampen_half": 5.714386941567207,
+    "gpp_af": 0.4621796973523708,
+    "gpp_b": 5.190713720036356e-05,
+    "gpp_d": 128.62113841235993,
+    "ign_k": 0.8146117322506592,
+    "ign_c": 20.126441845162326
+  }
+}
