@@ -81,37 +81,68 @@ against Model I result.
 **So the run was repeated with `MAG_BAND=1.3`, and it finished at 2500 trials.** Internal 0.6126
 against the warm start 0.6094, **875 Mha, 1.10x observed**, `models/C/params.coupledPOPmag.json`.
 
-**SCORED WITH OFFICIAL ILAMB, `ilamb_out_popmag/`.**
+**THE ANSWER, FROM A CONTROLLED PAIR. `ilamb_out_pair/`. POPULATION SURVIVES AND IS WORTH HAVING.**
+
+Two runs, identical config, one flag apart, `logs/opt_pairPOP.log` and `logs/opt_pairCTL.log`.
+
+    DUMP_CLIMATE=1 SEASONAL_TRANSFORM=1 FUEL_WINDOW=60 MAG_BAND=1.3
+    SAMPLER=tpe SEED=42 N_TRIALS=2500 WARM=params.coupledFW.json   POP_TERM=1 | 0
+
+The warm starts agree, 0.6002 and 0.5989, which is the check that the pair is actually controlled.
+Every earlier attempt at this comparison failed that check.
 
 | | Official Overall | Bias | RMSE | Seasonal | Spatial | Mha/yr |
 |---|---|---|---|---|---|---|
 | control, `coupledFW` | 0.6532 | 0.7102 | 0.4655 | 0.8009 | 0.8240 | 921 |
-| `coupledPOPmag` | **0.6601** | 0.7017 | 0.5010 | 0.8250 | 0.7718 | **875** |
+| pairCTL, refit, no population | 0.6489 | 0.6934 | 0.4945 | 0.8203 | 0.7420 | 866 |
+| **pairPOP, refit, with population** | **0.6652** | 0.7031 | 0.5096 | 0.8258 | 0.7777 | **722** |
 
-So it is better on the score AND closer on magnitude, +0.0069 official and 1.10x against 1.16x.
+**Population is worth +0.0163 official against its own control**, and it also beats the standing
+0.6532. Magnitude goes 866 to 722 against 793 observed, so 1.09x over becomes 0.91x under, both
+inside the band.
 
-**BUT READ THE FITTED PARAMETERS, NOT THE SCORE. `pop_amp` came out at 0.00272.** The multiplier is
-`1 + pop_amp * gaussian`, so the population term varies the fire rate by **at most 0.27 percent
-anywhere on Earth**. `pop_peak` fitted at 0.07 capita per km2, which is empty land, not a hump.
-**Given a free hand under a magnitude constraint, the optimizer switched the population term off.**
+**The fitted hump is the part that matters more than the score.** `pop_amp` 3.77, `pop_peak` 23.95
+capita per km2, `pop_sig` 0.96. The optimizer could place that peak anywhere from 0.05 to 1000 and
+could set the amplitude to effectively zero, which is exactly what it did in the earlier run. It
+instead chose a strong hump centred at 24 people per km2. **The independent binning of GFED5 puts
+the observed peak between 10 and 35.** That is corroboration from a direction the objective knew
+nothing about, and it is the argument to give Lei and to put in the paper.
 
-**So the improvement is real and it is not a population improvement.** It was bought by `fuel_k` and
-`fuel_half`, the trailing mean fuel terms, and by refitting. The honest line for Lei is that the
-dynamic fuel term is worth having and that **population, once magnitude is held, is selected against.**
-The unconstrained 0.6711 at 1179 Mha was bought with over burn.
+**I WROTE THE OPPOSITE CONCLUSION TWICE BEFORE THIS AND BOTH WERE WRONG.** First from a partial
+optuna log at trial 1432, then from the `coupledPOPmag` run which fitted `pop_amp` at 0.0027 and
+looked like the term being selected against. The visible difference is that this pair carries
+`SEASONAL_TRANSFORM=1` and that run did not, but that cannot be confirmed because the run is not
+reproducible. **Which is the reason it must not be the basis of a claim.** Use the pair.
 
-**Do not promote `coupledPOPmag` as a population model.** If it is promoted at all it is a fuel window
-result, and it should be rerun with `POP_TERM=0` to confirm the population parameters are dead weight
-rather than doing something small through the tail.
+### A TRAP THAT VOIDED A WHOLE RUN. `DUMP_CLIMATE` IS NOT VISIBLE IN THE ENV VAR LIST
 
-**A caution recorded because I got this wrong mid session.** I read the log at trial 1432, saw the
-warm start still winning, and wrote that up as the answer. The warm start was beaten at trial 1622.
-**Do not call an optuna run from a partial log.** TPE exploits late, which is the whole point of it.
+**A coupling-mode run and a CRUJRA run are not comparable and never belong in the same table.**
+`DUMP_CLIMATE=1` takes D_bar, T_air and P from Lei ED dump instead of CRUJRA. It costs offline GFED5
+skill BY DESIGN, because ED D_bar is a derived diagnostic rather than an observation. That is why the
+paper Model E used CRUJRA and why the coupling series does not.
 
-Four earlier population fits were killed at 12, 16, 1165 and 1509 trials. Parameters were recovered
-from the logs into `models/C/params.coupledPOP.k{1..5}.json` and rebuilt by
-`scripts/build_pop_candidates.py`, because the optimizer internal score has been wrong before, 0.607
-internal against 0.6523 official on the last coupling model. **Nothing is believed until ilamb-run.**
+I refitted a control without it, got 0.6381, and nearly reported that as the cost of removing the
+population term. It was the cost of changing the climate driver. **The tell is the FIRST LINE of the
+log**, either `[setup] COUPLING-READY: climate ... all from global_baseline...` or `[setup] CRUJRA
+climate from data/crujra/`. **Check that line before comparing any two runs.** The warm start score
+disagreeing between two runs off the same WARM file is the symptom.
+
+**A second and worse finding from the same check. The historical `coupledPOPmag` run cannot be
+reproduced.** Matching drivers, seasonal transform, fuel window, trop mask, sampler and seed still
+gives a warm start of 0.5989 against its recorded 0.6094. Something about how it was launched is not
+recoverable from its log. **So its 0.6601 is not a baseline anyone can defend.** The optimizer records
+the fitted parameters but NOT the environment it was run under, which is the actual gap. Worth fixing
+by dumping the full env into the params json at write time.
+
+Because of that the population question is being settled by a FRESH CONTROLLED PAIR, `logs/opt_pairPOP.log`
+and `logs/opt_pairCTL.log`, identical config, one flag apart, both then scored by official ILAMB.
+
+    DUMP_CLIMATE=1 SEASONAL_TRANSFORM=1 FUEL_WINDOW=60 MAG_BAND=1.3
+    SAMPLER=tpe SEED=42 N_TRIALS=2500 WARM=params.coupledFW.json   POP_TERM=1 | 0
+
+**Also, background runs still get killed, exactly as the older note in this file warns.** The wrapper
+around that pair was killed while both python children survived, so the completion signal was lost but
+the runs were fine. Check `ps` before assuming a killed job means a dead run.
 
 ### NEW FILES THIS SESSION
 

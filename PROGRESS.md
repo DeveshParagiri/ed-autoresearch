@@ -26,14 +26,15 @@ Companion deck: `figures_and_tables.pptx` — single home for every table / sche
   the literature.
 - **Unconstrained it scores 0.6711 official against a 0.6554 control, but burns 1179 Mha against 793.**
   Richard flagged that this is the paper own thesis repeating itself, a better score on a worse model.
-- **Refitted with MAG_BAND=1.3, finished and scored with official ILAMB. 0.6601 against a 0.6532
-  control, and 875 Mha against the control 921, observed 793.** Better on both counts.
-- **But `pop_amp` fitted at 0.00272, so the population multiplier changes the fire rate by at most
-  0.27 percent anywhere on Earth. The optimizer switched the term off.** The gain came from the
-  trailing mean fuel terms, not from population. The improvement is real and is not a population
-  result. Held to magnitude, population is selected against rather than merely useless.
-- **I called that run from a partial log and was wrong.** At trial 1432 the warm start was still best,
-  and it was beaten at 1622. Do not judge an optuna run before it finishes, TPE exploits late.
+- **SETTLED BY A CONTROLLED PAIR, and it reverses what I first wrote.** Two runs identical but for
+  POP_TERM. Official ILAMB 0.6652 with population against 0.6489 without, and against a 0.6532
+  standing control. Magnitude 722 against 793 observed, from 866 without.
+- **The fitted hump peaks at 24 capita per km2 with amplitude 3.77.** The optimizer could have put
+  it anywhere from 0.05 to 1000 or switched it off, and the independent binning of GFED5 puts the
+  observed peak at 10 to 35. That agreement is stronger evidence than the score.
+- **Two earlier conclusions on this were wrong**, one from a partial log and one from a run that
+  cannot be reproduced. The warm starts agreeing, 0.6002 against 0.5989, is the check that says a
+  pair is genuinely controlled. Apply it before trusting any comparison.
 - Land use also works as a human term and is already in the dump, `LANDUSE_TERM=1`. Used for
   attribution it would need a new model letter.
 - New scripts. `make_population_driver.py`, `build_pop_candidates.py`, `prep_coupled_for_ilamb.py`,
