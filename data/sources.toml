@@ -584,7 +584,7 @@ preprocessing = "The TRENDY v14 EDv3 S3 native output was converted to a CF-1.7 
 limitations = "The output is reproducible as a pinned artifact, but the native ED source revision and producing command are not present in this workspace. It establishes the comparison floor, not source-level reproduction."
 license = "Derived TRENDY member data; consortium terms apply."
 integrity = "SHA-256 73c07a379ab25a04eb3d55a9ccc7e8671ddac334f2e7bdeeb409aaa59be9caeb is pinned in data/catalog.toml and the active evaluation contract."
-experiments = ["experiment.stock-baseline"]
+experiments = []
 
 [[sources]]
 id = "benchmark.config.gfed5-burned-area"

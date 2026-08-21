@@ -1,7 +1,0 @@
-data/
-out/
-.venv/
-__pycache__/
-*.pyc
-.DS_Store
-*.nc.tmp

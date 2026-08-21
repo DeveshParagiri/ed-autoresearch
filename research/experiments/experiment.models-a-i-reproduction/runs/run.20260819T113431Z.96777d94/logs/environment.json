@@ -1,9 +1,0 @@
-{
-  "lockfiles": {
-    "pyproject.toml": "fd4fbff44a968ad1bbda3d9409f014612ebc81dd2043007fee87f928e159dca6",
-    "uv.lock": "5348c7e40de4f5db98e8342025466b4f87388c9495617f0018a11516a2efe16b"
-  },
-  "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
-  "python": "3.13.1 (main, Jan 14 2025, 23:31:50) [Clang 19.1.6 ]",
-  "python_executable": "/Users/devparagiri/Research/ed-fire/.venv/bin/python3"
-}

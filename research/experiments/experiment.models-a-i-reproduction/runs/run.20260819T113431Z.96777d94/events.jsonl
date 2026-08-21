@@ -1,6 +1,0 @@
-{"event": "run-started", "metadata": {"execution_mode": "mechanistic", "experiment_id": "experiment.models-a-i-reproduction", "run_id": "run.20260819T113431Z.96777d94", "tool": "direct"}, "timestamp": "2026-08-19T11:34:32Z"}
-{"event": "candidate-started", "metadata": {"argv": ["/Users/devparagiri/Research/ed-fire/.venv/bin/python3", "scripts/stage_models_a_i.py"]}, "timestamp": "2026-08-19T11:34:32Z"}
-{"event": "candidate-finished", "metadata": {"exit_code": 0, "interrupted": false}, "timestamp": "2026-08-19T11:56:57Z"}
-{"event": "evaluation-started", "metadata": {"argv": ["/Users/devparagiri/Research/ed-fire/.venv/bin/python3", "scripts/evaluate_models_a_i.py"]}, "timestamp": "2026-08-19T11:56:58Z"}
-{"event": "evaluation-finished", "metadata": {"exit_code": 0, "interrupted": false}, "timestamp": "2026-08-19T11:56:59Z"}
-{"event": "run-finished", "metadata": {"failure": null, "status": "completed"}, "timestamp": "2026-08-19T11:57:07Z"}

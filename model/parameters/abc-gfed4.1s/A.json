@@ -1,13 +1,5 @@
 {
-  "model": "Model A v8 \u2014 v7 + LAI fuel",
-  "n_params": 27,
-  "scores_internal": {
-    "bias_score": 0.8327794671058655,
-    "rmse_score": 0.8122541308403015,
-    "seasonal_score": 0.531158983707428,
-    "spatial_score": 0.7955257296562195,
-    "overall": 0.7429295778274536
-  },
+  "model": "Model A v8 — v7 + LAI fuel",
   "params": {
     "k1": 0.00017112476773134438,
     "D_low": 1676.4654410268786,
@@ -36,7 +28,5 @@
     "rate_k": 0.516319521879398,
     "rate_c": -4.121993162612137,
     "fuel_anom_k": 0.015777797743120478
-  },
-  "n_trials": 5000,
-  "runtime_min": 20.9
+  }
 }

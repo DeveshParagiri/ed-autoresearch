@@ -1,6 +1,0 @@
-{"event": "run-started", "metadata": {"execution_mode": "mechanistic", "experiment_id": "experiment.stock-baseline", "run_id": "run.20260818T170639Z.ed6f7759", "tool": "direct"}, "timestamp": "2026-08-18T17:06:39Z"}
-{"event": "candidate-started", "metadata": {"argv": ["/Users/devparagiri/Research/ed-fire/.venv/bin/python3", "scripts/stage_stock_baseline.py"]}, "timestamp": "2026-08-18T17:06:39Z"}
-{"event": "candidate-finished", "metadata": {"exit_code": 0, "interrupted": false}, "timestamp": "2026-08-18T17:06:39Z"}
-{"event": "evaluation-started", "metadata": {"argv": ["/Users/devparagiri/miniconda3/envs/edfire/bin/python", "scripts/evaluate_burned_area.py"]}, "timestamp": "2026-08-18T17:06:39Z"}
-{"event": "evaluation-finished", "metadata": {"exit_code": 0, "interrupted": false}, "timestamp": "2026-08-18T17:08:32Z"}
-{"event": "run-finished", "metadata": {"failure": null, "status": "completed"}, "timestamp": "2026-08-18T17:08:33Z"}

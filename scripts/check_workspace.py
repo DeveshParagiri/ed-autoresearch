@@ -14,23 +14,21 @@ from autoresearch.workspace import status  # noqa: E402
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate this autoresearch workspace.")
-    parser.add_argument("--json", action="store_true", help="print the complete JSON report")
+    parser = argparse.ArgumentParser(description="Validate the simplified ED-Fire workspace.")
+    parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     report = status(PROJECT_ROOT)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
-        for issue in report["issues"]:
+        for item in report["issues"]:
             print(
-                f"{issue['severity'].upper():7} | {issue['code']:30} | "
-                f"{issue['subject']} | {issue['message']}"
+                f"{item['severity'].upper():7} | {item['code']:30} | "
+                f"{item['subject']} | {item['message']}"
             )
         print(
             f"status={report['status']} datasets={report['datasets']} "
-            f"framings={report['framings']} experiments={report['experiments']} "
-            f"runs={report['runs']} "
-            f"runnable={len(report['runnable_experiments'])} "
+            f"models={report['models']} contracts={report['contracts']} "
             f"errors={report['errors']} warnings={report['warnings']}"
         )
     return 0 if report["status"] == "ok" else 1

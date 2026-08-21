@@ -38,47 +38,36 @@ name = "autoresearch-workspace"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cftime" },
+    { name = "h5py" },
+    { name = "matplotlib" },
     { name = "netcdf4", version = "1.7.3", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
     { name = "netcdf4", version = "1.7.4", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
     { name = "numpy" },
+    { name = "optuna" },
     { name = "pyyaml" },
     { name = "requests" },
+    { name = "scienceplots" },
+    { name = "scipy" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "xarray" },
 ]
 
-[package.optional-dependencies]
-historical = [
-    { name = "cftime" },
-    { name = "h5py" },
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "scienceplots" },
-    { name = "scipy" },
-    { name = "xarray" },
-]
-optuna = [
-    { name = "optuna" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "cftime", marker = "extra == 'historical'", specifier = "==1.6.5" },
-    { name = "h5py", marker = "extra == 'historical'", specifier = "==3.16.0" },
-    { name = "matplotlib", marker = "extra == 'historical'", specifier = "==3.10.9" },
+    { name = "cftime", specifier = "==1.6.5" },
+    { name = "h5py", specifier = "==3.16.0" },
+    { name = "matplotlib", specifier = "==3.10.9" },
     { name = "netcdf4", specifier = ">=1.6" },
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "numpy", marker = "extra == 'historical'", specifier = "==2.2.6" },
-    { name = "optuna", marker = "extra == 'optuna'", specifier = ">=4.9,<5" },
+    { name = "numpy", specifier = "==2.2.6" },
+    { name = "optuna", specifier = ">=4.9,<5" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.31" },
-    { name = "scienceplots", marker = "extra == 'historical'", specifier = "==2.2.2" },
-    { name = "scipy", marker = "extra == 'historical'", specifier = "==1.15.2" },
+    { name = "scienceplots", specifier = "==2.2.2" },
+    { name = "scipy", specifier = "==1.15.2" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0" },
-    { name = "xarray", specifier = ">=2023.1" },
-    { name = "xarray", marker = "extra == 'historical'", specifier = "==2025.6.1" },
+    { name = "xarray", specifier = "==2025.6.1" },
 ]
-provides-extras = ["optuna", "historical"]
 
 [[package]]
 name = "certifi"

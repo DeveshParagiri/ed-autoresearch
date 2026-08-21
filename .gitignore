@@ -11,7 +11,7 @@ build/
 model/stock-ed/external_apps/
 model/stock-ed/EDv3_inputs
 model/stock-ed/ED_outputs/
-model/reproduced/
+results/
 
 # Large project-local data and generated scientific products stay outside Git.
 data/inputs/*
@@ -27,10 +27,6 @@ data/derived/*
 data/benchmarks/configs/*
 !data/benchmarks/configs/*.cfg
 !data/reference/*.md
-
-# Run contents are durable when deliberately recorded, but transient work is not.
-research/experiments/*/runs/*/work/
-research/experiments/*/runs/*/tmp/
 
 # Meeting transcripts, exports, and private records never enter public Git history.
 /research/meetings/private/

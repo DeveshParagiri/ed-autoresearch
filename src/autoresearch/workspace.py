@@ -1,78 +1,85 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 from .catalog import load_catalog, validate_catalog, validate_sources
-from .experiments import load_experiments, validate_experiments
-from .runner import runnable_experiments, validate_contracts, validate_runs
 
 
-def experiments(project_root: Path) -> dict[str, dict[str, Any]]:
-    loaded, _ = load_experiments(project_root)
-    return {experiment_id: experiment.metadata for experiment_id, experiment in loaded.items()}
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
-def input_ids(project_root: Path) -> set[str]:
+def issue(severity: str, code: str, subject: str, message: str) -> dict[str, str]:
     return {
-        record["id"]
-        for record in load_catalog(project_root).get("datasets", [])
-        if isinstance(record, dict) and isinstance(record.get("id"), str)
+        "severity": severity,
+        "code": code,
+        "subject": subject,
+        "message": message,
     }
-
-
-def _memory_issues(project_root: Path) -> list[dict[str, str]]:
-    memory = project_root / "memory.md"
-    if memory.is_file() and memory.read_text().strip():
-        return []
-    return [
-        {
-            "severity": "error",
-            "code": "missing-memory",
-            "subject": "memory.md",
-            "message": str(memory),
-        }
-    ]
 
 
 def status(project_root: Path) -> dict[str, Any]:
     data = validate_catalog(project_root)
     source_issues = validate_sources(project_root)
-    research = validate_experiments(project_root)
-    experiment_records = experiments(project_root)
-    inputs = input_ids(project_root)
-    contract_issues = validate_contracts(project_root, experiment_records, inputs)
-    run_count, run_issues = validate_runs(project_root, experiment_records, inputs)
     issues = [
-        {
-            "severity": issue.severity,
-            "code": issue.code,
-            "subject": issue.item_id,
-            "message": issue.message,
-        }
-        for issue in (*data.issues, *source_issues, *research.issues)
+        issue(item.severity, item.code, item.item_id, item.message)
+        for item in (*data.issues, *source_issues)
     ]
-    issues.extend(issue.as_dict() for issue in (*contract_issues, *run_issues))
-    issues.extend(_memory_issues(project_root))
-    errors = sum(issue["severity"] == "error" for issue in issues)
-    warnings = sum(issue["severity"] == "warning" for issue in issues)
+
+    research = project_root / "research.md"
+    if not research.is_file() or not research.read_text().strip():
+        issues.append(issue("error", "missing-research-plan", "research.md", str(research)))
+
+    registry_path = project_root / "model" / "registry.toml"
+    models: list[dict[str, Any]] = []
+    if not registry_path.is_file():
+        issues.append(issue("error", "missing-model-registry", "model/registry.toml", str(registry_path)))
+    else:
+        registry = tomllib.loads(registry_path.read_text())
+        models = registry.get("models", [])
+        for model in models:
+            for value in model.get("parameter_files", []):
+                path = project_root / value
+                if not path.is_file():
+                    issues.append(issue("error", "missing-model-parameters", model.get("id", "unknown"), value))
+
+    contracts = sorted((project_root / "evals").glob("*.json"))
+    if len(contracts) != 1:
+        issues.append(issue("error", "evaluation-contract-count", "evals", f"expected 1 JSON contract, found {len(contracts)}"))
+    elif contracts:
+        contract = json.loads(contracts[0].read_text())
+        evaluator = project_root / contract["evaluator"]["path"]
+        if not evaluator.is_file():
+            issues.append(issue("error", "missing-evaluator", "evaluation", str(evaluator)))
+        elif sha256(evaluator) != contract["evaluator"]["sha256"]:
+            issues.append(issue("error", "evaluator-hash", "evaluation", str(evaluator)))
+        for record in contract.get("protected_files", []):
+            path = project_root / record["path"]
+            if not path.is_file():
+                issues.append(issue("error", "missing-evaluation-input", record["path"], str(path)))
+            elif sha256(path) != record["sha256"]:
+                issues.append(issue("error", "evaluation-input-hash", record["path"], str(path)))
+
+    errors = sum(item["severity"] == "error" for item in issues)
+    warnings = sum(item["severity"] == "warning" for item in issues)
     return {
         "status": "ok" if errors == 0 else "error",
         "datasets": data.dataset_count,
-        "framings": research.framing_count,
-        "experiments": research.experiment_count,
-        "runs": run_count,
-        "runnable_experiments": list(
-            runnable_experiments(project_root, experiment_records, inputs)
-        ),
+        "models": len(models),
+        "contracts": len(contracts),
         "errors": errors,
         "warnings": warnings,
         "issues": issues,
     }
-
-
-def final_check(project_root: Path) -> tuple[bool, str]:
-    report = status(project_root)
-    errors = [issue for issue in report["issues"] if issue["severity"] == "error"]
-    detail = "; ".join(f"{issue['code']}: {issue['message']}" for issue in errors[:5])
-    return not errors, detail
