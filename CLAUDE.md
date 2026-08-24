@@ -154,6 +154,7 @@ model folder before running or ILAMB raises `MonotonicityError` (it tries to mer
 
 ## Other docs
 
+- `REBUILD_REGISTRY.md` — how every scored version is rebuilt, and the verification result.
 - `HANDOFF_NOTE.md` — current state + next steps (read after this).
 - `HYBRID_REFIT_SUMMARY.md` — detailed final results + every optimization round tried.
 - `PROGRESS.md` — living log (most recent on top).

@@ -57,15 +57,34 @@ recorded on 2026-08-19 for `coupledPOPmag`, hit here from outside the group.
   An identical file necessarily scores 0.681896, so the chain is closed end to end.
 - `params.H.json` and its k1 to k5 are stamped and carry that verification in `environment_note`.
 
+### THE BACKFILL IS DONE, AND ALL TEN VERSIONS VERIFY
+
+See `REBUILD_REGISTRY.md`. Every version in the burned-area ladder was rebuilt from this repo and
+compared cell by cell against the file that was scored. D, G, G6, G7, H, I and Ibest come back
+EXACT. C, E and F differ only at float32 rounding, 1e-8, and C was carried through official ILAMB
+to prove it, 0.648445 rebuilt against 0.648453 canonical. ED-stock is not ours to rebuild.
+
+84 params files are stamped. F turned out to be fully reproducible after all: its coordinate descent
+reconverges to the saved per-region gamma exactly.
+
+**A trap found while doing it. THE PAPER'S MODEL C IS NOT THE SHIPPED MODEL C.**
+`paper_gmd/models/C/params.json` is `models/C/params.nsga2.json`, 12 params, pre-tropfix2, official
+0.6485. `models/C/params.json` is the tropfix2 k4, 14 params, official 0.6473, a different model.
+Rebuild "Model C" from the canonical file and you are 0.0012 off the paper with no explanation.
+Both files now carry a stamp saying which is which.
+
+Also fixed: `assemble_continental.py` crashed on `relative_to` whenever `ASSEMBLE_OUTDIR` pointed
+outside the repo, which is the only reason that option exists. The file was written first, so the
+run looked like a failure while having succeeded.
+
 ### NEXT STEP, NOT YET DONE
 
-**Backfill the stamp for the other paper versions**, C, D, E, F, G, G6, G7, I, and verify each the
-same way, rebuild and compare. Run scripts exist only for G and H, so the rest have to come out of
-the `logs/opt_*.log` headers, which print DUMP_CLIMATE and GDP_TERM and REGION but NOT
-SEASONAL_TRANSFORM, FUEL_AMP, RATE_AMP, FUEL_WINDOW or CURING. Where a log is ambiguous the answer is
-to try the candidate environments and keep the one that rebuilds the canonical file, which is exactly
-what the bit-identical test is for. Any version that cannot be rebuilt should be reported as such
-rather than assumed fine.
+**The fFire / emissions versions have NOT been through this.** The registry is burned area only.
+The combustion step has its own betas and scripts and the same question applies to it.
+
+**The E-clean per-region fits are not individually stamped.** Their environments are in prose in
+`paper_gmd/models/E-clean/PROVENANCE.md` and the assembly verifies, but the files themselves would
+need the same treatment the G ones got.
 
 **Also still open, and separate:** `ilamb/MODELS/ED-ModelC-final/` holds 60+ stale `burntArea.*.nc`
 files. That is the MonotonicityError hazard in CLAUDE.md and the optimizer writes there by default.

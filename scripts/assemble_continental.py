@@ -175,7 +175,13 @@ outdir = Path(_OUTDIR_ENV) if _OUTDIR_ENV else REPO / "ilamb" / _PARENT / _OUT_N
 outdir.mkdir(parents=True, exist_ok=True)
 ds.to_netcdf(outdir / "burntArea.nc", encoding=enc, format="NETCDF4_CLASSIC")
 print(f"\n[write] {outdir / 'burntArea.nc'}")
+# ASSEMBLE_OUTDIR can point outside the repo (that is the point of it), so relative_to would
+# raise after the file has already been written, making a successful run look like a failure.
+_out_nc = outdir / "burntArea.nc"
+try:
+    _shown = _out_nc.relative_to(REPO).as_posix()
+except ValueError:
+    _shown = _out_nc.as_posix()
 print("Score it: python scripts/score_spatial.py "
-      "ilamb/MODELS/ED-ModelC-final/burntArea.nc "
-      f"{(outdir / 'burntArea.nc').relative_to(REPO).as_posix()}")
+      f"ilamb/MODELS/ED-ModelC-final/burntArea.nc {_shown}")
 print("and official ILAMB on ilamb/MODELS_CONTINENTAL (CLAUDE.md recipe).")

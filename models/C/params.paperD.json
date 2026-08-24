@@ -16,6 +16,25 @@
     "seasonal_transform": false,
     "transform": "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12"
   },
+  "environment": {
+    "GDP_TERM": false,
+    "POP_TERM": false,
+    "LANDUSE_TERM": false,
+    "CURING": false,
+    "RATE_AMP": false,
+    "FUEL_AMP": false,
+    "SEASONAL_TRANSFORM": false,
+    "DUMP_CLIMATE": false,
+    "TROP_MASK": true,
+    "FUEL_WINDOW": 0,
+    "FIRE_MAX_RATE": 5.0,
+    "GDP_MLO": 0.15,
+    "GDP_MHI": 6.0,
+    "REGION": "",
+    "FIT_Y0": 2001,
+    "FIT_YF": 2016
+  },
+  "environment_note": "Backfilled 2026-08-24. Paper Model D. VERIFIED: rebuilds paper_gmd/models/D/burntArea.nc BIT-IDENTICALLY (data array exact) and reproduces internal Overall 0.5908. Plain Model C form, no mechanism terms.",
   "scores_internal": {
     "bias": 0.6750726533299939,
     "rmse": 0.36358274054967593,
