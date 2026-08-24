@@ -1,4 +1,4 @@
-"""Historical GFED5 Model C checkpoint with inline coefficients."""
+"""Historical GFED5 Model D checkpoint with inline coefficients."""
 
 from collections.abc import Collection, Mapping
 from typing import Any
@@ -10,18 +10,18 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 SEARCH_SPACE: dict[str, dict[str, Any]] = {}
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature')
 
-PARAMS = {'D_high': 2940.51756322311,
- 'D_low': 70.18267183720735,
- 'P_half': 12.808863354047988,
- 'fire_exp': 1.165368636520435,
- 'gpp_af': 0.1476584299248268,
- 'gpp_b': 0.0005752434266899163,
- 'gpp_d': 660.9129108295722,
- 'ign_c': 20.03995359361212,
- 'ign_k': 8.708806168038567,
- 'k1': 0.03635503353478365,
- 'k2': 0.012758211164590085,
- 'pre_dampen_half': 107.40052367919465}
+PARAMS = {'D_high': 80760.9304904705,
+ 'D_low': 12.492307509390828,
+ 'P_half': 51.41531903173455,
+ 'fire_exp': 2.4685680709443356,
+ 'gpp_af': 0.505788295333708,
+ 'gpp_b': 0.0024605285374226047,
+ 'gpp_d': 13.076473382928533,
+ 'ign_c': 19.19168994439752,
+ 'ign_k': 8.761971101023693,
+ 'k1': 0.014344484793173472,
+ 'k2': 0.018890961174687686,
+ 'pre_dampen_half': 719.4083432823455}
 
 
 def _rising(array: np.ndarray, k: float, center: float) -> np.ndarray:
