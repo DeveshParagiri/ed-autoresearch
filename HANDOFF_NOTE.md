@@ -1,6 +1,6 @@
 # HANDOFF NOTE — ED fire submodule, the GMD paper, and the CPA
 
-Last updated **2026-08-19, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
+Last updated **2026-08-24, Windows session**. Read `CLAUDE.md` first, then this file top to bottom.
 Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH** unless the session says otherwise.
 
 ## HOW TO ORIENT IN FIVE MINUTES
@@ -13,6 +13,68 @@ Branch `coupled-refit-gfed5`. **All commits are LOCAL. DO NOT PUSH** unless the 
    once with git-filter-repo to remove them after a `git add -f` put them in.
 4. `paper_gmd/TOPIC_SENTENCES_v3.md` is the paper live outline.
 5. `paper_gmd/references/VERIFIED_CITATIONS.md` before writing any sentence with a citation in it.
+
+---
+
+## 2026-08-24, WINDOWS SESSION. DEV COULD NOT REBUILD MODEL H, AND HE WAS RIGHT TO ASK
+
+Dev mailed on 2026-08-22 saying he rebuilt Model H, scored 0.5636 through official ILAMB, and asked
+whether our recorded 0.6819 was really the optimizer internal score rather than an official one.
+
+**Our number is right and it is official.** `paper_gmd/scoring/ba_final/scalar_database.csv` has H at
+0.681896 and a fresh official ILAMB run today returned 0.681896 again. His other number, 0.6338, is
+the internal score, and `paper_gmd/MODEL_VERSIONS.md` line 206 already labels it as internal in words.
+
+**But he exposed a real defect. Model H was not rebuildable, and nor was anything else.**
+`scripts/reproduce_modelC.py` has NO GDP term. Point it at `params.H.json` and it reads gdp_gamma,
+prints it in its own log line, and never uses it, producing Model C driven by H parameters. That
+scores 0.5582 with no error raised. With SEASONAL_TRANSFORM=1 it gives 0.5851. Dev 0.5636 sits inside
+that band, so he did not mis-score H, he scored a different model without knowing.
+
+The general problem: TEN env flags change the model equation and none were written into the params
+file. Every fitted version was a params file plus an invisible environment surviving only in a shell
+script or an optimizer log, and we had run scripts for two versions out of ten. Same failure already
+recorded on 2026-08-19 for `coupledPOPmag`, hit here from outside the group.
+
+### What was built
+
+- **`scripts/model_mechanisms.py`** (new). Every mechanism term (GDP, population, land use, curing),
+  the driver loader, the ED transform and the NetCDF writer, as pure functions in ONE place, imported
+  by both the optimizer and the rebuilder. No second copy that can drift.
+- **The optimizer now stamps `environment` into every params file it writes**, including the top-K.
+  Read from the same env vars the flags read, so it cannot disagree with what ran.
+- **`scripts/reproduce_model.py`** (new). Takes `--params` and `--out` as arguments and reads the
+  mechanisms from the stamp. **REFUSES to run on an unstamped file** unless given `--env-from` or
+  `--assume-model-c`, because guessing would restore the exact silent failure. `--check` scores the
+  rebuild internally against `scores_internal` in about a minute.
+
+### Verification
+
+- Optimizer refactor is numerically clean. Under H env the warm start still prints
+  Overall=0.5993 bias=0.6793 rmse=0.3680 seas=0.8308 spatial=0.7505, identical to `logs/opt_modelH.log`.
+- **`reproduce_model.py` rebuilds Model H BIT-IDENTICALLY**, md5 `b162c7e2280b8222b41e1f41b1d8e995`,
+  the same file as `paper_gmd/models/H/burntArea.nc`. Internal Overall 0.6338 on all four components.
+  An identical file necessarily scores 0.681896, so the chain is closed end to end.
+- `params.H.json` and its k1 to k5 are stamped and carry that verification in `environment_note`.
+
+### NEXT STEP, NOT YET DONE
+
+**Backfill the stamp for the other paper versions**, C, D, E, F, G, G6, G7, I, and verify each the
+same way, rebuild and compare. Run scripts exist only for G and H, so the rest have to come out of
+the `logs/opt_*.log` headers, which print DUMP_CLIMATE and GDP_TERM and REGION but NOT
+SEASONAL_TRANSFORM, FUEL_AMP, RATE_AMP, FUEL_WINDOW or CURING. Where a log is ambiguous the answer is
+to try the candidate environments and keep the one that rebuilds the canonical file, which is exactly
+what the bit-identical test is for. Any version that cannot be rebuilt should be reported as such
+rather than assumed fine.
+
+**Also still open, and separate:** `ilamb/MODELS/ED-ModelC-final/` holds 60+ stale `burntArea.*.nc`
+files. That is the MonotonicityError hazard in CLAUDE.md and the optimizer writes there by default.
+
+### Reply to Dev
+
+Not sent yet. Tell him the registry number is official and verified, that 0.6338 is labelled internal
+in the doc, that his rebuild dropped the GDP term through no fault of his, and that the rebuilder now
+exists. He found a real problem and should be told so plainly.
 
 ---
 

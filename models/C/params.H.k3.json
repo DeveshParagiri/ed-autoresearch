@@ -16,6 +16,25 @@
     "seasonal_transform": false,
     "transform": "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12"
   },
+  "environment": {
+    "GDP_TERM": true,
+    "POP_TERM": false,
+    "LANDUSE_TERM": false,
+    "CURING": false,
+    "RATE_AMP": false,
+    "FUEL_AMP": false,
+    "SEASONAL_TRANSFORM": false,
+    "DUMP_CLIMATE": false,
+    "TROP_MASK": false,
+    "FUEL_WINDOW": 0,
+    "FIRE_MAX_RATE": 5.0,
+    "GDP_MLO": 0.15,
+    "GDP_MHI": 6.0,
+    "REGION": "",
+    "FIT_Y0": 2001,
+    "FIT_YF": 2016
+  },
+  "environment_note": "Backfilled 2026-08-24 from scripts/run_modelH.sh, same run as params.H.json (verified bit-identical at k1).",
   "scores_internal": {
     "bias": 0.712885156241256,
     "rmse": 0.3985533892800163,

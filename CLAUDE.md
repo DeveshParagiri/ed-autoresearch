@@ -91,13 +91,35 @@ tropfix2-k4 promotion (magnitude over-burn cut 1.26x -> **1.11x** GFED5):
 
 | Script | Purpose |
 |---|---|
-| `scripts/reproduce_modelC.py` | Regenerate `burntArea.nc` from `params.json` + drivers. |
+| `scripts/reproduce_model.py` | **Rebuild ANY version** from its params file. `--params X --out Y [--check]`. |
+| `scripts/model_mechanisms.py` | The one copy of every mechanism term + driver loader + NC writer. |
+| `scripts/reproduce_modelC.py` | Model C ONLY, hardcoded paths, NO mechanism terms. Prefer `reproduce_model.py`. |
 | `scripts/optimize_modelC_coupled.py` | The optimizer. Env-var driven (see below). |
 | `scripts/compute_emissions.py` | BA + biomass + betas -> fFire. `--betas-json ... --out-suffix ""`. |
 | `scripts/tune_combustion_params.py` | Retune combustion betas against GFED5 fFire. |
 | `scripts/maps_hybrid_ba_ffire.py` | 4-panel BA + fFire maps vs GFED5/CLM6/ELM-FATES. |
 | `scripts/maps_seasonal.py` / `_ffire.py` | Seasonal figures (timeseries, regional cycles, peak-month, Hovmoller). |
 | `scripts/diagnose_false_positives.py` | Quantify + map where we over-predict vs GFED5. |
+
+### Rebuilding a fitted version (READ THIS BEFORE RE-SCORING ANYTHING)
+
+Ten env vars change the model EQUATION, not just the search: `GDP_TERM`, `POP_TERM`, `LANDUSE_TERM`,
+`CURING`, `RATE_AMP`, `FUEL_AMP`, `SEASONAL_TRANSFORM`, `DUMP_CLIMATE`, `TROP_MASK`, `FUEL_WINDOW`.
+A params file alone therefore does NOT define a model. `reproduce_modelC.py` implements Model C and
+nothing else, so pointing it at another version's params silently drops that version's mechanism and
+scores the wrong model with no error (Model H rebuilt this way scores 0.5582 against its true 0.6819
+— Dev hit this on 2026-08-22).
+
+Params files written from 2026-08-24 carry an `environment` stamp. Rebuild with:
+
+```bash
+python scripts/reproduce_model.py --params models/C/params.H.json --out ilamb/MODELS_REBUILD/H --check
+```
+
+`--check` compares the rebuild against `scores_internal` in about a minute and is the fast way to
+catch a wrong environment before spending an official ILAMB run. Older files have no stamp and the
+script REFUSES to guess; pass `--env-from GDP_TERM=1,TROP_MASK=0` (recover the flags from the run
+script or the `logs/opt_*.log` header) or `--assume-model-c`.
 
 ### optimize_modelC_coupled.py env vars
 `N_TRIALS` (default 2500), `SAMPLER` (`tpe`|`cmaes`|`nsga2`), `SEED`, `WARM` (path under models/C/),

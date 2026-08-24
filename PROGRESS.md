@@ -4,6 +4,25 @@ Living log. Most recent on top. Update at end of every working session so Mac an
 
 Companion deck: `figures_and_tables.pptx` — single home for every table / schematic.
 
+## 2026-08-24 — Dev could not rebuild Model H, and the reason was ours
+
+- **Our 0.6819 for Model H is official ILAMB and it is right.** Re-ran official ILAMB today, got
+  0.681896, matching `paper_gmd/scoring/ba_final/scalar_database.csv` to six figures. The 0.6338 in
+  `logs/opt_modelH.log` is the internal score and `MODEL_VERSIONS.md` already says so in words.
+- **Dev 0.5636 was a different model.** `reproduce_modelC.py` has no GDP term, so rebuilding H from
+  its params silently drops the one thing that makes it H. Measured: 0.5582 without the term, 0.5851
+  with SEASONAL_TRANSFORM=1. No error is raised either way.
+- **Ten env flags change the model equation and none were recorded in the params file.** Every fitted
+  version was a params file plus an invisible environment. Run scripts existed for two of ten.
+- **Built `scripts/model_mechanisms.py`**, one copy of every mechanism term, the driver loader, the
+  ED transform and the NetCDF writer, imported by both the optimizer and the rebuilder.
+- **The optimizer now stamps `environment` into every params file it writes.**
+- **Built `scripts/reproduce_model.py`**, argument driven, reads the stamp, refuses to guess on an
+  unstamped file, `--check` verifies against `scores_internal` in a minute.
+- **Verified bit-identically.** The rebuilt Model H has the same md5 as the canonical file, and the
+  refactored optimizer still reproduces the warm start to four decimals on every component.
+- Next: backfill and verify the stamp for C, D, E, F, G, G6, G7 and I.
+
 ## 2026-08-19 — coupling consistency, a dynamic fuel term, and population as the human driver
 
 - **`coupledE_fx` / `coupledFW` is the coupling legal version, official ILAMB 0.6532.** Model I is not,

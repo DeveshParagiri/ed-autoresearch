@@ -34,6 +34,10 @@ import xarray as xr
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from reproduce_modelC import fire_C, add_cf_bounds, uncoarsen, coarsen, sig, trailing_mean
+# The mechanism terms (GDP, population, land use, curing) and the ED transform live in
+# model_mechanisms so that scripts/reproduce_model.py applies the SAME code, not a second copy.
+# See that module's docstring for why: a params file alone could not rebuild Model H.
+import model_mechanisms as mech
 
 REPO         = Path(__file__).resolve().parents[1]
 MODELS_DIR   = REPO / "models" / "C"
@@ -136,87 +140,20 @@ _LU_KEYS = ("lu_past", "lu_scnd")
 CURING = os.environ.get("CURING", "0") == "1"
 _CURE_KEYS = ("cure_k", "cure_p_min", "cure_gpp_ref", "cure_agb_crit")
 
-
-# ── 1. Hybrid driver loader: CRUJRA climate + coupled GPP ─────────────────
-def load_coupled_drivers():
-    ds = xr.open_dataset(DUMP_NC)
-    sl = slice(DUMP_SLICE_START, DUMP_SLICE_STOP)
-
-    def grab(name):
-        return np.nan_to_num(ds[name].isel(time=sl).values.astype(np.float32), nan=0.0)
-
-    if DUMP_CLIMATE:
-        print(f"[setup] COUPLING-READY: climate (D_bar/T_air/P_*) + GPP all from {DUMP_NC.name} ...")
-        d = {
-            "dbar":    coarsen(grab("D_bar")),
-            "p_ann":   coarsen(grab("P_ann")),
-            "p_month": coarsen(grab("P_month")),
-            "t_air":   coarsen(grab("T_air")),
-        }
-    else:
-        print(f"[setup] CRUJRA climate from data/crujra/, GPP from {DUMP_NC.name} ...")
-        cru = REPO / "data" / "crujra"
-        d = {
-            "dbar":    np.load(cru / "dbar_monthly.npy").astype(np.float32),
-            "p_ann":   np.load(cru / "p_ann_monthly.npy").astype(np.float32),
-            "p_month": np.load(cru / "p_month_monthly.npy").astype(np.float32),
-            "t_air":   np.load(cru / "t_air_monthly.npy").astype(np.float32),
-        }
-
-    gpp_n = np.clip(grab("GPP_month_ntrl"), 0, None)
-    gpp_s = np.clip(grab("GPP_month_scnd"), 0, None)
-    gpp_p = np.clip(grab("GPP_month_past"), 0, None)
-    af_n  = grab("area_frac_ntrl")
-    af_s  = grab("area_frac_scnd")
-    af_p  = grab("area_frac_past")
-    gpp_total = (gpp_n * af_n + gpp_s * af_s + gpp_p * af_p).astype(np.float32)
-    d["gpp_monthly"] = coarsen(gpp_total)
-    if LANDUSE_TERM:
-        d["f_past"] = coarsen(af_p)
-        d["f_scnd"] = coarsen(af_s)
-
-    # FUEL_WINDOW (months) replaces the fuel term's static whole-record GPP mean with a
-    # causal trailing mean, so the term can run forward and back to 1850. Built from the
-    # FULL dump and sliced afterwards, so the fit window opens with a real spun-up window
-    # rather than a one-month mean. FUEL_WINDOW=0 keeps the old static field.
-    if FUEL_WINDOW > 0:
-        full = np.zeros_like(ds["GPP_month_ntrl"].values, dtype=np.float32)
-        for tag in ("ntrl", "scnd", "past"):
-            g = np.clip(np.nan_to_num(ds[f"GPP_month_{tag}"].values.astype(np.float32), nan=0.0), 0, None)
-            a = np.nan_to_num(ds[f"area_frac_{tag}"].values.astype(np.float32), nan=0.0)
-            full += g * a
-        d["gpp_fuel"] = coarsen(trailing_mean(full, FUEL_WINDOW))[sl]
-        spin = min(FUEL_WINDOW, DUMP_SLICE_START)
-        print(f"[fuel] FUEL_WINDOW={FUEL_WINDOW} months, causal trailing mean, "
-              f"{spin} months of spin-up ahead of the fit window")
-    ds.close()
-
-    # AGB for vegetation-aware suppression
-    agb_p = REPO / "global_baseline_modelCfuel_inputs_1997-2016.nc"
-    if agb_p.exists():
-        ds_agb = xr.open_dataset(agb_p)
-        agb = np.nan_to_num(ds_agb["AGB"].isel(time=sl).values.astype(np.float32),
-                            nan=0.0, posinf=0.0, neginf=0.0)
-        ds_agb.close()
-        d["agb"] = coarsen(agb)
-    return d
+# The mechanism environment this run defines, read from the same env vars as the flags above so it
+# cannot disagree with what actually ran. Stamped into every params file written below, so the
+# model can be rebuilt later by scripts/reproduce_model.py.
+MECH_ENV = mech.read_env()
 
 
-def load_gfed5_1deg():
-    print(f"[setup] loading GFED5 reference from {GFED5_NC.name} ...")
-    ds = xr.open_dataset(GFED5_NC)
-    # GFED5 ILAMB ref is at 0.5-deg, units percent, 2001-2020.
-    # Slice to 2001-2016 (first 192 months) and convert % -> fraction.
-    a = ds["burntArea"].isel(time=slice(0, N_MONTHS)).values.astype(np.float32)
-    a = np.nan_to_num(a, nan=0.0) / 100.0
-    ds.close()
-    # Coarsen 0.5-deg -> 1-deg by 2x2 mean
-    return coarsen(a)
+# ── 1. Drivers: loaded by model_mechanisms so the rebuilder uses the SAME code ────
+# DUMP_CLIMATE / FUEL_WINDOW / LANDUSE_TERM change which fields drive the model, so the loader
+# has to travel with the stamp. See model_mechanisms.load_drivers.
 
 
 # ── 2. Setup ────────────────────────────────────────────────────────────────
-drivers = load_coupled_drivers()                              # all 1-deg, 192 months
-obs     = load_gfed5_1deg()                                   # (192, 180, 360) monthly fraction
+drivers = mech.load_drivers(MECH_ENV, coarsen, trailing_mean)                              # all 1-deg, 192 months
+obs     = mech.load_gfed5_1deg(coarsen)                                   # (192, 180, 360) monthly fraction
 
 # Held-out-years validation: FIT_Y0/FIT_YF restrict the FIT to a year window (the
 # data is 2001-2016). Default = full range (bit-identical). reproduce/assemble keep
@@ -246,46 +183,15 @@ print(f"[setup] land cells (GFED5 burnable): {int(land_mask.sum())} / {land_mask
       f"({100*land_mask.mean():.1f}%)")
 
 # gridded population density, held as log10 so the hump is fitted in the space it lives in
-if POP_TERM:
-    _pop = np.load(REPO / "data_human" / "pop_density_1deg_2001_2016.npy")
-    _lpop = np.log10(_pop.astype(np.float32) + 0.1)
-    _npop = int((_pop[0] > 0).sum())
-    del _pop
-    print(f"[pop] POP_TERM ON: HYDE density, {_npop} populated cells, "
-          f"log10 range {_lpop.min():.2f} to {_lpop.max():.2f}")
-
-    def pop_mult(p):
-        mu = np.log10(p["pop_peak"] + 0.1)          # peak density -> position on the log axis
-        z = (_lpop - mu) / (p["pop_sig"] + 1e-9)
-        return 1.0 + p["pop_amp"] * np.exp(-0.5 * z * z)
+pop_mult = mech.make_pop_mult() if POP_TERM else None
 
 # GDP human-suppression multiplier field (1deg), fit strength gdp_gamma applied in predict()
-if GDP_TERM:
-    _gdp   = np.load(REPO / "data_human" / "gdp_pcap_grid_1deg.npy").astype(np.float64)  # 180x360, US$/cap
-    _gw    = np.log10(np.clip(_gdp, 50.0, None))
-    _ghave = np.isfinite(_gdp) & (_gdp > 0)
-    _gmask = _ghave & land_mask
-    _gw0   = float(np.median(_gw[_gmask])) if _gmask.any() else float(np.median(_gw[_ghave]))
-    _GMLO  = float(os.environ.get("GDP_MLO", 0.15))
-    _GMHI  = float(os.environ.get("GDP_MHI", 6.0))
-    def gdp_mult(gamma):
-        M = np.power(10.0, gamma * (_gw0 - _gw)); M[~_ghave] = 1.0
-        return np.clip(M, _GMLO, _GMHI).astype(np.float64)
-    print(f"[gdp] GDP_TERM ON: pivot ${10**_gw0:,.0f}/cap, "
-          f"coverage {100*_gmask.mean():.0f}% of grid, clip [{_GMLO},{_GMHI}]x")
+_GMLO = float(os.environ.get("GDP_MLO", 0.15))
+_GMHI = float(os.environ.get("GDP_MHI", 6.0))
+gdp_mult = mech.make_gdp_mult(land_mask, _GMLO, _GMHI) if GDP_TERM else None
 
 # Grass-curing pathway precomputes (fields independent of the fit params)
-if CURING:
-    _p_ann_cell = drivers["p_ann"].mean(0, keepdims=True).astype(np.float64)    # (1,180,360)
-    _gpp_cell   = drivers["gpp_monthly"].mean(0, keepdims=True).astype(np.float64)
-    _agb_cell   = drivers["agb"].mean(0, keepdims=True).astype(np.float64)
-    _cured_sat  = sig(drivers["dbar"], 0.001, 3000.0).astype(np.float64)         # (192,...) dry -> cured
-    def curing_term(p):
-        grass_zone = 1.0 / (1.0 + np.exp(-0.02 * (_p_ann_cell - p["cure_p_min"])))          # rain -> grass, not desert
-        grass_gate = 1.0 / (1.0 + np.power(np.clip(_agb_cell / p["cure_agb_crit"], 0, None), 3.0))  # not forest
-        inv_gpp    = 1.0 / (1.0 + _gpp_cell / (p["cure_gpp_ref"] + 1e-9))                    # fine sparse grass burns more
-        return (p["cure_k"] * grass_zone * grass_gate * inv_gpp * _cured_sat).astype(np.float64)
-    print("[curing] CURING ON: grass-curing pathway (precip-gated, forest/desert-gated, inverse-GPP)")
+curing_term = mech.make_curing_term(drivers, sig) if CURING else None
 print(f"[setup] GFED5 land-mean monthly frac: {float((obs*w3_land).sum()/w3_land.sum()):.4g}")
 
 # ILAMB-aligned (Collier-2018) precomputes
@@ -301,12 +207,7 @@ obs_anom    = (obs - gfed_tm[None, :, :]).astype(np.float64)
 
 # ── 3. ED-consistent transform ──────────────────────────────────────────────
 def ed_transform(rate_yr):
-    rate_capped = np.minimum(rate_yr, FIRE_MAX_RATE)
-    if SEASONAL_TRANSFORM:
-        # per-month disturbance fraction (no 1/12 cap; concentrates dry-season fire)
-        return (1.0 - np.exp(-rate_capped * DT_YEARS / 12.0)).astype(np.float32)
-    annual_frac = 1.0 - np.exp(-rate_capped * DT_YEARS)
-    return (annual_frac / 12.0).astype(np.float32)
+    return mech.ed_transform(rate_yr, FIRE_MAX_RATE, SEASONAL_TRANSFORM, DT_YEARS)
 
 
 # ── 4a. Per-cell unweighted physical objective (penalizes false positives) ───
@@ -449,27 +350,16 @@ def score_BA(pred_monthly):
                          overall=overall)
 
 
-def landuse_mult(p):
-    """human-activity multiplier from ED's own land-use tiles, time-varying by construction"""
-    return ((1.0 + p["lu_past"] * drivers["f_past"]) *
-            (1.0 + p["lu_scnd"] * drivers["f_scnd"])).astype(np.float64)
+landuse_mult = mech.make_landuse_mult(drivers) if LANDUSE_TERM else None
 
 
 def predict(params):
-    fc = {k: v for k, v in params.items()
-          if k != "gdp_gamma" and k not in _CURE_KEYS and k not in _LU_KEYS
-          and k not in _POP_KEYS}
+    fc = {k: v for k, v in params.items() if k not in mech.MECH_KEYS}
     with np.errstate(over="ignore", invalid="ignore"):
         rate = fire_C(drivers, fc)
-    if CURING and "cure_k" in params:                 # additive grass-curing pathway
-        rate = rate + curing_term(params)
-    rate = rate * land_mask[None, :, :]
-    if GDP_TERM and "gdp_gamma" in params:
-        rate = rate * gdp_mult(params["gdp_gamma"])[None, :, :]
-    if POP_TERM and "pop_amp" in params:
-        rate = rate * pop_mult(params)
-    if LANDUSE_TERM and "lu_past" in params:
-        rate = rate * landuse_mult(params)
+    rate = mech.apply_mechanisms(rate, params, MECH_ENV, land_mask,
+                                 gdp_mult=gdp_mult, pop_mult=pop_mult,
+                                 landuse_mult=landuse_mult, curing_term=curing_term)
     return ed_transform(rate)
 
 
@@ -691,33 +581,10 @@ def objective(trial):
 
 
 def write_ba_nc(pred, path):
-    """Write a monthly-fraction BA prediction (1deg, land-masked) to a 0.5deg CF
-    NetCDF at `path`, creating parent dirs. Shared by the primary output and the
-    FIX-2 top-K candidate dump so every candidate is encoded identically and can
-    be re-scored with official ILAMB without surprises."""
-    pred_hd = uncoarsen(np.where(land_mask[None, :, :], pred, np.nan).astype(np.float32))
-    times = [cftime.DatetimeNoLeap(y, m, 15) for y in FIT_YEARS for m in range(1, 13)]
-    lat   = np.arange(-89.75, 90.0, 0.5)
-    lon   = np.arange(-179.75, 180.0, 0.5)
-    ds = xr.Dataset(
-        {"burntArea": (("time","lat","lon"), pred_hd,
-                       {"units":"1", "standard_name":"burnt_area_fraction",
-                        "long_name":"Burnt Area Fraction"})},
-        coords={"time": ("time", times), "lat": ("lat", lat), "lon": ("lon", lon)},
-        attrs={"title": "ED-ModelC-final (coupled-consistent retune, GFED5)",
-               "Conventions": "CF-1.7",
-               "transform": (f"monthly_frac = 1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) / 12)"
-                             if SEASONAL_TRANSFORM else
-                             f"monthly_frac = (1 - exp(-min(rate_yr, {FIRE_MAX_RATE}) * 1yr)) / 12")})
-    ds = add_cf_bounds(ds)
-    enc = {"burntArea":   {"zlib":True, "complevel":4, "_FillValue":1e20},
-           "time":        {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"},
-           "time_bounds": {"units":"days since 2001-01-01 00:00:00", "calendar":"noleap", "dtype":"float64"}}
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".nc.tmp")
-    ds.to_netcdf(tmp, encoding=enc, format="NETCDF4_CLASSIC")
-    os.replace(tmp, path)
-    return path
+    """Encode a prediction exactly the way scripts/reproduce_model.py will encode a rebuild,
+    since ILAMB is sensitive to encoding and a difference there would look scientific."""
+    return mech.write_ba_nc(pred, path, land_mask, MECH_ENV, uncoarsen, add_cf_bounds,
+                            FIT_YEARS)
 
 
 def main():
@@ -826,6 +693,11 @@ def main():
                                     if SEASONAL_TRANSFORM else
                                     "burnt_monthly_frac = (1 - exp(-min(rate, fire_max) * 1yr)) / 12"),
             },
+            # THE STAMP. Which mechanism terms this model needs, so the params file describes a
+            # model rather than just a point in parameter space. Without it, rebuilding Model H
+            # silently produced Model C and scored 0.56 against its true 0.68 (Dev, 2026-08-22).
+            # scripts/reproduce_model.py reads this and refuses to build a file that lacks it.
+            "environment":    MECH_ENV,
             "scores_internal": breakdown,
             "warm_start_internal": warm_breakdown,
             "n_trials":   len(study.trials),
