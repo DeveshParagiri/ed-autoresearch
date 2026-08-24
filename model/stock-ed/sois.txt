@@ -1,9 +1,0 @@
-NUM_SOIS   6
-
-
-Fire_Rh    70.25  102.72
-Fire_Rh    55.25  32.75
-Fire_Rh    27.25  112.75
-Fire_Rh    63.25  16.75
-Fire_Rh    -6.25  -60.75
-Fire_Rh    7.25  23.75

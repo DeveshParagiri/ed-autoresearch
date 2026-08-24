@@ -1,25 +1,9 @@
 # ED-Fire
 
-This repository develops and evaluates improved fire mechanisms for Ecosystem Demography. Start with [`research.md`](research.md); it is the only research-control document.
+The research loop runs from [`autoresearch/`](autoresearch/). That directory contains its complete working context: one editable scientific artifact, its instructions, its official result ledger, and its prepared inputs.
 
-The retained parameter sets for the existing models live in `model/parameters/`, with their minimal mapping in `model/registry.toml`. Candidate inputs and benchmarks live under `data/`. The sole evaluation contract is `evals/burned-area.json`, and the sole evaluation entry point is `scripts/evaluate_candidate.py`.
+The loop has one discoverable command surface. From inside `autoresearch/`, `uv run ar --help` shows every command and `uv run ar list` lists the tools available to the model. Their implementations and the external installer and progress publisher live in [`scripts/`](scripts/). The GFED5 benchmark lives in [`evals/`](evals/). Neither outer directory belongs to the loop's normal working context.
 
-Evaluate a candidate with:
+Every official evaluation overwrites the single external `progress.png`. The graph shows the running-best three-decimal GFED5 Overall against the number of official experiments. Run `uv run python scripts/progress.py` only when you want to recreate it manually from the complete ledger.
 
-```bash
-uv run python scripts/evaluate_candidate.py path/to/burntArea.nc --output results/<run-name>
-```
-
-The candidate must provide monthly `burntArea` fractions on the global 0.5-degree grid for 2001–2016. The command runs the fixed ILAMB suite against GFED5 and GFED4.1s and writes metrics, evaluator records, the candidate artifact, logs, and figures under the requested output directory.
-
-`scripts/run_optuna.py` runs a declared parameter search and replays the best trial. `scripts/run_shapley.py` evaluates every subset of a small set of mechanisms and writes exact grouped Shapley values plus drop-one effects. Both call the same evaluator above.
-
-The local research viewer lives in `viewer/`. Run `pnpm dev` there and open `http://127.0.0.1:4173`; it reads the current `research.md` directly.
-
-Run the lightweight repository checks with:
-
-```bash
-uv run python scripts/check_workspace.py
-```
-
-Public and project-local data identities remain in `data/catalog.toml` and `data/sources.toml`. Data retrieval is handled by `scripts/install_all_data.sh`; pass `--fetch-public` only when a declared input is absent.
+No model variants, experiment directories, persisted diagnostic figures, candidate NetCDF files, or ILAMB output trees are retained.
