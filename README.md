@@ -10,16 +10,14 @@ The research loop works entirely inside this directory:
 
 ```text
 autoresearch/
-├── __pycache__/
-│   └── model.cpython-313.pyc
-├── inputs/
-│   ├── climate.nc
-│   ├── ed.nc
-│   ├── lightning.nc
-│   ├── luh2.nc
-│   ├── population.nc
-│   └── README.md
-├── model.py
-├── research.md
-└── results.tsv
+├── inputs/                 prepared monthly inputs on the shared 2001–2016 global grid
+│   ├── climate.nc          temperature, precipitation, and accumulated dryness
+│   ├── ed.nc               frozen ED vegetation and ecosystem state
+│   ├── lightning.nc        monthly lightning climatology
+│   ├── luh2.nc             land-use and land-cover fractions
+│   ├── population.nc       population density
+│   └── README.md           input variables, provenance, units, and usage
+├── model.py                the one editable mechanistic fire model
+├── research.md             instructions for the autoresearch loop
+└── results.tsv             official GFED5 experiment ledger and model checkpoints
 ```
