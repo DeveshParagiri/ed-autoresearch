@@ -30,6 +30,7 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
 # Fit the first independent annual-propensity correction while retaining the
 # separately calibrated seasonal-allocation head.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
+    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.10},
     'annual_intact_half': {'type': 'float', 'low': 0.5, 'high': 10.0, 'log': True},
     'annual_intact_w': {'type': 'float', 'low': 0.0, 'high': 0.8},
     'annual_vpd_half': {'type': 'float', 'low': 0.2, 'high': 2.0, 'log': True},
@@ -40,7 +41,8 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
-PARAMS = {'annual_intact_half': 2.0,
+PARAMS = {'annual_scale': 0.92,
+ 'annual_intact_half': 2.0,
  'annual_intact_w': 0.3,
  'annual_vpd_half': 1.4886095530141774,
  'annual_vpd_n': 3.057230500964514,
@@ -574,6 +576,11 @@ def _annual_seasonal_closure(
         )
         target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
         annual_burn = np.clip(target, 0.0, 11.5)
+
+    # The annual head has its own intercept. This is deliberately downstream of
+    # map-shaping factors so global level can be calibrated without changing
+    # their spatial or seasonal response.
+    annual_burn = np.clip(annual_burn * p.get("annual_scale", 1.0), 0.0, 11.5)
 
     if "vpd" in enabled and p.get("alloc_dry_w", 0.0) > 0.0:
         dry_spell = np.clip(
