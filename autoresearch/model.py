@@ -206,7 +206,7 @@ def _fire_rate(
         canopy = 1.0 / (1.0 + np.power(ratio, p["trop_k_veg"]))
         rate *= tropical * canopy + (1.0 - tropical)
     weight = float(np.clip(p.get("soft_w", 0.0), 0.0, 1.0))
-    if weight > 0.0 and len(factors) > 1:
+    if "softmin" in enabled and weight > 0.0 and len(factors) > 1:
         # A product of favourability lets any single weak factor veto fire, so
         # a merely damp month in a well-fuelled landscape is suppressed as
         # hard as a month with no fuel at all. Real constraint is closer to a
