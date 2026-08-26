@@ -656,8 +656,9 @@ def _annual_seasonal_closure(
             + p["window_wet_w"] * antecedent
         )
         window = np.exp(np.clip(log_window, -8.0, 8.0))
-        window_allocation = window / (
-            window.sum(axis=1, keepdims=True) + 1e-12
+        window_allocation = allocation * window
+        window_allocation = window_allocation / (
+            window_allocation.sum(axis=1, keepdims=True) + 1e-12
         )
         mix = float(np.clip(p["window_mix"], 0.0, 1.0))
         allocation = (1.0 - mix) * allocation + mix * window_allocation
