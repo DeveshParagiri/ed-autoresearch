@@ -20,6 +20,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'spread_crit': {'type': 'float', 'low': 0.05, 'high': 20.0, 'log': True},
     'spread_k': {'type': 'float', 'low': 1.0, 'high': 12.0},
     'spread_gain': {'type': 'float', 'low': 0.2, 'high': 30.0, 'log': True},
+    'month_scale': {'type': 'float', 'low': 0.005, 'high': 1.0, 'log': True},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -34,13 +35,14 @@ PARAMS = {'D_high': 2940.51756322311,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
  'pre_dampen_half': 107.40052367919465,
- 'cure_alpha': 0.9022958255196324,
- 'cure_half': 101.69797202430976,
- 'cure_n': 0.7938582223133299,
- 'cure_cap': 4.041069635757127,
- 'spread_crit': 1.3740943282898994,
- 'spread_k': 7.040273184439577,
- 'spread_gain': 3.8622513492967787}
+ 'cure_alpha': 0.9459325061597951,
+ 'cure_half': 72.81247733921077,
+ 'cure_n': 0.7771518756969097,
+ 'cure_cap': 6.792532803422177,
+ 'spread_crit': 1.7625369910383835,
+ 'spread_k': 2.702736326566014,
+ 'spread_gain': 9.358811681038784,
+ 'month_scale': 0.04231973135491261}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -190,9 +192,22 @@ def _fire_rate(
     return rate
 
 
-def _transform(rate: np.ndarray) -> np.ndarray:
-    rate = np.minimum(rate, 5.0)
-    return (1.0 - np.exp(-rate)) / 12.0
+def _transform(rate: np.ndarray, p: Mapping[str, float] | None = None) -> np.ndarray:
+    """Convert a monthly fire rate into the fraction of the cell burned.
+
+    Poisson exceedance on the month itself: with a mean number of burns
+    ``r`` in a month, the expected fraction burned at least once is
+    ``1 - exp(-r)``. The previous form divided that by twelve, which caps
+    monthly burned fraction at 8.33% however large the rate grows. Observed
+    peak months exceed that cap in exactly the regions that dominate the
+    score -- northern hemisphere Africa reaches 18.7% in December, southern
+    Africa 11.6% in August, southeast Asia 9.8% in March -- so those peaks
+    were unreachable at any parameter setting, and the seasonal amplitude
+    deficit could never be closed by reshaping the rate.
+    """
+    scale = 1.0 if p is None else p.get("month_scale", 1.0)
+    rate = np.clip(rate * scale, 0.0, 50.0)
+    return 1.0 - np.exp(-rate)
 
 
 def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
@@ -301,5 +316,5 @@ def predict(
         rate = rate * _curing(data, fallback)
     if "spread" in enabled:
         rate = rate * _spread(rate, fallback)
-    prediction = _transform(rate)
+    prediction = _transform(rate, fallback)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
