@@ -9,7 +9,7 @@ import numpy as np
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'neighbour')
+              'cropland', 'neighbour', 'legacy')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -30,6 +30,8 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'crop_n': {'type': 'float', 'low': 0.3, 'high': 3.0},
     'nb_w': {'type': 'float', 'low': 0.0, 'high': 0.9},
     'nb_diag': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'leg_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'leg_a': {'type': 'float', 'low': 0.02, 'high': 0.5},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -58,7 +60,9 @@ PARAMS = {'D_high': 2940.51756322311,
  'crop_k': 0.5,
  'crop_n': 2.0,
  'nb_w': 0.35,
- 'nb_diag': 0.5}
+ 'nb_diag': 0.5,
+ 'leg_w': 0.3,
+ 'leg_a': 0.3}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -270,6 +274,36 @@ def _lag(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     return (1.0 - weight) * rate + weight * previous
 
 
+def _legacy(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
+    """Carry multi-year fuel accumulation into the fire rate.
+
+    Every term in the model reads current conditions: the antecedent-wetness
+    accumulator tuned its own memory away, so nothing now remembers more than
+    the previous month. But fuel load is a stock built over years, not a state
+    of this month's weather. A landscape that has gone several seasons without
+    burning carries more litter and deadwood than one burnt last year under
+    identical climate. Track a slow accumulator over the model's own fire rate
+    and let a shortfall against it raise flammability.
+    """
+    weight = float(np.clip(p.get("leg_w", 0.0), 0.0, 1.0))
+    if weight <= 0.0:
+        return rate
+    alpha = float(np.clip(p.get("leg_a", 0.1), 1e-3, 1.0))
+    state = rate.mean(axis=0)
+    stock = np.empty_like(rate)
+    for step in range(rate.shape[0]):
+        stock[step] = state
+        state = state + alpha * (rate[step] - state)
+    mean = rate.mean(axis=0, keepdims=True)
+    deficit = np.clip(mean / (stock + mean * 1e-3 + 1e-12), 0.0, 4.0)
+    # Apply the accumulated deficit through each cell's long-run mean rather
+    # than month by month: the stock is a multi-year quantity, so letting it
+    # modulate individual months imprints its own slow drift on the seasonal
+    # cycle, which is not what a fuel stock does.
+    factor = deficit.mean(axis=0, keepdims=True)
+    return rate * (1.0 - weight + weight * factor)
+
+
 def _neighbour(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     """Let each cell see its neighbours' flammability.
 
@@ -420,6 +454,8 @@ def predict(
         rate = rate * _curing(data, fallback)
     if "lag" in enabled:
         rate = _lag(rate, fallback)
+    if "legacy" in enabled:
+        rate = _legacy(rate, fallback)
     if "neighbour" in enabled:
         rate = _neighbour(rate, fallback)
     if "spread" in enabled:
