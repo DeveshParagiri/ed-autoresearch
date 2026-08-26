@@ -7,9 +7,9 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
-          'luh2_cropland_fraction')
+          'luh2_cropland_fraction', 'luh2_rangeland_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'neighbour', 'legacy', 'stubble')
+              'cropland', 'neighbour', 'legacy', 'stubble', 'pasture')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -36,6 +36,9 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'stub_k': {'type': 'float', 'low': 0.0, 'high': 6.0},
     'stub_t': {'type': 'float', 'low': 0.0, 'high': 18.0},
     'stub_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
+    'past_k': {'type': 'float', 'low': 0.0, 'high': 6.0},
+    'past_t': {'type': 'float', 'low': 5.0, 'high': 45.0},
+    'past_w': {'type': 'float', 'low': 1.0, 'high': 10.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -70,7 +73,10 @@ PARAMS = {'D_high': 2940.51756322311,
  'leg_cap': 3.0,
  'stub_k': 1.5,
  'stub_t': 8.0,
- 'stub_w': 4.0}
+ 'stub_w': 4.0,
+ 'past_k': 1.0,
+ 'past_t': 30.0,
+ 'past_w': 5.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -488,6 +494,20 @@ def predict(
         rate = rate * (
             1.0 + fallback["stub_k"] * crop * shoulder * np.clip(warming, 0.0, None)
         )
+    if "pasture" in enabled and fallback.get("past_k", 0.0) > 0.0:
+        # Rangeland is managed by burning too, but for a different reason and
+        # on a different schedule than crop stubble: graziers fire the sward
+        # to kill woody seedlings and flush new growth, which is done in the
+        # dry season when the grass is cured rather than at sowing. Gate on
+        # rangeland fraction and fire on the warm dry end of the year, keeping
+        # the calendar shape that made the cropland term work while giving it
+        # its own timing.
+        temperature = data["air_temperature"]
+        window = np.exp(
+            -np.square((temperature - fallback["past_t"]) / fallback["past_w"])
+        )
+        graze = np.clip(data["luh2_rangeland_fraction"], 0.0, 1.0)
+        rate = rate * (1.0 + fallback["past_k"] * graze * window)
     if "neighbour" in enabled:
         rate = _neighbour(rate, fallback)
     if "spread" in enabled:
