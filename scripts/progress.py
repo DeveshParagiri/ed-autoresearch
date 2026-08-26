@@ -30,6 +30,8 @@ from matplotlib.ticker import FormatStrFormatter, MaxNLocator
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RESULTS = ROOT / "autoresearch" / "results.tsv"
 DEFAULT_OUTPUT = ROOT / "progress.png"
+# Official apples-to-apples GFED5 ILAMB check recorded in commit c4a7b5f.
+STOCK_ED_BASELINE_OVERALL = 0.4225
 REQUIRED_FIELDS = {
     "commit",
     "overall",
@@ -72,8 +74,15 @@ def render(results: Path, output: Path) -> bool:
     scores = np.asarray([float(row["overall"]) for row in rows], dtype=np.float64)
     running_best = np.maximum.accumulate(scores)
     experiments = np.arange(1, len(rows) + 1)
-    improvements = np.concatenate(([True], running_best[1:] > running_best[:-1]))
+    improvements = np.concatenate(
+        (
+            [scores[0] > STOCK_ED_BASELINE_OVERALL],
+            running_best[1:] > running_best[:-1],
+        )
+    )
     other_experiments = ~improvements
+    progress_steps = np.arange(0, len(rows) + 1)
+    progress_scores = np.concatenate(([STOCK_ED_BASELINE_OVERALL], running_best))
 
     figure, axis = plt.subplots(figsize=(13, 6.8))
     figure.patch.set_facecolor("white")
@@ -89,8 +98,8 @@ def render(results: Path, output: Path) -> bool:
         zorder=1,
     )
     axis.step(
-        experiments,
-        running_best,
+        progress_steps,
+        progress_scores,
         where="post",
         color="#2EAD67",
         linewidth=2.1,
@@ -107,6 +116,26 @@ def render(results: Path, output: Path) -> bool:
         label="Overall improvements",
         zorder=3,
     )
+    axis.scatter(
+        [0],
+        [STOCK_ED_BASELINE_OVERALL],
+        s=62,
+        marker="D",
+        color="#3D5A80",
+        edgecolor="#24364D",
+        linewidth=0.9,
+        label="Stock ED baseline",
+        zorder=4,
+    )
+    axis.annotate(
+        f"Stock ED\n{STOCK_ED_BASELINE_OVERALL:.3f}",
+        xy=(0, STOCK_ED_BASELINE_OVERALL),
+        xytext=(10, 10),
+        textcoords="offset points",
+        color="#24364D",
+        fontsize=9,
+        fontweight="semibold",
+    )
     count = len(rows)
     kept = int(improvements.sum())
     axis.set_title(
@@ -119,17 +148,19 @@ def render(results: Path, output: Path) -> bool:
     axis.set_ylabel("GFED5 Overall (higher is better)")
     axis.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=2))
     axis.yaxis.set_major_formatter(FormatStrFormatter("%.3f"))
-    axis.set_xlim(0.6, max(2, len(rows)) + 0.8)
-    spread = max(0.006, float(scores.max() - scores.min()))
-    lower_margin = max(0.004, spread * 0.18)
-    upper_margin = max(0.008, spread * 0.35)
+    axis.set_xlim(-0.45, max(2, len(rows)) + 0.8)
+    chart_min = min(STOCK_ED_BASELINE_OVERALL, float(scores.min()))
+    chart_max = max(STOCK_ED_BASELINE_OVERALL, float(scores.max()))
+    spread = max(0.006, chart_max - chart_min)
+    lower_margin = max(0.008, spread * 0.08)
+    upper_margin = max(0.008, spread * 0.08)
     axis.set_ylim(
-        max(0.0, float(scores.min()) - lower_margin),
-        min(1.0, float(scores.max()) + upper_margin),
+        max(0.0, chart_min - lower_margin),
+        min(1.0, chart_max + upper_margin),
     )
     axis.grid(color="#D7DDE1", linewidth=0.7, alpha=0.65)
     handles, labels = axis.get_legend_handles_labels()
-    order = [0, 2, 1]
+    order = [3, 0, 2, 1]
     axis.legend(
         [handles[index] for index in order],
         [labels[index] for index in order],
