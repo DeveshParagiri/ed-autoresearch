@@ -9,7 +9,7 @@ import numpy as np
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland')
+              'cropland', 'neighbour')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -28,6 +28,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'soft_s': {'type': 'float', 'low': 0.2, 'high': 12.0},
     'crop_k': {'type': 'float', 'low': 0.0, 'high': 4.0},
     'crop_n': {'type': 'float', 'low': 0.3, 'high': 3.0},
+    'nb_w': {'type': 'float', 'low': 0.0, 'high': 0.9},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -54,7 +55,8 @@ PARAMS = {'D_high': 2940.51756322311,
  'soft_w': 1.0,
  'soft_s': 2.0,
  'crop_k': 0.5,
- 'crop_n': 2.0}
+ 'crop_n': 2.0,
+ 'nb_w': 0.25}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -266,6 +268,30 @@ def _lag(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     return (1.0 - weight) * rate + weight * previous
 
 
+def _neighbour(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
+    """Let each cell see its neighbours' flammability.
+
+    Every other term is a pointwise function of the same cell's own inputs, but
+    fire crosses cell boundaries: a cell adjacent to burning savanna is reached
+    by fronts that started elsewhere, while an isolated flammable cell ringed
+    by wet forest is not. Averaging part of the four-neighbour flammability
+    into each cell couples them, so connected flammable landscapes carry fire
+    further than the same conditions in isolation.
+    """
+    weight = float(np.clip(p.get("nb_w", 0.0), 0.0, 0.9))
+    if weight <= 0.0:
+        return rate
+    north = np.roll(rate, 1, axis=1)
+    south = np.roll(rate, -1, axis=1)
+    east = np.roll(rate, 1, axis=2)
+    west = np.roll(rate, -1, axis=2)
+    # Latitude rolls wrap the poles, so damp the two polar rows back to self.
+    north[:, 0] = rate[:, 0]
+    south[:, -1] = rate[:, -1]
+    surround = 0.25 * (north + south + east + west)
+    return (1.0 - weight) * rate + weight * surround
+
+
 def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     """Percolation-style spread multiplier on the instantaneous fire rate.
 
@@ -382,6 +408,8 @@ def predict(
         rate = rate * _curing(data, fallback)
     if "lag" in enabled:
         rate = _lag(rate, fallback)
+    if "neighbour" in enabled:
+        rate = _neighbour(rate, fallback)
     if "spread" in enabled:
         rate = rate * _spread(rate, fallback)
     prediction = _transform(rate, fallback)
