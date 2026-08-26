@@ -19,25 +19,25 @@ _MONTH_DURATION = (_MONTH_DAYS / _MONTH_DAYS.mean())[:, None, None]
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
-          'wind_speed_mean', 'vapor_pressure_deficit_mean')
+          'wind_speed_mean', 'vapor_pressure_deficit_mean',
+          'maximum_consecutive_dry_days')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
 
-# Focus optimisation on coefficients whose optima can move when monthly hazard
-# is made duration-aware. The frozen regional core and unrelated mechanisms stay
-# fixed so this search tests the calendar-duration correction cleanly.
+# Fit the first independent seasonal-allocation mechanism while the annual
+# propensity head is held fixed by construction.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'vpd_half': {'type': 'float', 'low': 0.05, 'high': 0.20, 'log': True},
-    'vpd_n': {'type': 'float', 'low': 0.20, 'high': 0.55},
-    'spread_gain': {'type': 'float', 'low': 6.0, 'high': 10.0},
-    'month_scale': {'type': 'float', 'low': 0.035, 'high': 0.050},
-    'lag_w': {'type': 'float', 'low': 0.08, 'high': 0.22},
-    'nb_w': {'type': 'float', 'low': 0.45, 'high': 0.75},
-    'gust_ref': {'type': 'float', 'low': 3.0, 'high': 8.0},
+    'alloc_dry_scale': {'type': 'float', 'low': 3.0, 'high': 80.0, 'log': True},
+    'alloc_dry_w': {'type': 'float', 'low': 0.0, 'high': 1.5},
+    'vpd_half': {'type': 'float', 'low': 0.05, 'high': 0.30, 'log': True},
+    'vpd_n': {'type': 'float', 'low': 0.20, 'high': 0.80},
+    'lag_w': {'type': 'float', 'low': 0.05, 'high': 0.25},
 }
 
-PARAMS = {'vpd_half': 0.18382904388591828,
+PARAMS = {'alloc_dry_scale': 30.0,
+ 'alloc_dry_w': 0.8,
+ 'vpd_half': 0.18382904388591828,
  'vpd_n': 0.5444782176108658,
  'vpd_cap': 5.0,
  'D_high': 2940.51756322311,
@@ -494,15 +494,20 @@ def _curing(
 # score. Pruning it cost nothing (0.6977 with it, 0.6980 without).
 
 
-def _annual_seasonal_closure(prediction: np.ndarray) -> np.ndarray:
-    """Factor monthly burning into annual propensity and seasonal allocation.
+def _annual_seasonal_closure(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Separate annual burned-area propensity from seasonal allocation.
 
-    This first APSA scaffold is deliberately prediction-identical. Annual
-    propensity is the sum of the incumbent monthly burned fractions. Seasonal
-    allocation is the fraction of its Poisson hazard in each month. Recombining
-    them with the saturating closure recovers every incumbent month, while
-    exposing two independent objects that later experiments can improve without
-    letting a seasonal change silently redraw the annual map.
+    Annual propensity is the sum of the incumbent monthly burned fractions.
+    Seasonal allocation begins from the incumbent Poisson hazard, then uses the
+    longest continuous dry spell as a within-year opportunity term. This is not
+    another moisture multiplier: it changes *when* a fixed annual amount burns.
+    The saturating closure solves for the hazard scale that conserves annual
+    burned area exactly despite redistributing hazard between months.
     """
     monthly = np.asarray(prediction).reshape(16, 12, 180, 360)
     hazard = -np.log1p(-np.clip(monthly, 0.0, 1.0 - 1e-7))
@@ -510,11 +515,20 @@ def _annual_seasonal_closure(prediction: np.ndarray) -> np.ndarray:
     allocation = hazard / (total_hazard + 1e-12)
     annual_burn = monthly.sum(axis=1, keepdims=True)
 
+    if "vpd" in enabled and p.get("alloc_dry_w", 0.0) > 0.0:
+        dry_spell = np.clip(
+            data["maximum_consecutive_dry_days"], 0.0, 31.0
+        ).reshape(16, 12, 180, 360)
+        opportunity = np.power(
+            1.0 + dry_spell / (p["alloc_dry_scale"] + 1e-12),
+            p["alloc_dry_w"],
+        )
+        allocation = allocation * opportunity
+        allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
+
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
-    # total_hazard is the exact identity solution for this initial allocation;
-    # retaining the solve makes the closure ready for separately tuned heads.
     lam = total_hazard.copy()
-    for _ in range(6):
+    for _ in range(8):
         survival = np.exp(-lam * allocation)
         produced = (1.0 - survival).sum(axis=1, keepdims=True)
         slope = (allocation * survival).sum(axis=1, keepdims=True)
@@ -617,5 +631,5 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
-    prediction = _annual_seasonal_closure(prediction)
+    prediction = _annual_seasonal_closure(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
