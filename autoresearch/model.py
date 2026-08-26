@@ -21,7 +21,8 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
-          'maximum_consecutive_dry_days')
+          'maximum_consecutive_dry_days', 'aboveground_biomass',
+          'luh2_primary_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
@@ -29,6 +30,8 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
 # Fit the first independent annual-propensity correction while retaining the
 # separately calibrated seasonal-allocation head.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
+    'annual_intact_half': {'type': 'float', 'low': 0.5, 'high': 10.0, 'log': True},
+    'annual_intact_w': {'type': 'float', 'low': 0.0, 'high': 0.8},
     'annual_vpd_half': {'type': 'float', 'low': 0.2, 'high': 2.0, 'log': True},
     'annual_vpd_n': {'type': 'float', 'low': 0.5, 'high': 4.0},
     'annual_vpd_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
@@ -37,7 +40,9 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
-PARAMS = {'annual_vpd_half': 1.4886095530141774,
+PARAMS = {'annual_intact_half': 2.0,
+ 'annual_intact_w': 0.3,
+ 'annual_vpd_half': 1.4886095530141774,
  'annual_vpd_n': 3.057230500964514,
  'annual_vpd_w': 0.2588549215194132,
  'alloc_dry_scale': 14.392746766513104,
@@ -542,6 +547,31 @@ def _annual_seasonal_closure(
         )
         # Hold global area-weighted burning fixed so this head changes the map,
         # not the global level. Bias remains available to a later explicit head.
+        target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
+        annual_burn = np.clip(target, 0.0, 11.5)
+
+    if "fuel" in enabled and p.get("annual_intact_w", 0.0) > 0.0:
+        # Dense intact primary biomass is not additional fine fuel available to
+        # surface fire. Closed humid forest protects and vertically separates
+        # much of that carbon, so it brakes annual burnable capacity rather than
+        # suppressing each month's weather response directly.
+        biomass = np.clip(data["aboveground_biomass"], 0.0, None).reshape(
+            16, 12, 180, 360
+        ).mean(axis=1, keepdims=True)
+        primary = np.clip(data["luh2_primary_fraction"], 0.0, 1.0).reshape(
+            16, 12, 180, 360
+        ).mean(axis=1, keepdims=True)
+        intact_brake = 1.0 - primary * biomass / (
+            biomass + p["annual_intact_half"] + 1e-12
+        )
+        intact_brake = np.clip(intact_brake, 1e-4, None)
+        weight = annual_burn * _CELL_AREA
+        center = np.exp(
+            (np.log(intact_brake) * weight).sum() / (weight.sum() + 1e-12)
+        )
+        target = annual_burn * np.power(
+            intact_brake / (center + 1e-12), p["annual_intact_w"]
+        )
         target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
         annual_burn = np.clip(target, 0.0, 11.5)
 
