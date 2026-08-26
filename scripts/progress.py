@@ -84,10 +84,17 @@ def render(results: Path, output: Path) -> bool:
     progress_steps = np.arange(0, len(rows) + 1)
     progress_scores = np.concatenate(([STOCK_ED_BASELINE_OVERALL], running_best))
 
-    figure, axis = plt.subplots(figsize=(13, 6.8))
+    figure, (detail_axis, baseline_axis) = plt.subplots(
+        2,
+        1,
+        sharex=True,
+        figsize=(13, 6.8),
+        gridspec_kw={"height_ratios": (4.8, 1.15), "hspace": 0.06},
+    )
     figure.patch.set_facecolor("white")
-    axis.set_facecolor("white")
-    axis.scatter(
+    detail_axis.set_facecolor("white")
+    baseline_axis.set_facecolor("white")
+    detail_axis.scatter(
         experiments[other_experiments],
         scores[other_experiments],
         s=18,
@@ -97,7 +104,7 @@ def render(results: Path, output: Path) -> bool:
         label="Other experiments",
         zorder=1,
     )
-    axis.step(
+    detail_axis.step(
         progress_steps,
         progress_scores,
         where="post",
@@ -106,7 +113,15 @@ def render(results: Path, output: Path) -> bool:
         label="Running best",
         zorder=2,
     )
-    axis.scatter(
+    baseline_axis.step(
+        progress_steps,
+        progress_scores,
+        where="post",
+        color="#2EAD67",
+        linewidth=2.1,
+        zorder=2,
+    )
+    detail_axis.scatter(
         experiments[improvements],
         running_best[improvements],
         s=48,
@@ -116,7 +131,7 @@ def render(results: Path, output: Path) -> bool:
         label="Overall improvements",
         zorder=3,
     )
-    axis.scatter(
+    baseline_axis.scatter(
         [0],
         [STOCK_ED_BASELINE_OVERALL],
         s=62,
@@ -129,36 +144,90 @@ def render(results: Path, output: Path) -> bool:
     )
     count = len(rows)
     kept = int(improvements.sum())
-    axis.set_title(
+    figure.suptitle(
         f"ED-Fire Autoresearch Progress: {count} Experiments, "
         f"{kept} Overall Improvements",
         fontsize=15,
         fontweight="semibold",
+        y=0.985,
     )
-    axis.set_xlabel("Experiment #")
-    axis.set_ylabel("GFED5 Overall (higher is better)")
-    axis.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=2))
-    axis.yaxis.set_major_formatter(FormatStrFormatter("%.3f"))
-    axis.set_xlim(-0.45, max(2, len(rows)) + 0.8)
-    chart_min = min(STOCK_ED_BASELINE_OVERALL, float(scores.min()))
-    chart_max = max(STOCK_ED_BASELINE_OVERALL, float(scores.max()))
-    spread = max(0.006, chart_max - chart_min)
-    lower_margin = max(0.008, spread * 0.08)
-    upper_margin = max(0.008, spread * 0.08)
-    axis.set_ylim(
-        max(0.0, chart_min - lower_margin),
-        min(1.0, chart_max + upper_margin),
+    baseline_axis.set_xlabel("Experiment #")
+    figure.text(
+        0.017,
+        0.5,
+        "GFED5 Overall (higher is better)",
+        rotation="vertical",
+        va="center",
     )
-    axis.grid(color="#D7DDE1", linewidth=0.7, alpha=0.65)
-    handles, labels = axis.get_legend_handles_labels()
-    order = [3, 0, 2, 1]
-    axis.legend(
-        [handles[index] for index in order],
-        [labels[index] for index in order],
-        loc="best",
+
+    detail_spread = max(0.006, float(scores.max() - scores.min()))
+    detail_axis.set_ylim(
+        max(0.0, float(scores.min()) - max(0.004, detail_spread * 0.12)),
+        min(1.0, float(scores.max()) + max(0.008, detail_spread * 0.25)),
+    )
+    baseline_margin = 0.010
+    baseline_axis.set_ylim(
+        max(0.0, STOCK_ED_BASELINE_OVERALL - baseline_margin),
+        min(1.0, STOCK_ED_BASELINE_OVERALL + baseline_margin),
+    )
+    baseline_axis.set_xlim(-0.45, max(2, len(rows)) + 0.8)
+    baseline_axis.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=2))
+    baseline_axis.yaxis.set_major_locator(MaxNLocator(nbins=3))
+
+    for plot_axis in (detail_axis, baseline_axis):
+        plot_axis.yaxis.set_major_formatter(FormatStrFormatter("%.3f"))
+        plot_axis.grid(color="#D7DDE1", linewidth=0.7, alpha=0.65)
+
+    detail_axis.spines["bottom"].set_visible(False)
+    baseline_axis.spines["top"].set_visible(False)
+    detail_axis.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
+    baseline_axis.tick_params(axis="x", which="both", top=False)
+
+    break_size = 0.008
+    break_style = {"color": "#4A525A", "clip_on": False, "linewidth": 0.9}
+    detail_axis.plot(
+        (-break_size, +break_size),
+        (-break_size, +break_size),
+        transform=detail_axis.transAxes,
+        **break_style,
+    )
+    detail_axis.plot(
+        (1 - break_size, 1 + break_size),
+        (-break_size, +break_size),
+        transform=detail_axis.transAxes,
+        **break_style,
+    )
+    baseline_axis.plot(
+        (-break_size, +break_size),
+        (1 - break_size, 1 + break_size),
+        transform=baseline_axis.transAxes,
+        **break_style,
+    )
+    baseline_axis.plot(
+        (1 - break_size, 1 + break_size),
+        (1 - break_size, 1 + break_size),
+        transform=baseline_axis.transAxes,
+        **break_style,
+    )
+
+    detail_handles, detail_labels = detail_axis.get_legend_handles_labels()
+    baseline_handles, baseline_labels = baseline_axis.get_legend_handles_labels()
+    handles_by_label = dict(
+        zip(detail_labels + baseline_labels, detail_handles + baseline_handles, strict=True)
+    )
+    legend_order = [
+        "Stock ED baseline",
+        "Other experiments",
+        "Overall improvements",
+        "Running best",
+    ]
+    detail_axis.legend(
+        [handles_by_label[label] for label in legend_order],
+        legend_order,
+        loc="upper left",
         frameon=True,
     )
-    figure.tight_layout()
+    figure.subplots_adjust(left=0.075, right=0.985, top=0.93, bottom=0.09)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     partial = output.with_name(f".{output.name}.partial")
