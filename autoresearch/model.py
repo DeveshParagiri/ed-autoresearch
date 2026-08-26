@@ -49,8 +49,6 @@ PARAMS = {'annual_scale': 0.95,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
- 'vpd_window_mix': 0.25,
- 'vpd_window_k': 1.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -616,24 +614,6 @@ def _annual_seasonal_closure(
             p["alloc_vpd_rise_w"] * fuel_support,
         )
         allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
-
-    # A local atmospheric-dryness window supplies the high-VPD shoulders that
-    # the incumbent underallocates while the convex mixture caps months that
-    # already monopolise the annual burn.  VPD is standardised within each
-    # cell-year, so the same global response measures departure from the local
-    # fuel-moisture climate rather than imposing a geographic threshold.
-    if "vpd" in enabled and p.get("vpd_window_mix", 0.0) > 0.0:
-        vpd = np.clip(
-            data["vapor_pressure_deficit_mean"], 0.0, None
-        ).reshape(16, 12, 180, 360)
-        center = vpd.mean(axis=1, keepdims=True)
-        scale = vpd.std(axis=1, keepdims=True)
-        anomaly = np.clip((vpd - center) / (scale + 1e-6), -3.0, 3.0)
-        window = np.exp(np.clip(p["vpd_window_k"] * anomaly, -8.0, 8.0))
-        window /= window.sum(axis=1, keepdims=True) + 1e-12
-        mix = float(np.clip(p["vpd_window_mix"], 0.0, 1.0))
-        allocation = (1.0 - mix) * allocation + mix * window
-        allocation /= allocation.sum(axis=1, keepdims=True) + 1e-12
 
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
     lam = total_hazard.copy()
