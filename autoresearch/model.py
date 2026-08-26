@@ -21,7 +21,7 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
-          'maximum_consecutive_dry_days', 'wet_day_fraction', 'aboveground_biomass',
+          'maximum_consecutive_dry_days', 'aboveground_biomass',
           'luh2_primary_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
@@ -49,9 +49,6 @@ PARAMS = {'annual_scale': 0.95,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
- 'legacy_wet_w': 0.5,
- 'legacy_precip_half': 700.0,
- 'legacy_precip_n': 2.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -616,53 +613,6 @@ def _annual_seasonal_closure(
             vpd_rise.reshape(16, 12, 180, 360),
             p["alloc_vpd_rise_w"] * fuel_support,
         )
-        allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
-
-    # Antecedent moisture reverses sign across the global fuel-limitation
-    # continuum.  Prior wetness builds fine fuel in dry open systems, whereas
-    # it delays curing in wet intact systems.  The same continuous equations
-    # apply in every cell; no geographic classification is used.  Acting on
-    # the incumbent allocation preserves its established phase structure and
-    # the closure below conserves each cell's annual burned area.
-    if "legacy" in enabled and p.get("legacy_wet_w", 0.0) != 0.0:
-        wet_days = np.clip(
-            data["wet_day_fraction"], 0.0, 1.0
-        ).reshape(16, 12, 180, 360)
-        wet_center = wet_days.mean(axis=1, keepdims=True)
-        wet_scale = wet_days.std(axis=1, keepdims=True)
-        wet_anomaly = np.clip(
-            (wet_days - wet_center) / (wet_scale + 1e-6), -3.0, 3.0
-        )
-        antecedent_wet = 0.65 * np.roll(wet_anomaly, 1, axis=1) + 0.35 * np.roll(
-            wet_anomaly, 2, axis=1
-        )
-
-        annual_precip = np.clip(
-            data["annual_precipitation"], 0.0, None
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        dry_system = 1.0 / (
-            1.0
-            + np.power(
-                annual_precip / (p["legacy_precip_half"] + 1e-12),
-                p["legacy_precip_n"],
-            )
-        )
-        primary = np.clip(
-            data["luh2_primary_fraction"], 0.0, 1.0
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        biomass = np.clip(
-            data["aboveground_biomass"], 0.0, None
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        intact = primary * biomass / (
-            biomass + p["annual_intact_half"] + 1e-12
-        )
-        fuel_limited = np.clip(dry_system * (1.0 - intact), 0.0, 1.0)
-        wet_sign = 2.0 * fuel_limited - 1.0
-
-        correction = np.exp(
-            np.clip(p["legacy_wet_w"] * wet_sign * antecedent_wet, -4.0, 4.0)
-        )
-        allocation = allocation * correction
         allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
 
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
