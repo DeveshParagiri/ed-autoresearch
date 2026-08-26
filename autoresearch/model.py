@@ -494,6 +494,34 @@ def _curing(
 # score. Pruning it cost nothing (0.6977 with it, 0.6980 without).
 
 
+def _annual_seasonal_closure(prediction: np.ndarray) -> np.ndarray:
+    """Factor monthly burning into annual propensity and seasonal allocation.
+
+    This first APSA scaffold is deliberately prediction-identical. Annual
+    propensity is the sum of the incumbent monthly burned fractions. Seasonal
+    allocation is the fraction of its Poisson hazard in each month. Recombining
+    them with the saturating closure recovers every incumbent month, while
+    exposing two independent objects that later experiments can improve without
+    letting a seasonal change silently redraw the annual map.
+    """
+    monthly = np.asarray(prediction).reshape(16, 12, 180, 360)
+    hazard = -np.log1p(-np.clip(monthly, 0.0, 1.0 - 1e-7))
+    total_hazard = hazard.sum(axis=1, keepdims=True)
+    allocation = hazard / (total_hazard + 1e-12)
+    annual_burn = monthly.sum(axis=1, keepdims=True)
+
+    # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
+    # total_hazard is the exact identity solution for this initial allocation;
+    # retaining the solve makes the closure ready for separately tuned heads.
+    lam = total_hazard.copy()
+    for _ in range(6):
+        survival = np.exp(-lam * allocation)
+        produced = (1.0 - survival).sum(axis=1, keepdims=True)
+        slope = (allocation * survival).sum(axis=1, keepdims=True)
+        lam = np.clip(lam - (produced - annual_burn) / (slope + 1e-12), 0.0, 1e4)
+    return (1.0 - np.exp(-lam * allocation)).reshape(prediction.shape)
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -589,4 +617,5 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
+    prediction = _annual_seasonal_closure(prediction)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
