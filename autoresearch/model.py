@@ -29,6 +29,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'crop_k': {'type': 'float', 'low': 0.0, 'high': 4.0},
     'crop_n': {'type': 'float', 'low': 0.3, 'high': 3.0},
     'nb_w': {'type': 'float', 'low': 0.0, 'high': 0.9},
+    'nb_diag': {'type': 'float', 'low': 0.0, 'high': 1.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -56,7 +57,8 @@ PARAMS = {'D_high': 2940.51756322311,
  'soft_s': 2.0,
  'crop_k': 0.5,
  'crop_n': 2.0,
- 'nb_w': 0.25}
+ 'nb_w': 0.35,
+ 'nb_diag': 0.5}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -289,6 +291,16 @@ def _neighbour(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     north[:, 0] = rate[:, 0]
     south[:, -1] = rate[:, -1]
     surround = 0.25 * (north + south + east + west)
+    diagonal = float(np.clip(p.get("nb_diag", 0.0), 0.0, 1.0))
+    if diagonal > 0.0:
+        # Fire fronts do not respect the grid axes, so let the corners
+        # contribute too, at their own weight.
+        ne = np.roll(north, 1, axis=2)
+        nw = np.roll(north, -1, axis=2)
+        se = np.roll(south, 1, axis=2)
+        sw = np.roll(south, -1, axis=2)
+        corners = 0.25 * (ne + nw + se + sw)
+        surround = (1.0 - diagonal) * surround + diagonal * corners
     return (1.0 - weight) * rate + weight * surround
 
 
