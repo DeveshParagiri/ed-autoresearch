@@ -7,8 +7,17 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp')
-SEARCH_SPACE: dict[str, dict[str, Any]] = {}
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing')
+
+# Only the new memory coefficients are searched. The seven fitted regional
+# parameter sets stay frozen so this experiment tests one added mechanism
+# instead of becoming a refit of the whole model.
+SEARCH_SPACE: dict[str, dict[str, Any]] = {
+    'cure_alpha': {'type': 'float', 'low': 0.05, 'high': 1.0},
+    'cure_half': {'type': 'float', 'low': 1.0, 'high': 300.0, 'log': True},
+    'cure_n': {'type': 'float', 'low': 0.3, 'high': 6.0},
+    'cure_cap': {'type': 'float', 'low': 1.2, 'high': 12.0},
+}
 
 PARAMS = {'D_high': 2940.51756322311,
  'D_low': 70.18267183720735,
@@ -21,7 +30,11 @@ PARAMS = {'D_high': 2940.51756322311,
  'ign_k': 8.708806168038567,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
- 'pre_dampen_half': 107.40052367919465}
+ 'pre_dampen_half': 107.40052367919465,
+ 'cure_alpha': 0.8568324799818776,
+ 'cure_half': 48.20363945484691,
+ 'cure_n': 1.0483566938301763,
+ 'cure_cap': 10.157674380116116}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -176,6 +189,51 @@ def _transform(rate: np.ndarray) -> np.ndarray:
     return (1.0 - np.exp(-rate)) / 12.0
 
 
+def _antecedent(series: np.ndarray, alpha: float) -> np.ndarray:
+    """Exponential moving average of a monthly field over preceding months.
+
+    Fuel moisture and grass curing respond to rainfall integrated over the
+    preceding weeks, not to the instantaneous month. ``alpha`` near one means
+    almost no memory; small ``alpha`` means a long antecedent window. The
+    accumulator is initialised with each cell's own climatology so the result
+    stays a pure function of the inputs with no spin-up transient.
+    """
+    alpha = float(np.clip(alpha, 1e-3, 1.0))
+    state = series.mean(axis=0)
+    output = np.empty_like(series)
+    for step in range(series.shape[0]):
+        state = state + alpha * (series[step] - state)
+        output[step] = state
+    return output
+
+
+def _curing(
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+) -> np.ndarray:
+    """Relative flammability of fuel given antecedent wetness.
+
+    Returns a field whose per-cell time mean is one, so this term redistributes
+    burning across the season rather than rescaling the annual total. A cell
+    that has been wet for the preceding months is below one, a cell that has
+    been drying is above one, which sharpens season onset into a threshold
+    instead of the gentle ramp an instantaneous predictor produces.
+    """
+    wetness = _antecedent(data["monthly_precipitation"], p["cure_alpha"])
+    ratio = np.clip(wetness / (p["cure_half"] + 1e-12), 0.0, None)
+    flammable = 1.0 / (1.0 + np.power(ratio, p["cure_n"]))
+    mean = flammable.mean(axis=0, keepdims=True)
+    return np.clip(flammable / (mean + 1e-12), 0.0, p["cure_cap"])
+
+
+# A fuel-depletion state was tested here and removed. Optuna drove its
+# consumption coefficient to the floor of its range and its regrowth rate
+# toward one, i.e. it switched the mechanism off: African savannas burn about a
+# sixth of their area every year, so depletion strong enough to truncate a fire
+# season also silences the annually-reburning grasslands that carry the spatial
+# score. Pruning it cost nothing (0.6977 with it, 0.6980 without).
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -188,7 +246,12 @@ def predict(
     unknown = enabled - set(COMPONENTS)
     if unknown:
         raise ValueError(f"unknown model components: {sorted(unknown)}")
-    prediction = _transform(_fire_rate(data, fallback, enabled))
+
+    # Build the instantaneous fire rate, splicing the fitted regional parameter
+    # sets over the global fallback. The memory terms below are deliberately
+    # shared by every region so a single mechanism has to earn its place
+    # everywhere rather than being refitted per region.
+    rate = _fire_rate(data, fallback, enabled)
     lat = -89.5 + np.arange(180, dtype=np.float32)
     lon = -179.5 + np.arange(360, dtype=np.float32)
     longitude, latitude = np.meshgrid(lon, lat)
@@ -202,7 +265,11 @@ def predict(
             & (latitude <= north)
             & ~assigned
         )
-        regional = _transform(_fire_rate(data, region_params, enabled))
-        prediction[:, mask] = regional[:, mask]
+        regional = _fire_rate(data, region_params, enabled)
+        rate[:, mask] = regional[:, mask]
         assigned |= mask
-    return np.asarray(prediction, dtype=np.float32)
+
+    if "curing" in enabled:
+        rate = rate * _curing(data, fallback)
+    prediction = _transform(rate)
+    return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
