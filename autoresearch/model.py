@@ -27,28 +27,28 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
 
-# Fit the first independent annual-propensity correction while retaining the
-# separately calibrated seasonal-allocation head.
+# Tune the new causal seasonal-onset allocation independently from the
+# retained annual-propensity parent.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.10},
-    'annual_intact_half': {'type': 'float', 'low': 0.5, 'high': 10.0, 'log': True},
-    'annual_intact_w': {'type': 'float', 'low': 0.0, 'high': 0.8},
-    'annual_vpd_half': {'type': 'float', 'low': 0.2, 'high': 2.0, 'log': True},
-    'annual_vpd_n': {'type': 'float', 'low': 0.5, 'high': 4.0},
-    'annual_vpd_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'alloc_vpd_rise_w': {'type': 'float', 'low': 0.0, 'high': 1.2},
+    'alloc_vpd_rise_half': {'type': 'float', 'low': 100.0, 'high': 1500.0, 'log': True},
+    'alloc_vpd_rise_n': {'type': 'float', 'low': 0.5, 'high': 3.0},
     'alloc_dry_scale': {'type': 'float', 'low': 10.0, 'high': 80.0, 'log': True},
     'alloc_dry_w': {'type': 'float', 'low': 0.3, 'high': 1.5},
     'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
-PARAMS = {'annual_scale': 0.9019565649430648,
- 'annual_intact_half': 4.513991879804472,
- 'annual_intact_w': 0.7295846382041736,
- 'annual_vpd_half': 1.7820757951592376,
- 'annual_vpd_n': 2.9118252232309105,
- 'annual_vpd_w': 0.3005475570743234,
- 'alloc_dry_scale': 14.635097175145322,
- 'alloc_dry_w': 1.118642075457734,
+PARAMS = {'annual_scale': 0.95,
+ 'annual_intact_half': 7.27782641589826,
+ 'annual_intact_w': 0.7482273413045754,
+ 'annual_vpd_half': 1.7380558910922053,
+ 'annual_vpd_n': 3.5111403706263125,
+ 'annual_vpd_w': 0.1406449712828405,
+ 'alloc_dry_scale': 25.852949531840476,
+ 'alloc_dry_w': 0.35438507767111543,
+ 'alloc_vpd_rise_w': 0.3,
+ 'alloc_vpd_rise_half': 400.0,
+ 'alloc_vpd_rise_n': 1.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -72,7 +72,7 @@ PARAMS = {'annual_scale': 0.9019565649430648,
  'spread_k': 6.52,
  'spread_gain': 6.340277350273691,
  'month_scale': 0.04298969468924071,
- 'lag_w': 0.12410830207706339,
+ 'lag_w': 0.18862814833689176,
  'soft_w': 1.0,
  'soft_s': 2.0,
  'crop_k': 1.22,
@@ -591,6 +591,28 @@ def _annual_seasonal_closure(
             p["alloc_dry_w"],
         )
         allocation = allocation * opportunity
+        allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
+
+    # Rising VPD is a causal signal of fire-season onset, but only where
+    # precipitation has supported fuel production.  This continuous gate avoids
+    # interpreting increasing atmospheric demand as new fuel in arid cells.
+    if "vpd" in enabled and p.get("alloc_vpd_rise_w", 0.0) > 0.0:
+        vpd_series = np.asarray(data["vapor_pressure_deficit_mean"], dtype=np.float64)
+        previous_vpd = np.empty_like(vpd_series)
+        previous_vpd[0] = vpd_series[0]
+        previous_vpd[1:] = vpd_series[:-1]
+        vpd_rise = 1.0 + np.clip(vpd_series - previous_vpd, 0.0, None)
+        annual_precip = np.clip(
+            data["annual_precipitation"], 0.0, None
+        ).reshape(16, 12, 180, 360)
+        fuel_support = np.power(
+            annual_precip / (annual_precip + p["alloc_vpd_rise_half"] + 1e-12),
+            p["alloc_vpd_rise_n"],
+        )
+        allocation = allocation * np.power(
+            vpd_rise.reshape(16, 12, 180, 360),
+            p["alloc_vpd_rise_w"] * fuel_support,
+        )
         allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
 
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
