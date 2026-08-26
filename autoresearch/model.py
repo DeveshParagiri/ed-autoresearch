@@ -32,6 +32,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'nb_diag': {'type': 'float', 'low': 0.0, 'high': 1.0},
     'leg_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
     'leg_a': {'type': 'float', 'low': 0.02, 'high': 0.5},
+    'leg_cap': {'type': 'float', 'low': 1.2, 'high': 8.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -62,7 +63,8 @@ PARAMS = {'D_high': 2940.51756322311,
  'nb_w': 0.35,
  'nb_diag': 0.5,
  'leg_w': 0.3,
- 'leg_a': 0.3}
+ 'leg_a': 0.3,
+ 'leg_cap': 3.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -295,7 +297,10 @@ def _legacy(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
         stock[step] = state
         state = state + alpha * (rate[step] - state)
     mean = rate.mean(axis=0, keepdims=True)
-    deficit = np.clip(mean / (stock + mean * 1e-3 + 1e-12), 0.0, 4.0)
+    # A nonlinear response on the stock ratio was tested and removed: the
+    # exponent tuned to one, so the relationship is linear in the shortfall.
+    cap = float(np.clip(p.get("leg_cap", 4.0), 1.0, 50.0))
+    deficit = np.clip(mean / (stock + mean * 1e-3 + 1e-12), 0.0, cap)
     # Apply the accumulated deficit through each cell's long-run mean rather
     # than month by month: the stock is a multi-year quantity, so letting it
     # modulate individual months imprints its own slow drift on the seasonal
