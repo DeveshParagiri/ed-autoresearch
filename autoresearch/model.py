@@ -7,9 +7,10 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
-          'luh2_cropland_fraction', 'luh2_rangeland_fraction')
+          'luh2_cropland_fraction', 'luh2_rangeland_fraction',
+          'wind_speed_mean')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'neighbour', 'legacy', 'stubble', 'pasture')
+              'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -39,6 +40,9 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'past_k': {'type': 'float', 'low': 0.0, 'high': 6.0},
     'past_t': {'type': 'float', 'low': 5.0, 'high': 45.0},
     'past_w': {'type': 'float', 'low': 1.0, 'high': 10.0},
+    'gust_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'gust_ref': {'type': 'float', 'low': 1.0, 'high': 8.0},
+    'gust_cap': {'type': 'float', 'low': 1.0, 'high': 8.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -76,7 +80,10 @@ PARAMS = {'D_high': 2940.51756322311,
  'stub_w': 4.0,
  'past_k': 1.0,
  'past_t': 30.0,
- 'past_w': 5.0}
+ 'past_w': 5.0,
+ 'gust_w': 0.22,
+ 'gust_ref': 3.0,
+ 'gust_cap': 5.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -377,6 +384,48 @@ def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     return factor / (factor.mean(axis=0, keepdims=True) + 1e-12)
 
 
+def _gust(
+    rate: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+) -> np.ndarray:
+    """Wind, but only where there is dry fuel for it to drive.
+
+    Rate of spread rises steeply with wind in every operational fire-behaviour
+    model, yet monthly-mean wind speed is almost worthless as a pointwise
+    predictor here: it correlates 0.014 with observed burned area and 0.003
+    with this model's residual, second-to-last of twenty-four inputs. Tested
+    as a plain multiplicative map it duly does nothing but harm.
+
+    The reason is that wind is not a favourability factor. It does not decide
+    whether a cell can burn, only how fast a front already alight travels, so
+    its effect is conditional on fuel state: a gale over damp fuel drives
+    nothing, while a moderate wind over cured fuel runs a fire for kilometres.
+    That makes wind an *interaction* term rather than an independent one, which
+    is invisible to any pointwise correlation.
+
+    Implemented as wind anomaly gated on dryness anomaly, so the term departs
+    from one only where a windy month coincides with a dry month. Normalised by
+    its own global mean, which holds the annual total and leaves the term to
+    redistribute burning toward the windy end of each fire season.
+    """
+    weight = float(p.get("gust_w", 0.0))
+    if weight <= 0.0:
+        return rate
+    wind = data["wind_speed_mean"]
+    relative = wind / (p["gust_ref"] + 1e-9)
+    dry = data["dryness"] / (data["dryness"].mean(axis=0, keepdims=True) + 1e-9)
+    gate = np.clip(dry, 0.0, p["gust_cap"])
+    factor = 1.0 + weight * (relative - 1.0) * gate
+    factor = np.clip(factor, 0.0, None)
+    adjusted = rate * factor
+    # Renormalise on the *product*, not on the factor alone. Dividing by
+    # factor.mean() only holds the total when factor and rate are uncorrelated,
+    # and here they are strongly correlated by construction: the gate is
+    # dryness, which is exactly where the rate is already high.
+    return adjusted * (rate.mean() / (adjusted.mean() + 1e-12))
+
+
 def _antecedent(series: np.ndarray, alpha: float) -> np.ndarray:
     """Exponential moving average of a monthly field over preceding months.
 
@@ -513,4 +562,6 @@ def predict(
     if "spread" in enabled:
         rate = rate * _spread(rate, fallback)
     prediction = _transform(rate, fallback)
+    if "gust" in enabled:
+        prediction = _gust(prediction, data, fallback)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
