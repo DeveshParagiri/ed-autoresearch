@@ -7,7 +7,7 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp')
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -21,6 +21,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'spread_k': {'type': 'float', 'low': 1.0, 'high': 12.0},
     'spread_gain': {'type': 'float', 'low': 0.2, 'high': 30.0, 'log': True},
     'month_scale': {'type': 'float', 'low': 0.005, 'high': 1.0, 'log': True},
+    'lag_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -42,7 +43,8 @@ PARAMS = {'D_high': 2940.51756322311,
  'spread_crit': 1.7625369910383835,
  'spread_k': 2.702736326566014,
  'spread_gain': 9.358811681038784,
- 'month_scale': 0.04231973135491261}
+ 'month_scale': 0.04231973135491261,
+ 'lag_w': 0.2}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -210,6 +212,25 @@ def _transform(rate: np.ndarray, p: Mapping[str, float] | None = None) -> np.nda
     return 1.0 - np.exp(-rate)
 
 
+def _lag(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
+    """Carry part of each month's flammability into the following month.
+
+    Observed burning in both African regions peaks exactly one month after the
+    rainfall minimum, and no driver peaks in the observed peak month at all:
+    in northern hemisphere Africa fire peaks in December while dryness peaks in
+    May, temperature in March and leaf area in October. Fine fuel needs some
+    weeks of low humidity before it will carry a front, so flammability trails
+    the meteorology that produces it. Blending the previous month's rate
+    forward shifts the modelled peak later without moving any driver.
+    """
+    weight = float(np.clip(p["lag_w"], 0.0, 1.0))
+    if weight <= 0.0:
+        return rate
+    previous = np.roll(rate, 1, axis=0)
+    previous[0] = rate[0]
+    return (1.0 - weight) * rate + weight * previous
+
+
 def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     """Percolation-style spread multiplier on the instantaneous fire rate.
 
@@ -314,6 +335,8 @@ def predict(
 
     if "curing" in enabled:
         rate = rate * _curing(data, fallback)
+    if "lag" in enabled:
+        rate = _lag(rate, fallback)
     if "spread" in enabled:
         rate = rate * _spread(rate, fallback)
     prediction = _transform(rate, fallback)
