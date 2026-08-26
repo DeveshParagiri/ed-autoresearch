@@ -6,6 +6,17 @@ from typing import Any
 import numpy as np
 
 
+# The interface is fixed to Jan-2001 through Dec-2016. Convert a hazard for an
+# average month to each calendar month's true exposure duration. Leap Februaries
+# occur in 2004, 2008, 2012, and 2016.
+_MONTH_DAYS = np.tile(
+    np.asarray((31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31), dtype=np.float32),
+    16,
+)
+_MONTH_DAYS[np.asarray((3, 7, 11, 15)) * 12 + 1] = 29.0
+_MONTH_DURATION = (_MONTH_DAYS / _MONTH_DAYS.mean())[:, None, None]
+
+
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean')
@@ -279,7 +290,10 @@ def _transform(rate: np.ndarray, p: Mapping[str, float] | None = None) -> np.nda
     deficit could never be closed by reshaping the rate.
     """
     scale = 1.0 if p is None else p.get("month_scale", 1.0)
-    rate = np.clip(rate * scale, 0.0, 50.0)
+    # A monthly hazard accumulates over the number of days available to burn.
+    # Treat ``month_scale`` as the average-month exposure, then use exact month
+    # lengths instead of giving February and a 31-day month equal opportunity.
+    rate = np.clip(rate * scale * _MONTH_DURATION, 0.0, 50.0)
     return 1.0 - np.exp(-rate)
 
 
