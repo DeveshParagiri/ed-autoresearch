@@ -7,7 +7,7 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp')
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -22,6 +22,8 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'spread_gain': {'type': 'float', 'low': 0.2, 'high': 30.0, 'log': True},
     'month_scale': {'type': 'float', 'low': 0.005, 'high': 1.0, 'log': True},
     'lag_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'soft_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'soft_s': {'type': 'float', 'low': 0.2, 'high': 12.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -36,7 +38,7 @@ PARAMS = {'D_high': 2940.51756322311,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
  'pre_dampen_half': 107.40052367919465,
- 'cure_alpha': 0.9459325061597951,
+ 'cure_alpha': 1.0,
  'cure_half': 72.81247733921077,
  'cure_n': 0.7771518756969097,
  'cure_cap': 6.792532803422177,
@@ -44,7 +46,9 @@ PARAMS = {'D_high': 2940.51756322311,
  'spread_k': 5.2,
  'spread_gain': 9.358811681038784,
  'month_scale': 0.04231973135491261,
- 'lag_w': 0.2}
+ 'lag_w': 0.14,
+ 'soft_w': 1.0,
+ 'soft_s': 2.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -161,19 +165,30 @@ def _fire_rate(
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
+    factors: list[np.ndarray] = []
     rate = np.ones_like(data["dryness"], dtype=np.float32)
     if "dryness" in enabled:
-        rate *= _rising(data["dryness"], p["k1"], p["D_low"])
-        rate *= _falling(data["dryness"], p["k2"], p["D_high"])
+        term = _rising(data["dryness"], p["k1"], p["D_low"]) * _falling(
+            data["dryness"], p["k2"], p["D_high"]
+        )
+        factors.append(term)
+        rate = rate * term
     if "precipitation" in enabled:
         annual = data["annual_precipitation"]
         monthly = data["monthly_precipitation"]
-        rate *= annual / (annual + p["P_half"] + 1e-12)
-        rate *= 1.0 / (1.0 + monthly / (p["pre_dampen_half"] + 1e-12))
+        term = (annual / (annual + p["P_half"] + 1e-12)) * (
+            1.0 / (1.0 + monthly / (p["pre_dampen_half"] + 1e-12))
+        )
+        factors.append(term)
+        rate = rate * term
     if "fuel" in enabled:
-        rate *= _hump(p["gpp_af"] * data["gpp"], p["gpp_b"], p["gpp_d"])
+        term = _hump(p["gpp_af"] * data["gpp"], p["gpp_b"], p["gpp_d"])
+        factors.append(term)
+        rate = rate * term
     if "temperature" in enabled:
-        rate *= _rising(data["air_temperature"], p["ign_k"], p["ign_c"])
+        term = _rising(data["air_temperature"], p["ign_k"], p["ign_c"])
+        factors.append(term)
+        rate = rate * term
     if "vegetation" in enabled and "trop_agb_crit" in p:
         lat = -89.5 + np.arange(180, dtype=np.float32)
         tropical = (np.abs(lat) < 23.5).astype(np.float32)[None, :, None]
@@ -184,6 +199,20 @@ def _fire_rate(
         )
         canopy = 1.0 / (1.0 + np.power(ratio, p["trop_k_veg"]))
         rate *= tropical * canopy + (1.0 - tropical)
+    weight = float(np.clip(p.get("soft_w", 0.0), 0.0, 1.0))
+    if weight > 0.0 and len(factors) > 1:
+        # A product of favourability lets any single weak factor veto fire, so
+        # a merely damp month in a well-fuelled landscape is suppressed as
+        # hard as a month with no fuel at all. Real constraint is closer to a
+        # limiting factor: fire follows the scarcest requirement rather than
+        # the product of all of them. Blend toward a smooth minimum.
+        stack = np.stack(factors, axis=0)
+        sharp = float(np.clip(p.get("soft_s", 4.0), 0.5, 50.0))
+        softmin = -np.log(
+            np.exp(-sharp * np.clip(stack, 1e-6, None)).sum(axis=0) + 1e-12
+        ) / sharp
+        softmin = np.clip(softmin, 1e-6, None)
+        rate = np.power(np.clip(rate, 1e-9, None), 1.0 - weight) * np.power(softmin, weight)
     rate = np.power(np.clip(rate, 0.0, None), p["fire_exp"])
     if "fuel" in enabled and "fuel_k" in p:
         capacity = data["gpp"].mean(axis=0, keepdims=True)
