@@ -6,8 +6,10 @@ from typing import Any
 import numpy as np
 
 
-INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp')
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin')
+INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
+          'luh2_cropland_fraction')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
+              'cropland')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -24,6 +26,8 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'lag_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
     'soft_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
     'soft_s': {'type': 'float', 'low': 0.2, 'high': 12.0},
+    'crop_k': {'type': 'float', 'low': 0.0, 'high': 4.0},
+    'crop_n': {'type': 'float', 'low': 0.3, 'high': 3.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -48,7 +52,9 @@ PARAMS = {'D_high': 2940.51756322311,
  'month_scale': 0.04231973135491261,
  'lag_w': 0.2133,
  'soft_w': 1.0,
- 'soft_s': 2.0}
+ 'soft_s': 2.0,
+ 'crop_k': 0.5,
+ 'crop_n': 2.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -362,6 +368,16 @@ def predict(
         rate[:, mask] = regional[:, mask]
         assigned |= mask
 
+    if "cropland" in enabled and fallback.get("crop_k", 0.0) > 0.0:
+        # Cropland cells burn less than the surrounding landscape yet the
+        # biophysical model overpredicts them: weighted against the residual,
+        # cropland fraction correlates -0.27 with observed burning but +0.12
+        # with the model's error. Fields are ploughed, grazed and cut by roads
+        # and field boundaries, so fuel is removed before the fire season and
+        # what remains cannot carry a front across the landscape.
+        crop = np.clip(data["luh2_cropland_fraction"], 0.0, 1.0)
+        p_ = fallback
+        rate = rate * (1.0 / (1.0 + p_["crop_k"] * np.power(crop, p_["crop_n"])))
     if "curing" in enabled:
         rate = rate * _curing(data, fallback)
     if "lag" in enabled:
