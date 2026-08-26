@@ -41,7 +41,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
-PARAMS = {'annual_scale': 0.92,
+PARAMS = {'annual_scale': 0.95,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.7482273413045754,
  'annual_vpd_half': 1.7380558910922053,
