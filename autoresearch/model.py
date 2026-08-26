@@ -46,7 +46,7 @@ PARAMS = {'D_high': 2940.51756322311,
  'spread_k': 5.2,
  'spread_gain': 9.358811681038784,
  'month_scale': 0.04231973135491261,
- 'lag_w': 0.14,
+ 'lag_w': 0.2133,
  'soft_w': 1.0,
  'soft_s': 2.0}
 
