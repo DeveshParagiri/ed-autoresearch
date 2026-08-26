@@ -7,7 +7,7 @@ import numpy as np
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp')
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -17,6 +17,9 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'cure_half': {'type': 'float', 'low': 1.0, 'high': 300.0, 'log': True},
     'cure_n': {'type': 'float', 'low': 0.3, 'high': 6.0},
     'cure_cap': {'type': 'float', 'low': 1.2, 'high': 12.0},
+    'spread_crit': {'type': 'float', 'low': 0.05, 'high': 20.0, 'log': True},
+    'spread_k': {'type': 'float', 'low': 1.0, 'high': 12.0},
+    'spread_gain': {'type': 'float', 'low': 0.2, 'high': 30.0, 'log': True},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -31,10 +34,13 @@ PARAMS = {'D_high': 2940.51756322311,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
  'pre_dampen_half': 107.40052367919465,
- 'cure_alpha': 0.8568324799818776,
- 'cure_half': 48.20363945484691,
- 'cure_n': 1.0483566938301763,
- 'cure_cap': 10.157674380116116}
+ 'cure_alpha': 0.9022958255196324,
+ 'cure_half': 101.69797202430976,
+ 'cure_n': 0.7938582223133299,
+ 'cure_cap': 4.041069635757127,
+ 'spread_crit': 1.3740943282898994,
+ 'spread_k': 7.040273184439577,
+ 'spread_gain': 3.8622513492967787}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -189,6 +195,28 @@ def _transform(rate: np.ndarray) -> np.ndarray:
     return (1.0 - np.exp(-rate)) / 12.0
 
 
+def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
+    """Percolation-style spread multiplier on the instantaneous fire rate.
+
+    Burned area is ignition times how far each fire runs, and spread is not
+    linear in flammability. Below a connectivity threshold a fire dies in the
+    unburnable gaps between fuel patches; above it neighbouring patches carry
+    the front and one ignition clears a whole landscape. That threshold makes
+    the response to conditions sharply nonlinear, which is what separates a
+    savanna burning a sixth of its area from a marginal cell that only
+    smoulders. The model without it computes a smooth product of favourability
+    and so paints every mediocre cell with some fire while capping the good
+    ones, compressing the observed dynamic range at both ends.
+    """
+    ratio = np.clip(rate / (p["spread_crit"] + 1e-12), 0.0, None)
+    powered = np.power(ratio, p["spread_k"])
+    connected = powered / (1.0 + powered)
+    factor = 1.0 + p["spread_gain"] * connected
+    # Normalise by each cell's own time-mean so the term redistributes burned
+    # area between good and marginal months instead of inflating the total.
+    return factor / (factor.mean(axis=0, keepdims=True) + 1e-12)
+
+
 def _antecedent(series: np.ndarray, alpha: float) -> np.ndarray:
     """Exponential moving average of a monthly field over preceding months.
 
@@ -271,5 +299,7 @@ def predict(
 
     if "curing" in enabled:
         rate = rate * _curing(data, fallback)
+    if "spread" in enabled:
+        rate = rate * _spread(rate, fallback)
     prediction = _transform(rate)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
