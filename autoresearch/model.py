@@ -44,6 +44,7 @@ PARAMS = {'annual_scale': 0.95,
  'annual_vpd_half': 1.7380558910922053,
  'annual_vpd_n': 3.5111403706263125,
  'annual_vpd_w': 0.1406449712828405,
+ 'annual_overlap_gamma': 0.75,
  'alloc_dry_scale': 25.852949531840476,
  'alloc_dry_w': 0.35438507767111543,
  'alloc_vpd_rise_w': 0.3,
@@ -576,6 +577,19 @@ def _annual_seasonal_closure(
         )
         target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
         annual_burn = np.clip(target, 0.0, 11.5)
+
+    if "spread" in enabled and p.get("annual_overlap_gamma", 1.0) != 1.0:
+        # At one-degree resolution, repeated fronts increasingly revisit area
+        # that has already burned within the year.  Annual unique burned area
+        # therefore grows sublinearly with aggregate fire opportunity.  Apply
+        # the same occupancy closure in every cell and conserve each year's
+        # global area-weighted total, changing only the spatial distribution.
+        gamma = float(np.clip(p["annual_overlap_gamma"], 0.2, 1.0))
+        occupied = np.power(np.clip(annual_burn, 1e-8, None), gamma)
+        before = (annual_burn * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
+        after = (occupied * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
+        annual_burn = occupied * (before / (after + 1e-12))
+        annual_burn = np.clip(annual_burn, 0.0, 11.5)
 
     # The annual head has its own intercept. This is deliberately downstream of
     # map-shaping factors so global level can be calibrated without changing
