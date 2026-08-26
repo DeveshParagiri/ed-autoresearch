@@ -21,7 +21,7 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
-          'maximum_consecutive_dry_days', 'aboveground_biomass',
+          'maximum_consecutive_dry_days', 'wet_day_fraction', 'aboveground_biomass',
           'luh2_primary_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
@@ -49,6 +49,11 @@ PARAMS = {'annual_scale': 0.95,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
+ 'window_mix': 0.35,
+ 'window_vpd_w': 1.0,
+ 'window_dry_w': 0.5,
+ 'window_wet_w': 0.7,
+ 'window_wet_alpha': 0.5,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -613,6 +618,49 @@ def _annual_seasonal_closure(
             vpd_rise.reshape(16, 12, 180, 360),
             p["alloc_vpd_rise_w"] * fuel_support,
         )
+        allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
+
+    # Fuel-supported fire-weather window, applied identically in every cell.
+    # Wet antecedent months build fine fuel; a subsequent positive VPD anomaly
+    # and persistent dry spell cure it and open a short burn window.  This is a
+    # separate seasonal pathway rather than another rate multiplier, so it can
+    # correct waveform shape while the annual propensity map remains fixed.
+    if "vpd" in enabled and p.get("window_mix", 0.0) > 0.0:
+        vpd = np.clip(
+            data["vapor_pressure_deficit_mean"], 0.0, None
+        ).reshape(16, 12, 180, 360)
+        dry_spell = np.clip(
+            data["maximum_consecutive_dry_days"], 0.0, 31.0
+        ).reshape(16, 12, 180, 360)
+        wet_days = np.clip(
+            data["wet_day_fraction"], 0.0, 1.0
+        ).reshape(16, 12, 180, 360)
+
+        def standardise(field: np.ndarray) -> np.ndarray:
+            center = field.mean(axis=1, keepdims=True)
+            scale = field.std(axis=1, keepdims=True)
+            return np.clip((field - center) / (scale + 1e-6), -3.0, 3.0)
+
+        vpd_anomaly = standardise(vpd)
+        dry_anomaly = standardise(dry_spell)
+        wet_anomaly = standardise(wet_days)
+        antecedent = np.roll(wet_anomaly, 1, axis=1)
+        alpha = float(np.clip(p["window_wet_alpha"], 0.0, 1.0))
+        antecedent = alpha * antecedent + (1.0 - alpha) * np.roll(
+            wet_anomaly, 2, axis=1
+        )
+
+        log_window = (
+            p["window_vpd_w"] * vpd_anomaly
+            + p["window_dry_w"] * dry_anomaly
+            + p["window_wet_w"] * antecedent
+        )
+        window = np.exp(np.clip(log_window, -8.0, 8.0))
+        window_allocation = window / (
+            window.sum(axis=1, keepdims=True) + 1e-12
+        )
+        mix = float(np.clip(p["window_mix"], 0.0, 1.0))
+        allocation = (1.0 - mix) * allocation + mix * window_allocation
         allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
 
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
