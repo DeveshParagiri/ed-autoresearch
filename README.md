@@ -1,6 +1,6 @@
 # ED-Fire
 
-![ED-Fire autoresearch progress](progress.png?rev=stock-ed-baseline)
+![ED-Fire autoresearch progress](progress.png?rev=stock-ed-baseline-no-label)
 
 ED-Fire tests whether autoresearch can develop a better fire module for the [Ecosystem Demography model](https://gel.umd.edu/ed.php). Global fire models still struggle to reproduce where fire occurs, when it peaks, and how much land burns. The research loop proposes interpretable changes to the model's equations, fits their parameters, and tests each formulation against satellite observations.
 

@@ -127,15 +127,6 @@ def render(results: Path, output: Path) -> bool:
         label="Stock ED baseline",
         zorder=4,
     )
-    axis.annotate(
-        f"Stock ED\n{STOCK_ED_BASELINE_OVERALL:.3f}",
-        xy=(0, STOCK_ED_BASELINE_OVERALL),
-        xytext=(10, 10),
-        textcoords="offset points",
-        color="#24364D",
-        fontsize=9,
-        fontweight="semibold",
-    )
     count = len(rows)
     kept = int(improvements.sum())
     axis.set_title(
