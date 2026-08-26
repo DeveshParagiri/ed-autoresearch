@@ -15,6 +15,7 @@ _MONTH_DAYS = np.tile(
 )
 _MONTH_DAYS[np.asarray((3, 7, 11, 15)) * 12 + 1] = 29.0
 _MONTH_DURATION = (_MONTH_DAYS / _MONTH_DAYS.mean())[:, None, None]
+_CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, None, :, None]
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
@@ -25,17 +26,21 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
 
-# Fit the first independent seasonal-allocation mechanism while the annual
-# propensity head is held fixed by construction.
+# Fit the first independent annual-propensity correction while retaining the
+# separately calibrated seasonal-allocation head.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'alloc_dry_scale': {'type': 'float', 'low': 3.0, 'high': 80.0, 'log': True},
-    'alloc_dry_w': {'type': 'float', 'low': 0.0, 'high': 1.5},
-    'vpd_half': {'type': 'float', 'low': 0.05, 'high': 0.30, 'log': True},
-    'vpd_n': {'type': 'float', 'low': 0.20, 'high': 0.80},
-    'lag_w': {'type': 'float', 'low': 0.05, 'high': 0.25},
+    'annual_vpd_half': {'type': 'float', 'low': 0.2, 'high': 2.0, 'log': True},
+    'annual_vpd_n': {'type': 'float', 'low': 0.5, 'high': 4.0},
+    'annual_vpd_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
+    'alloc_dry_scale': {'type': 'float', 'low': 10.0, 'high': 80.0, 'log': True},
+    'alloc_dry_w': {'type': 'float', 'low': 0.3, 'high': 1.5},
+    'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
-PARAMS = {'alloc_dry_scale': 30.089390599566563,
+PARAMS = {'annual_vpd_half': 0.8,
+ 'annual_vpd_n': 2.0,
+ 'annual_vpd_w': 0.3,
+ 'alloc_dry_scale': 30.089390599566563,
  'alloc_dry_w': 0.8748024858786037,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
@@ -514,6 +519,31 @@ def _annual_seasonal_closure(
     total_hazard = hazard.sum(axis=1, keepdims=True)
     allocation = hazard / (total_hazard + 1e-12)
     annual_burn = monthly.sum(axis=1, keepdims=True)
+
+    if "vpd" in enabled and p.get("annual_vpd_w", 0.0) > 0.0:
+        # The amount of fire weather available over a whole year constrains the
+        # annual area that can burn. This is a slow capacity head, distinct from
+        # the monthly VPD factor: persistent extreme atmospheric demand expands
+        # the burnable window, while a brief spike only reallocates its season.
+        vpd = np.clip(data["vapor_pressure_deficit_mean"], 0.0, None).reshape(
+            16, 12, 180, 360
+        )
+        saturation = vpd / (vpd + p["annual_vpd_half"] + 1e-12)
+        fire_window = np.power(saturation, p["annual_vpd_n"]).mean(
+            axis=1, keepdims=True
+        )
+        fire_window = np.clip(fire_window, 1e-5, None)
+        weight = annual_burn * _CELL_AREA
+        center = np.exp(
+            (np.log(fire_window) * weight).sum() / (weight.sum() + 1e-12)
+        )
+        target = annual_burn * np.power(
+            fire_window / (center + 1e-12), p["annual_vpd_w"]
+        )
+        # Hold global area-weighted burning fixed so this head changes the map,
+        # not the global level. Bias remains available to a later explicit head.
+        target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
+        annual_burn = np.clip(target, 0.0, 11.5)
 
     if "vpd" in enabled and p.get("alloc_dry_w", 0.0) > 0.0:
         dry_spell = np.clip(
