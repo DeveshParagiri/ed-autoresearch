@@ -22,7 +22,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
           'maximum_consecutive_dry_days', 'aboveground_biomass',
-          'luh2_primary_fraction', 'lightning_flash_rate')
+          'luh2_primary_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
@@ -41,10 +41,6 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 0.95,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.7482273413045754,
- 'annual_lightning_w': 0.01,
- 'annual_lightning_half': 0.01,
- 'annual_lightning_gpp_half': 0.1,
- 'annual_lightning_rain_half': 200.0,
  'annual_vpd_half': 1.7380558910922053,
  'annual_vpd_n': 3.5111403706263125,
  'annual_vpd_w': 0.1406449712828405,
@@ -580,29 +576,6 @@ def _annual_seasonal_closure(
         )
         target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
         annual_burn = np.clip(target, 0.0, 11.5)
-
-    if "temperature" in enabled and p.get("annual_lightning_w", 0.0) > 0.0:
-        # Lightning supplies an ignition floor where the incumbent annual
-        # propensity is too close to zero, but an ignition only becomes area
-        # burned when precipitation has produced continuous fuel.  This annual
-        # role is distinct from the previously refuted monthly multiplier.
-        flash = np.clip(
-            data["lightning_flash_rate"], 0.0, None
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        gpp = np.clip(data["gpp"], 0.0, None).reshape(
-            16, 12, 180, 360
-        ).mean(axis=1, keepdims=True)
-        rain = np.clip(
-            data["annual_precipitation"], 0.0, None
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        ignition = flash / (flash + p["annual_lightning_half"] + 1e-12)
-        fuel = (gpp / (gpp + p["annual_lightning_gpp_half"] + 1e-12)) * (
-            rain / (rain + p["annual_lightning_rain_half"] + 1e-12)
-        )
-        target = annual_burn + p["annual_lightning_w"] * ignition * fuel
-        before = (annual_burn * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
-        after = (target * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
-        annual_burn = np.clip(target * (before / (after + 1e-12)), 0.0, 11.5)
 
     # The annual head has its own intercept. This is deliberately downstream of
     # map-shaping factors so global level can be calibrated without changing
