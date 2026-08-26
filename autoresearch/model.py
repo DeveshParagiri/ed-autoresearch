@@ -9,7 +9,7 @@ import numpy as np
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'neighbour', 'legacy')
+              'cropland', 'neighbour', 'legacy', 'stubble')
 
 # Only the new memory coefficients are searched. The seven fitted regional
 # parameter sets stay frozen so this experiment tests one added mechanism
@@ -33,6 +33,9 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'leg_w': {'type': 'float', 'low': 0.0, 'high': 1.0},
     'leg_a': {'type': 'float', 'low': 0.02, 'high': 0.5},
     'leg_cap': {'type': 'float', 'low': 1.2, 'high': 8.0},
+    'stub_k': {'type': 'float', 'low': 0.0, 'high': 6.0},
+    'stub_t': {'type': 'float', 'low': 0.0, 'high': 18.0},
+    'stub_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
 }
 
 PARAMS = {'D_high': 2940.51756322311,
@@ -64,7 +67,10 @@ PARAMS = {'D_high': 2940.51756322311,
  'nb_diag': 0.5,
  'leg_w': 0.3,
  'leg_a': 0.3,
- 'leg_cap': 3.0}
+ 'leg_cap': 3.0,
+ 'stub_k': 1.5,
+ 'stub_t': 8.0,
+ 'stub_w': 4.0}
 
 REGION_PARAMS = {'Africa': {'D_high': 2941.5751391396584,
             'D_low': 8.1043507389441,
@@ -461,6 +467,27 @@ def predict(
         rate = _lag(rate, fallback)
     if "legacy" in enabled:
         rate = _legacy(rate, fallback)
+    if "stubble" in enabled and fallback.get("stub_k", 0.0) > 0.0:
+        # Central Asia burns in April while every climate driver there peaks
+        # in July to September, and dryness is at its annual minimum as fire
+        # ramps. That season is stubble clearing, which follows a planting
+        # calendar rather than the weather, and the three most agricultural
+        # regions (0.34, 0.34, 0.38 cropland fraction) are exactly the three
+        # with the worst phase errors. LUH2 carries no calendar of its own --
+        # its fields are annual values repeated monthly -- but the shoulders
+        # of the growing season are recoverable from temperature. Fire the
+        # term as the land crosses a growth threshold, gated on how much
+        # cropland is there to burn.
+        temperature = data["air_temperature"]
+        warming = temperature - np.roll(temperature, 1, axis=0)
+        warming[0] = warming[1]
+        shoulder = np.exp(
+            -np.square((temperature - fallback["stub_t"]) / fallback["stub_w"])
+        )
+        crop = np.clip(data["luh2_cropland_fraction"], 0.0, 1.0)
+        rate = rate * (
+            1.0 + fallback["stub_k"] * crop * shoulder * np.clip(warming, 0.0, None)
+        )
     if "neighbour" in enabled:
         rate = _neighbour(rate, fallback)
     if "spread" in enabled:
