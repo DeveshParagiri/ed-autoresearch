@@ -30,13 +30,12 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
 # Tune the new causal seasonal-onset allocation independently from the
 # retained annual-propensity parent.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'regime_mix': {'type': 'float', 'low': 0.0, 'high': 0.95},
-    'regime_land_half': {'type': 'float', 'low': 0.03, 'high': 0.8, 'log': True},
-    'regime_land_n': {'type': 'float', 'low': 0.5, 'high': 5.0},
-    'regime_vpd_half': {'type': 'float', 'low': 0.05, 'high': 3.0, 'log': True},
-    'regime_vpd_n': {'type': 'float', 'low': 0.3, 'high': 4.0},
-    'regime_dry_n': {'type': 'float', 'low': 0.0, 'high': 3.0},
-    'regime_lag': {'type': 'float', 'low': 0.0, 'high': 0.8},
+    'alloc_vpd_rise_w': {'type': 'float', 'low': 0.0, 'high': 1.2},
+    'alloc_vpd_rise_half': {'type': 'float', 'low': 100.0, 'high': 1500.0, 'log': True},
+    'alloc_vpd_rise_n': {'type': 'float', 'low': 0.5, 'high': 3.0},
+    'alloc_dry_scale': {'type': 'float', 'low': 10.0, 'high': 80.0, 'log': True},
+    'alloc_dry_w': {'type': 'float', 'low': 0.3, 'high': 1.5},
+    'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
 }
 
 PARAMS = {'annual_scale': 0.95,
@@ -50,13 +49,6 @@ PARAMS = {'annual_scale': 0.95,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
- 'regime_mix': 0.41372455833018856,
- 'regime_land_half': 0.47879419297103903,
- 'regime_land_n': 0.7298824781774902,
- 'regime_vpd_half': 0.6489190039819533,
- 'regime_vpd_n': 3.389450394289,
- 'regime_dry_n': 1.396626326519489,
- 'regime_lag': 0.04538146782467556,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -621,60 +613,6 @@ def _annual_seasonal_closure(
             vpd_rise.reshape(16, 12, 180, 360),
             p["alloc_vpd_rise_w"] * fuel_support,
         )
-        allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
-
-    # A globally shared managed-open-fire pathway. This is a physical regime,
-    # not a geographic region: every grid cell uses the same equations and
-    # coefficients, and the pathway fades in continuously from observable land
-    # cover and fuel structure. It supplies a seasonal allocation independent
-    # of the incumbent hazard, allowing open grass and managed fuels to respond
-    # to a short fire-weather window without imposing that waveform on intact
-    # woody vegetation. Annual burned area remains exactly conserved below.
-    if "vpd" in enabled and p.get("regime_mix", 0.0) > 0.0:
-        rangeland = np.clip(
-            data["luh2_rangeland_fraction"], 0.0, 1.0
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        cropland = np.clip(
-            data["luh2_cropland_fraction"], 0.0, 1.0
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        primary = np.clip(
-            data["luh2_primary_fraction"], 0.0, 1.0
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-        biomass = np.clip(
-            data["aboveground_biomass"], 0.0, None
-        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
-
-        managed_open = np.clip(rangeland + 0.35 * cropland, 0.0, 1.0)
-        half = max(float(p["regime_land_half"]), 1e-6)
-        exponent = max(float(p["regime_land_n"]), 1e-6)
-        powered = np.power(managed_open, exponent)
-        land_gate = powered / (powered + half**exponent + 1e-12)
-        intact_woody = primary * biomass / (
-            biomass + p["annual_intact_half"] + 1e-12
-        )
-        regime_gate = np.clip(land_gate * (1.0 - intact_woody), 0.0, 1.0)
-
-        vpd = np.clip(
-            data["vapor_pressure_deficit_mean"], 0.0, None
-        ).reshape(16, 12, 180, 360)
-        vpd_fire_weather = np.power(
-            vpd / (vpd + p["regime_vpd_half"] + 1e-12),
-            p["regime_vpd_n"],
-        )
-        dry_spell = np.clip(
-            data["maximum_consecutive_dry_days"], 0.0, 31.0
-        ).reshape(16, 12, 180, 360)
-        dry_opportunity = np.power(
-            1.0 + dry_spell / 31.0,
-            p["regime_dry_n"],
-        )
-        event = vpd_fire_weather * dry_opportunity
-        lag = float(np.clip(p["regime_lag"], 0.0, 1.0))
-        event = (1.0 - lag) * event + lag * np.roll(event, 1, axis=1)
-        event_allocation = event / (event.sum(axis=1, keepdims=True) + 1e-12)
-
-        mix = np.clip(p["regime_mix"] * regime_gate, 0.0, 0.95)
-        allocation = (1.0 - mix) * allocation + mix * event_allocation
         allocation = allocation / (allocation.sum(axis=1, keepdims=True) + 1e-12)
 
     # Newton's method solves sum_m(1-exp(-lambda*pi_m)) = annual_burn.
