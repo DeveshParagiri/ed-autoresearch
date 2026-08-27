@@ -4348,3 +4348,43 @@ fuel persistence, event footprint and occurrence-spread factorization. The next 
 must replace the stage where chronic shoulder fire and muted peaks first arise, using
 one causal state that alters both annual propensity and within-year allocation. Optuna
 remains deferred because none of these families produced a meaningful structural step.
+
+
+### Entry 123: stage causality closes the current product-rate family
+
+A stage-by-stage reconstruction localises the defect before any downstream closure.
+Immediately after `_transform`, peak-versus-shoulder capacity is only .103, .148,
+.009 and .024 of observed in NHAF, SHAF, CEAS and Australia, while annual fire is
+already 2.20-4.23 times observed across the major chronic-overburn regimes. The later
+stack raises Overall from .6477 to .7169 by compensating for this malformed base signal;
+it never begins with a correct peak that a later term destroys.
+
+The strongest harmful interaction is pathway event scaling plus seasonal rainfall
+capacity at **-.03980 Overall**. Both stages raise peaks, but together they add chronic
+fire in every audited overburn regime. Surface and multipath banks have a smaller
+-.00156 interaction. Neither redundancy is removable by scalar retuning: deleting
+seasonal rainfall capacity and retuning the surviving pathway and footprint terms peaks
+at .715984, while either one-bank consolidation peaks at .715040 or .712655. The best
+bridge also raises arid low-fuel fire from 1.32 to 1.45 times observed.
+
+Compact replacement architectures were tested rather than stacked. A unified live/dead
+fuel state reaches .705654; a conservative hazard-preserving version reaches .709941;
+a direct finite-fuel event rebuild reaches .6240. A nonlinear subgrid tile union reaches
+.714648 but makes boreal and arid fire pathological. Upstream power, smooth-threshold,
+and Poisson-occurrence hurdles fall to .6963, .7106 and .6905 because the raw rate spans
+more than twelve orders of magnitude: thresholding removes true widespread low-rate
+spatial support together with false shoulder fire.
+
+A held-out ecology-only shallow learner confirms that this low-rate tail is separable
+without geography or future state (OOF AUC .747, average precision .766 versus .559).
+Stable interactions involve cropland, temperature and warming, trailing lightning, and
+secondary canopy. Smooth natural-lightning and cold-warming translations nevertheless
+change exact Overall by only about +.00001, so the tail carries too little evaluator
+weight to matter. All prefix tests are exact through the perturbed prefix and no
+candidate was promoted or evaluated officially.
+
+The current product-rate plus downstream-compensation family is therefore closed for
+incremental additions. The next reverse-ML pass must target the high-weight recurrent-
+fire waveform and joint annual-map/cycle residual directly, then motivate a genuinely
+different base equation. Optuna remains deferred until such an equation produces a
+model-level step.
