@@ -4925,3 +4925,19 @@ capacity improvements. All commits remain in Git history. No retained row contai
 GAM/ML residuals, geographic or regional dispatch, neighbours, invalid modern forcings,
 benchmark-derived spatial tables, or full-record reductions. `progress.png` is regenerated
 from these three faithful official evaluations.
+
+
+### Entry 152: partitioned annual closure is exact-flat and rejected
+
+The safer partitioned closure at strength .25 was tested once on the pruned canonical
+model. Exact Overall changes from .718363408 to **.718296098**, a loss of .000067. Spatial
+skill rises .000733 and bias is effectively unchanged, but RMSE loses .000292 and seasonal
+skill .000483. Only six of fourteen regions improve; northern and southern South America
+lose .00607 and .00505 even as northern Africa gains .00116.
+
+The ecological movement is mostly coherent: intact tropical, temperate closed, productive
+rangeland, and cropland underburn all move toward one. Tropical-open and arid-low-fuel
+overburn rise slightly, however, and the score-bearing temporal metrics do not follow the
+held-block annual gain. Prefix causality is bit-exact. Because the first exact candidate is
+flat-negative, the stronger .5 form and tuning are not justified; the incumbent closure is
+retained without official evaluation.
