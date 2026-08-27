@@ -5203,3 +5203,20 @@ Official evaluation remains **.719** after three-decimal rounding, with bias .75
 .547, seasonal .862, and spatial .881. The refinement is retained because its exact global
 score is higher and it recovers much of the American regional cost without creating a new
 ecological failure. No Optuna follows a sub-thousandth structural step.
+
+
+### Entry 169: coherent surface variability supplies a small broad exact gain
+
+The persistent-desiccation capacity was refined with causal local variability rather than
+another geographic correction. A globally shared smooth factor reduces capacity when
+dryness is erratic, raises it when combustion conditions align with warm months, and
+dampens that response in primary vegetation. Its only states are trailing pointwise
+dryness variability, combustion-weighted temperature, and primary-cover continuity.
+
+Annual error improves in all four held-cell folds. On the exact grid, Overall rises from
+**.718882554** to **.718995341**, a +.000112787 gain, with 9 of 14 regions improving.
+CEAM gains .00033, NHSA .00021, SHSA .00072, and NHAF .00036; TENA loses .00056.
+Tropical-open and productive-rangeland ratios improve, while intact tropical, boreal, and
+arid ratios move by less than .0006. A future-input perturbation leaves the earlier prefix
+bit-exact. The equation is a bounded mechanistic candidate, but the step is too small for
+Optuna and requires a clean canonical reproduction before official evaluation.
