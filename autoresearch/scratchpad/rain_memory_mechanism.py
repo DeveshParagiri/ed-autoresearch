@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from netCDF4 import Dataset
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -20,6 +21,7 @@ from scripts.fast_ilamb import GFED5Evaluator  # noqa: E402
 from scripts.runtime import (  # noqa: E402
     GFED5_PATH,
     load_inputs,
+    load_land_mask,
     load_model,
     validate_prediction,
 )
@@ -78,6 +80,39 @@ def main() -> int:
 
     evaluator = GFED5Evaluator(GFED5_PATH)
     report(evaluator, "incumbent", incumbent)
+    if "--audit-bins" in sys.argv:
+        with Dataset(GFED5_PATH) as dataset:
+            reference = np.asarray(dataset.variables["burntArea"][:192])
+        observed = reference.reshape(192, 180, 2, 360, 2).mean(axis=(2, 4)) / 100.0
+        land = load_land_mask()[None, ...]
+        area = np.cos(
+            np.deg2rad(-89.5 + np.arange(180, dtype=np.float64))
+        )[None, :, None]
+        mass_weight = np.broadcast_to(area, incumbent.shape)
+
+        def audit(name: str, values: np.ndarray) -> None:
+            selected_values = values[land.repeat(values.shape[0], axis=0)]
+            edges = np.unique(np.quantile(selected_values, np.linspace(0.0, 1.0, 7)))
+            print(f"mass audit {name} edges={np.array2string(edges, precision=6)}")
+            for index in range(edges.size - 1):
+                selected = land & (values >= edges[index]) & (
+                    values <= edges[index + 1]
+                    if index == edges.size - 2
+                    else values < edges[index + 1]
+                )
+                predicted_mass = float((incumbent * mass_weight * selected).sum())
+                observed_mass = float((observed * mass_weight * selected).sum())
+                global_observed = float((observed * mass_weight * land).sum())
+                print(
+                    f"bin={index} ratio={predicted_mass / (observed_mass + 1e-12):.3f} "
+                    f"observed_share={observed_mass / global_observed:.3f}",
+                    flush=True,
+                )
+
+        audit("gpp_memory_24m", gpp_24m)
+        audit("dryness_memory_12m", running(np.asarray(data["dryness"]), 12.0))
+        audit("rain_memory_12m", rain_12m)
+        return 0
     families = {
         "recurrent-rain-curing": drying * fuel_construction * fine_fuel * recurrent,
         "open-rain-curing": drying * fuel_construction * fine_fuel * open_natural,
