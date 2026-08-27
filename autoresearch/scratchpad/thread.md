@@ -4772,3 +4772,24 @@ tropical-open, productive-rangeland, and arid overburn all fall slightly, but cr
 underburn deepens from .925 to .923 times observed. Prefix causality remains bit-exact.
 The incumbent allocator and green-up strengths are therefore retained; neither weak
 phenology component is dead at the operating point, and no official evaluation follows.
+
+
+### Entry 144: explicit grass curing is real physics but unsupported by frozen ED proxies
+
+Three finite, prefix-causal grass-stock equations were screened on 1,536 high-weight
+cells while replacing the existing surface opportunity bank: root-zone drawdown transfer,
+two-stage live-cohort maturation, and accumulated dry-degree curing. All conserve hazard
+to numerical precision, but even the best root-zone form worsens allocation RMSE by
+.00123 globally and .00222 in the warm-open carrier; the fixed-age and dry-degree forms
+are worse. This confirms that the incumbent bank already contributes useful timing and
+that another release clock would duplicate it.
+
+A second screen tested the physically preferred SPITFIRE interpretation directly: live
+grass moves into a dead-fuel class as moisture falls, and only that class receives the
+fine-dead-fuel moisture response. Frozen ED GPP and LAI declines are weak proxies for the
+root-water drawdown state, with a joint correlation of only .063; the inferred cured
+fraction reaches .266 overall and .134-.326 by held fold. More importantly, separate
+live/dead readiness is anti-aligned with the required within-cell correction in every
+fold. Its apparent annual signal is also unstable, including a sign reversal in one fold.
+Both proxy paths are prefix-exact, but neither supports an eligible candidate. The grass
+clock family is closed without full-grid or official evaluation.
