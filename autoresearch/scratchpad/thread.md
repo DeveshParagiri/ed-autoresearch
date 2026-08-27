@@ -4854,3 +4854,20 @@ Nine of fourteen regions improve, with Central America gaining .01332 and the la
 central Asia, limited to .00308. Because the existing arid-low-fuel audit already burns
 1.311 times observed, pruning an unconditional positive arid multiplier is also the safer
 physical direction. A clean canonical removal is justified before full ecological audit.
+
+
+### Entry 148: broad humid-primary shielding fails held spatial blocks
+
+The warm humid primary mosaic was rebuilt over all 566 qualifying cells, retaining 99.84%
+of its observed-fire weight and reproducing the 1.363 modeled-to-observed ratio. After the
+active wet-forest and warm-closure gates, a finite-root-water-by-primary shield has the
+expected suppressive coefficient in every training fold, but worsens held annual-log RMSE
+by .0386 because only two of four folds improve and one fails badly. Direct strengths .10,
+.25, and .50 all worsen both the regime and the sampled global annual map.
+
+Optical-canopy and hydraulic-canopy states have the opposite residual sign in every fold:
+cells with stronger inferred shielding need more modeled fire after the current controls,
+not less. Root water carries a possible cycle signal, but it also reverses in one held
+fold. The aggregate humid-primary overburn is therefore another between-cell mixture that
+a broad physical canopy or root-moisture brake cannot separate. Prefix causality passes,
+but no full-grid or official candidate follows.
