@@ -1108,24 +1108,11 @@ def _conditional_fire_allocation(
     )
 
     baseline = np.asarray(prediction, dtype=np.float64)
-    share = np.empty_like(baseline)
-    trailing = np.zeros_like(baseline[0], dtype=np.float64)
-    history: list[np.ndarray] = []
-    for time in range(baseline.shape[0]):
-        current = baseline[time]
-        trailing += current
-        history.append(current)
-        if len(history) > 12:
-            trailing -= history.pop(0)
-        annualized = trailing * 12.0 / len(history)
-        share[time] = current / (annualized + 1e-12)
-
-    low_or_moderate = _falling(share, 1.0 / 0.025, 0.16)
-    saturated_peak = _rising(share, 1.0 / 0.025, 0.16)
     shoulder = dry_12 * (
         0.5 * fuel_bank + 0.3 * curing + 0.2 * warm_departure
     )
-    signal = low_or_moderate * shoulder - 0.5 * saturated_peak * dry_6
+    wet_uncured = (1.0 - dry_6) * (1.0 - curing)
+    signal = shoulder - 0.25 * wet_uncured
     factor = np.exp(np.clip(strength * signal, -4.0, 4.0))
     adjusted = baseline * factor
 
