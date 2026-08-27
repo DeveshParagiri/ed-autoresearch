@@ -26,7 +26,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology')
+              'softmin', 'cropland', 'phenology', 'regime_capacity')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -57,6 +57,9 @@ PARAMS = {'annual_scale': 1.85,
  'absolute_glm_w': 0.50,
  'cool_crop_brake': 4.0,
  'wet_forest_brake': 1.0,
+ 'cold_forest_capacity': 3.0,
+ 'arid_fine_fuel_capacity': 2.0,
+ 'productive_range_brake': 2.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -1936,6 +1939,69 @@ def _ecological_regime_brakes(
     return prediction * np.exp(-log_brake)
 
 
+def _ecological_fire_capacity(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Resolve fire-size regimes from local vegetation and climate state.
+
+    Cold natural forest can carry rare crown fires even below the warm-season
+    ignition threshold. Warm arid open land can retain a small antecedent grass
+    bank that burns after curing. Conversely, productive managed rangeland is
+    fragmented and grazed, limiting the contiguous fuel available to a front.
+    These are smooth local-state mechanisms with one coefficient set globally.
+    """
+    if "regime_capacity" not in enabled:
+        return prediction
+
+    temperature = _antecedent(
+        np.asarray(data["air_temperature"], dtype=np.float64),
+        1.0 - np.exp(-1.0 / 24.0),
+    )
+    gpp = _antecedent(
+        np.asarray(data["gpp"], dtype=np.float64),
+        1.0 - np.exp(-1.0 / 12.0),
+    )
+    biomass = np.asarray(data["aboveground_biomass"], dtype=np.float64)
+    natural = np.asarray(data["natural_vegetation_fraction"], dtype=np.float64)
+    canopy = np.asarray(data["natural_canopy_height"], dtype=np.float64)
+    rangeland = np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64)
+    annual_rain = np.asarray(data["annual_precipitation"], dtype=np.float64)
+
+    cold_forest = (
+        _falling(temperature, 1.0 / 3.0, 8.0)
+        * biomass / (biomass + 2.0)
+        * canopy / (canopy + 8.0)
+        * natural
+    )
+    open_land = np.clip(
+        natural * 10.0 / (canopy + 10.0) + rangeland, 0.0, 1.0
+    )
+    arid_fine_fuel = (
+        _rising(temperature, 1.0 / 3.0, 10.0)
+        * _falling(annual_rain, 1.0 / 150.0, 600.0)
+        * gpp / (gpp + 0.2)
+        * open_land
+    )
+    productive_range = (
+        rangeland
+        * _rising(annual_rain, 1.0 / 120.0, 250.0)
+        * _falling(annual_rain, 1.0 / 250.0, 1500.0)
+        * biomass / (biomass + 0.2)
+    )
+    log_capacity = (
+        p.get("cold_forest_capacity", 0.0) * cold_forest
+        + p.get("arid_fine_fuel_capacity", 0.0) * arid_fine_fuel
+        - p.get("productive_range_brake", 0.0) * productive_range
+    )
+    return np.asarray(
+        np.clip(prediction * np.exp(np.clip(log_capacity, -5.0, 5.0)), 0.0, 1.0),
+        dtype=np.float32,
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2023,4 +2089,5 @@ def predict(
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
+    prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
