@@ -29,13 +29,11 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'softmin', 'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool')
 
-# Focus tuning on the independently validated global annual and seasonal heads.
+# Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
-    'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
-    'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
-    'memory_gam_w': {'type': 'float', 'low': 0.50, 'high': 1.00},
-    'causal_glm_w': {'type': 'float', 'low': 0.25, 'high': 0.75},
+    'dead_fuel_pool_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
+    'dead_fuel_decay': {'type': 'float', 'low': 0.02, 'high': 0.20},
+    'dead_fuel_consumption': {'type': 'float', 'low': 0.0, 'high': 8.0},
 }
 
 PARAMS = {'annual_scale': 1.73,
