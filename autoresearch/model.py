@@ -28,11 +28,13 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'pathway_hazards', 'surface_opportunity_bank',
               'conditional_allocation')
 
-# Focus tuning only on the newly validated causal dead-fuel state equation.
+# Calibrate only the newly validated globally shared event-footprint equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'dead_fuel_pool_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
-    'dead_fuel_decay': {'type': 'float', 'low': 0.02, 'high': 0.20},
-    'dead_fuel_consumption': {'type': 'float', 'low': 0.0, 'high': 8.0},
+    'fire_footprint_background': {'type': 'float', 'low': 0.35, 'high': 0.65},
+    'fire_footprint_w': {'type': 'float', 'low': 1.5, 'high': 2.8},
+    'fire_footprint_natural_w': {'type': 'float', 'low': 0.5, 'high': 0.9},
+    'fire_footprint_lightning_half': {'type': 'float', 'low': 0.02, 'high': 0.1},
+    'fire_footprint_managed_half': {'type': 'float', 'low': 0.05, 'high': 0.2},
 }
 
 PARAMS = {'annual_scale': 1.73,
@@ -40,6 +42,9 @@ PARAMS = {'annual_scale': 1.73,
  'pathway_mix_w': 0.35,
  'fire_footprint_background': 0.5,
  'fire_footprint_w': 2.0,
+ 'fire_footprint_natural_w': 0.7,
+ 'fire_footprint_lightning_half': 0.05,
+ 'fire_footprint_managed_half': 0.1,
  'surface_bank_w': 1.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
@@ -1268,7 +1273,10 @@ def _local_fire_footprint(
     lightning_12 = _antecedent(
         lightning, 1.0 - np.exp(-1.0 / 12.0)
     )
-    natural_ignition = lightning_12 / (lightning_12 + 0.05)
+    lightning_half = float(
+        max(p.get("fire_footprint_lightning_half", 0.05), 1e-8)
+    )
+    natural_ignition = lightning_12 / (lightning_12 + lightning_half)
     rangeland = np.clip(
         np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
     )
@@ -1279,7 +1287,8 @@ def _local_fire_footprint(
         np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
     )
     managed = np.clip(rangeland + pasture + crop, 0.0, 1.0)
-    managed_access = managed / (managed + 0.1)
+    managed_half = float(max(p.get("fire_footprint_managed_half", 0.1), 1e-8))
+    managed_access = managed / (managed + managed_half)
     natural = np.clip(
         np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
         0.0,
@@ -1291,8 +1300,12 @@ def _local_fire_footprint(
     open_cover = np.clip(
         rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
     )
+    natural_weight = float(
+        np.clip(p.get("fire_footprint_natural_w", 0.7), 0.0, 1.0)
+    )
     activity = open_cover * (
-        0.7 * natural_ignition + 0.3 * managed_access
+        natural_weight * natural_ignition
+        + (1.0 - natural_weight) * managed_access
     )
     surface_footprint = np.clip(background + strength * activity, 0.1, 3.0)
     gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
