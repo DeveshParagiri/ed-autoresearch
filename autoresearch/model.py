@@ -890,6 +890,11 @@ _ANNUAL_RESIDUAL_DRIVERS = (
     "luh2_rangeland_fraction", "luh2_primary_fraction", "luh2_secondary_fraction",
     "luh2_urban_fraction", "population_density",
 )
+_ANNUAL_STATIC_DRIVERS = {
+    "luh2_cropland_fraction", "luh2_pasture_fraction",
+    "luh2_rangeland_fraction", "luh2_primary_fraction",
+    "luh2_secondary_fraction", "luh2_urban_fraction", "population_density",
+}
 
 # Raw coefficients of a global ridge equation for the annual log residual.
 # The ordered basis is constructed explicitly below from incumbent opportunity,
@@ -988,7 +993,7 @@ def _annual_propensity_correction(
             "p10": np.quantile(climatology, 0.10, axis=0),
             "p90": np.quantile(climatology, 0.90, axis=0),
         }
-        if np.max(np.abs(raw["p90"] - raw["p10"])) < 1e-8:
+        if name in _ANNUAL_STATIC_DRIVERS:
             raw = {"mean": raw["mean"]}
         summaries[name] = {}
         for statistic, values in raw.items():
