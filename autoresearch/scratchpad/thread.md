@@ -3886,3 +3886,25 @@ the direct two-state opportunity-by-drying threshold is slightly negative at .72
 reversions. The tree's large ratios arise where the base prediction is tiny and do not translate
 into useful standalone physics. The active official best remains **.730**; Optuna is still not
 justified.
+
+
+### Entry 105: daily fire-weather duration is real, but its first surrogate is too narrow
+
+Daily NOAA 20CR VPD diagnostics over 2001-2015 identify the fraction of days above 1 kPa as the
+only tested extreme with substantial incremental information: its partial correlation with the
+fire residual is **.211** after controlling for the active model and installed monthly VPD. A
+full 2001-2015 overlap against NCEP/NCAR Reanalysis 1 validates a 2016 continuation: area-weighted
+duration correlation is .876, every yearly correlation lies from .864 to .888, and one global
+affine bridge makes 2016 finite and mean-consistent. The complete field remains uninstalled and
+therefore excluded from `model.py`.
+
+A whole-site held-out tree using daily duration raises the proxy from .7296 to **.7337**. Valid
+monthly temperature, dryness, and rain reconstruct duration at held-out sites with HGB r=.898 and
+R2=.807; a five-term smooth surrogate retains r=.854. That surrogate was distilled into a global
+causal fire-window transition gated by antecedent GPP. The balanced pulse scored .7307, stronger
+onset failed at .7252, and progressively stronger closure reached proxy .7312 and official
+**.731**. The scalar gain is rejected as a protected promotion: global area worsens from 1.034 to
+1.084 times observed, intact tropical closed canopy from 1.074 to 1.116, and gains concentrate in
+NHAF, SHAF, and SEAS while NHSA, SHSA, CEAM, Europe, and TENA decline. All formulations remain in
+history; the balanced ecological .730 model is restored next. This is not a meaningful structural
+step for Optuna.
