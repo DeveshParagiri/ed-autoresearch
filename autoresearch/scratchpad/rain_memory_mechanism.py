@@ -140,6 +140,39 @@ def main() -> int:
         print(np.array2string(ratio_matrix, precision=3), flush=True)
         print("observed mass share matrix", flush=True)
         print(np.array2string(share_matrix, precision=3), flush=True)
+
+        gpp_3m = running(np.asarray(data["gpp"], dtype=np.float64), 3.0)
+        gpp_departure = (
+            np.asarray(data["gpp"], dtype=np.float64) - gpp_3m
+        ) / (np.abs(np.asarray(data["gpp"], dtype=np.float64)) + np.abs(gpp_3m) + 1e-3)
+        temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+        temperature_edges = np.unique(
+            np.quantile(temperature[land.repeat(temperature.shape[0], axis=0)], np.linspace(0.0, 1.0, 6))
+        )
+        departure_edges = np.unique(
+            np.quantile(gpp_departure[land.repeat(gpp_departure.shape[0], axis=0)], np.linspace(0.0, 1.0, 6))
+        )
+        phenology_ratio = np.full((temperature_edges.size - 1, departure_edges.size - 1), np.nan)
+        phenology_share = np.full_like(phenology_ratio, np.nan)
+        for i in range(phenology_ratio.shape[0]):
+            for j in range(phenology_ratio.shape[1]):
+                selected = (
+                    land
+                    & (temperature >= temperature_edges[i])
+                    & (temperature <= temperature_edges[i + 1] if i == phenology_ratio.shape[0] - 1 else temperature < temperature_edges[i + 1])
+                    & (gpp_departure >= departure_edges[j])
+                    & (gpp_departure <= departure_edges[j + 1] if j == phenology_ratio.shape[1] - 1 else gpp_departure < departure_edges[j + 1])
+                )
+                predicted_mass = float((incumbent * mass_weight * selected).sum())
+                observed_mass = float((observed * mass_weight * selected).sum())
+                phenology_ratio[i, j] = predicted_mass / (observed_mass + 1e-12)
+                phenology_share[i, j] = observed_mass / global_observed
+        print("temperature edges=" + np.array2string(temperature_edges, precision=3), flush=True)
+        print("gpp departure edges=" + np.array2string(departure_edges, precision=3), flush=True)
+        print("mass ratio matrix temperature x gpp_departure_3m", flush=True)
+        print(np.array2string(phenology_ratio, precision=3), flush=True)
+        print("observed mass share matrix", flush=True)
+        print(np.array2string(phenology_share, precision=3), flush=True)
         return 0
     families = {
         "recurrent-rain-curing": drying * fuel_construction * fine_fuel * recurrent,
