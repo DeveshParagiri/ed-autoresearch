@@ -1120,6 +1120,12 @@ _COUPLED_ANNUAL_COEFFICIENTS = np.asarray((
     -0.059447801872449996,
 ), dtype=np.float64)
 
+# Frozen calibration scales make the fitted response identical at an isolated
+# ED site and on the global evaluation grid. They replace runtime cross-cell
+# medians and interquartile ranges; no observed fire data enter at runtime.
+_COUPLED_ANNUAL_SCALING = {'dryness:mean': (254.17414801319438, 1971.3810015618799), 'dryness:std': (85.97174789533939, 149.58398729755356), 'dryness:p10': (83.17164009809494, 1824.9420560121537), 'dryness:p90': (446.5054379940033, 2126.5401218593124), 'annual_precipitation:mean': (473.96431255340576, 624.844419002533), 'monthly_precipitation:mean': (39.49702660987775, 52.07036862310149), 'monthly_precipitation:std': (17.347330650114202, 29.968269245074), 'monthly_precipitation:p10': (12.877287410013379, 25.813495210674592), 'monthly_precipitation:p90': (66.67687625288963, 90.72785850688817), 'air_temperature:mean': (4.880924940109253, 22.83300479253133), 'air_temperature:std': (6.925248453602162, 10.688747996500341), 'air_temperature:p10': (0.0, 31.054818558692933), 'air_temperature:p90': (17.647926807403564, 18.939352655410765), 'gpp:mean': (0.01139792062295027, 0.6766268447275555), 'gpp:std': (0.006728906226352785, 0.31336151838311216), 'gpp:p10': (0.0005870594619409532, 0.07957847461220809), 'gpp:p90': (0.020962763520947194, 1.2486256144940853), 'aboveground_biomass:mean': (0.1290913743238586, 1.567750244323785), 'aboveground_biomass:std': (0.004862058834260686, 0.0591332058518185), 'aboveground_biomass:p10': (0.1091192161431536, 1.5048849115148186), 'aboveground_biomass:p90': (0.15219358878675848, 1.6381184724159539), 'soil_carbon:mean': (0.8941057085370023, 7.106800893321633), 'soil_carbon:std': (0.005418998447000007, 0.03934285550205921), 'soil_carbon:p10': (0.8856353640556336, 7.055086908489466), 'soil_carbon:p90': (0.9003640593960882, 7.162637011706829), 'leaf_area_index:mean': (0.2811436417317357, 2.044282547865199), 'leaf_area_index:std': (0.028205708623091907, 0.7970191458828323), 'leaf_area_index:p10': (0.04091785420314409, 0.9186302833259106), 'leaf_area_index:p90': (0.3657135684974492, 3.5941932614892727), 'natural_canopy_height:mean': (0.2512683341046795, 8.779670105005303), 'natural_canopy_height:std': (0.0007836342969695514, 0.029906620178760127), 'natural_canopy_height:p10': (0.24773173551075162, 8.735707534104586), 'natural_canopy_height:p90': (0.25393680185079576, 8.830603800714016), 'secondary_canopy_height:mean': (3.8477236827214556, 11.363713107382258), 'secondary_canopy_height:std': (0.015787455894605486, 0.081727195095272), 'secondary_canopy_height:p10': (3.7903481356799604, 11.259638002514839), 'secondary_canopy_height:p90': (3.890541841834784, 11.44188721179962), 'natural_vegetation_fraction:mean': (0.07618884393014014, 0.6095968093723059), 'natural_vegetation_fraction:std': (0.0, 0.0), 'natural_vegetation_fraction:p10': (0.07618884393014014, 0.6095968093723059), 'natural_vegetation_fraction:p90': (0.07622363069094718, 0.6095968093723059), 'secondary_vegetation_fraction:mean': (0.016329333186149597, 0.1567498755757697), 'secondary_vegetation_fraction:std': (0.0, 0.0), 'secondary_vegetation_fraction:p10': (0.016329333186149597, 0.1567498755757697), 'secondary_vegetation_fraction:p90': (0.016329333186149597, 0.1567498755757697), 'lightning_flash_rate:mean': (0.006493361624052341, 0.021110813027569727), 'lightning_flash_rate:std': (0.009110128810931394, 0.02008475526869543), 'lightning_flash_rate:p10': (5.311021368470394e-06, 0.0007419758316245862), 'lightning_flash_rate:p90': (0.018469922151416542, 0.050555077742319564), 'luh2_cropland_fraction:mean': (0.0019709593179868534, 0.08153530675917864), 'luh2_pasture_fraction:mean': (0.0, 0.022412070218706504), 'luh2_rangeland_fraction:mean': (0.0032429337292114724, 0.1241085137007758), 'luh2_primary_fraction:mean': (0.20778736798092723, 0.5980775392381474), 'luh2_secondary_fraction:mean': (1.0, 0.0), 'luh2_urban_fraction:mean': (4.257736868851225e-06, 0.0012029065328533761)}
+_COUPLED_SEASONAL_SCALING = {'annual_precipitation': (473.96431255340576, 624.844419002533), 'air_temperature': (4.880924940109253, 22.83300479253133), 'gpp': (0.01139792062295027, 0.6766268447275555), 'aboveground_biomass': (0.1290913743238586, 1.567750244323785), 'soil_carbon': (0.8941057085370023, 7.106800893321633), 'leaf_area_index': (0.2811436417317357, 2.044282547865199), 'luh2_primary_fraction': (0.20778736798092723, 0.5980775392381474), 'luh2_secondary_fraction': (1.0, 0.0), 'luh2_cropland_fraction': (0.0019709593179868534, 0.08153530675917864), 'luh2_rangeland_fraction': (0.0032429337292114724, 0.1241085137007758), 'luh2_pasture_fraction': (0.0, 0.022412070218706504), 'lightning_flash_rate': (0.006493361624052341, 0.021110813027569727)}
+
 
 def _coupled_land(data: Mapping[str, np.ndarray]) -> np.ndarray:
     """Derive the local land domain without coordinates or neighbour state."""
@@ -1158,7 +1164,6 @@ def _coupled_annual_correction(
     for threshold in (-5.0, -4.0, -3.0, -2.0, -1.0):
         add(np.maximum(log_current - threshold, 0.0))
 
-    land = _coupled_land(data)
     summaries: dict[str, dict[str, np.ndarray]] = {}
     for name in _COUPLED_ANNUAL_DRIVERS:
         climatology = np.asarray(data[name], dtype=np.float64).reshape(
@@ -1174,9 +1179,7 @@ def _coupled_annual_correction(
             raw = {"mean": raw["mean"]}
         summaries[name] = {}
         for statistic, values in raw.items():
-            selected = values[land]
-            center = np.median(selected)
-            scale = np.quantile(selected, 0.75) - np.quantile(selected, 0.25)
+            center, scale = _COUPLED_ANNUAL_SCALING[f"{name}:{statistic}"]
             z = np.clip((values - center) / (scale + 1e-8), -4.0, 4.0)
             summaries[name][statistic] = z
             add(z)
@@ -1378,12 +1381,9 @@ def _coupled_seasonal_allocation(
         for threshold in (-1.5, -0.75, 0.75, 1.5):
             add(np.maximum(value - threshold, 0.0))
 
-    land = _coupled_land(data)
     gates: dict[str, np.ndarray] = {}
     for name in _COUPLED_SEASONAL_STATIC:
-        selected = means[name][land]
-        center = np.median(selected)
-        scale = np.quantile(selected, 0.75) - np.quantile(selected, 0.25)
+        center, scale = _COUPLED_SEASONAL_SCALING[name]
         gate = np.clip((means[name] - center) / (scale + 1e-6), -4.0, 4.0)[
             None, ...
         ]
