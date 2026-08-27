@@ -1004,7 +1004,10 @@ def main() -> int:
                     f"all main plus top-{count} interactions",
                     set(main_terms + ranked_interactions[:count]),
                 )
-                for count in (8, 16, 32, 64, 96, len(interaction_terms))
+                for count in (
+                    8, 16, 32, 64, 96, 112, 128, 144, 160, 176,
+                    len(interaction_terms),
+                )
             )
             for label, retained in candidates:
                 reduced = pickle.loads(pickle.dumps(learner, protocol=5))
