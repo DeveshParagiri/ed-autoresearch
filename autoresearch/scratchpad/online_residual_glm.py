@@ -999,6 +999,13 @@ def main() -> int:
                 train = rng.choice(train, size=train_limit, replace=False)
             learner = make_ebm(881)
             learner.fit(x[train][:, selected], y[train], sample_weight=weights[train])
+            if "--export-ebm" in sys.argv:
+                payload = base64.b85encode(
+                    zlib.compress(pickle.dumps(learner, protocol=5), level=9)
+                )
+                export_path = Path(__file__).with_name("causal_gam.b85")
+                export_path.write_bytes(payload)
+                print(f"exported={export_path} bytes={len(payload)}", flush=True)
             fitted = np.empty_like(y)
             for start in range(0, x.shape[0], 200_000):
                 fitted[start : start + 200_000] = np.clip(
