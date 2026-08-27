@@ -25,7 +25,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards', 'surface_opportunity_bank')
+              'pathway_hazards', 'surface_opportunity_bank',
+              'annual_regime_closure')
 
 # Calibrate only the newly validated globally shared event-footprint equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -44,6 +45,8 @@ PARAMS = {'annual_scale': 1.73,
  'fire_footprint_natural_w': 0.7774112521824282,
  'fire_footprint_lightning_half': 0.06098759667228644,
  'fire_footprint_managed_half': 0.18933595753561624,
+ 'persistent_warm_open_brake': 5.0,
+ 'cold_thaw_source': 0.0,
  'surface_bank_w': 1.0,
  'surface_bank_release': 8.0,
  'conditional_allocation_w': 1.0,
@@ -1331,6 +1334,161 @@ def _local_fire_footprint(
     )
 
 
+def _annual_regime_closure(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Balance persistent warm fire and rare continental thaw events.
+
+    Low lightning variability has opposite meanings conditional on realized
+    fire opportunity. In warm, humid, naturally fuelled open systems, large
+    persistent fire with little ignition variability indicates an unrealistically
+    broad footprint and is damped. In cold low-fire systems, the same quiet
+    ignition background can still support a rare spring event after thaw if a
+    continental fine-fuel carrier, stored soil carbon, combustion dryness and
+    slow lightning supply coincide. Both responses use one global state equation
+    and only current or trailing local history.
+    """
+    if "annual_regime_closure" not in enabled:
+        return prediction
+    warm_strength = float(max(p.get("persistent_warm_open_brake", 0.0), 0.0))
+    cold_strength = float(max(p.get("cold_thaw_source", 0.0), 0.0))
+    if warm_strength <= 0.0 and cold_strength <= 0.0:
+        return prediction
+
+    baseline = np.asarray(prediction, dtype=np.float64)
+    annual_fire = np.empty_like(baseline)
+    annual_fire[0] = baseline[0]
+    for time in range(1, baseline.shape[0]):
+        annual_fire[time] = baseline[max(0, time - 12) : time].mean(axis=0)
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_variability = np.empty_like(lightning)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_variability = np.empty_like(temperature)
+    for time in range(baseline.shape[0]):
+        start = max(0, time - 11)
+        lightning_variability[time] = lightning[start : time + 1].std(axis=0)
+        temperature_variability[time] = temperature[start : time + 1].std(axis=0)
+    low_lightning_variability = _falling(
+        lightning_variability, 200.0, 0.025
+    )
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    alpha_24 = 1.0 - np.exp(-1.0 / 24.0)
+    temperature_3 = _antecedent(temperature, alpha_3)
+    temperature_24 = _antecedent(temperature, alpha_24)
+    lightning_12 = _antecedent(lightning, alpha_12)
+
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6 = _antecedent(rain, alpha_6)
+    rain_deficit = np.maximum(
+        (rain_6 - rain) / (rain_6 + rain + 10.0), 0.0
+    )
+    rain_window = (
+        _rising(annual_rain, 0.01, 180.0)
+        * _falling(annual_rain, 1.0 / 180.0, 900.0)
+    )
+
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    open_cover = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
+    )
+
+    persistent_warm_open = (
+        low_lightning_variability
+        * _rising(annual_fire, 1.0 / 0.003, 0.007)
+        * _rising(temperature_24, 0.25, 18.0)
+        * _rising(annual_rain, 1.0 / 220.0, 900.0)
+        * open_cover
+        * _rising(natural, 10.0, 0.2)
+        * _rising(biomass, 20.0, 0.075)
+    )
+
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 250.0) * (
+        0.35 + 0.65 * rain_deficit
+    )
+    thaw = (
+        _rising(temperature, 1.0 / 3.0, 1.0)
+        * _rising(temperature - temperature_3, 0.5, 2.0)
+    )
+    soil_carbon = np.clip(
+        np.asarray(data["soil_carbon"], dtype=np.float64), 0.0, None
+    )
+    continental_natural_carrier = (
+        natural
+        * 3.0 / (canopy + 3.0)
+        * _rising(temperature_variability, 2.0, 11.5)
+        * soil_carbon / (soil_carbon + 4.0)
+        * lightning_12 / (lightning_12 + 0.004)
+    )
+    carrier = np.clip(
+        rangeland
+        + 0.5 * crop
+        + 0.25 * pasture
+        + continental_natural_carrier,
+        0.0,
+        1.0,
+    )
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fuel = gpp_12 / (gpp_12 + 0.08)
+    cold_thaw = (
+        low_lightning_variability
+        * _falling(annual_fire, 1000.0, 0.003)
+        * _falling(temperature_24, 0.5, 7.0)
+        * rain_window
+        * open_cover
+        * thaw
+        * combustion
+        * carrier
+        * (0.15 + 0.85 * fuel)
+    )
+
+    hazard = -np.log1p(-np.clip(baseline, 0.0, 1.0 - 1e-7))
+    adjusted_hazard = (
+        hazard * np.exp(-warm_strength * persistent_warm_open)
+        + cold_strength * cold_thaw
+    )
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1394,6 +1552,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _local_fire_footprint(
+        prediction, data, fallback, enabled
+    )
+    prediction = _annual_regime_closure(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
