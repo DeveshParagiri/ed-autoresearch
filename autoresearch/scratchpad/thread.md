@@ -4069,7 +4069,33 @@ The incremental target is now .70 through annual event-pathway allocation, then 
 through conserved conditional seasonal allocation, .75 through separate surface,
 woody, and residue hazards with dynamic fuel stores, and .78 through nonlinear
 multi-timescale combustion-window closure. The diagnostic whole-cell annual tree
-reaches .729 without coordinates, proving that the valid inputs contain enough map
-signal, while the old .751 seasonal allocation shows another roughly .008 is
-available from conserved timing. ML remains diagnostic only; no Optuna until a new
-physical family produces a material step.
+reaches .729 only in sample and is not a held-out ceiling; it is hypothesis triage.
+ML remains diagnostic only; no Optuna until a new physical family produces a
+material step.
+
+
+### Entry 114: a causal surface-fire bank raises the clean official best to .696
+
+Operating-point leave-one-out tests show that every active mechanism helps; the
+smallest contributions are drought maturation (.00004), pathway hazards (.00014),
+lag (.00059), dead-fuel timing (.00097), and conditional allocation (.00099).
+Twenty targeted grouped removals also fail, so simple pruning cannot supply the
+next step. A trailing annual connectivity capacity is rejected at .6876 because
+spatial skill falls from .8448 to .8270.
+
+A mass-balanced open-fuel hazard bank initially failed because later causal
+normalizers erased its timing. Moving it after all other local allocators, storing
+only the continuous surface-pathway share, and releasing that stock in fuel-rich,
+dry, curing months raises proxy from .6927 to **.6957**. Commit `b54e611` is
+official **.696** (bias .732, RMSE .529, seasonal .846, spatial .844). The audit
+passes: global area is 1.106 times observed, intact tropical closed canopy .996,
+cropland 1.092, productive rangeland .861, and arid low fuel 1.155. Congo is not
+reopened.
+
+A five-fold 10-degree spatial-block diagnostic using only the 19 valid inputs and
+causal site-local states reaches **.7014** after local annual conservation. Its
+stable interactions are current hazard with three-month rain and temperature,
+rain departure with antecedent rain, and rain departure with lightning anomaly.
+This is diagnostic evidence for a globally shared moisture-memory combustion
+allocator, not a model candidate or official score. Optuna remains deferred until
+that explicit mechanism produces a larger step.
