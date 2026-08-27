@@ -36,7 +36,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'dead_fuel_consumption': {'type': 'float', 'low': 0.0, 'high': 8.0},
 }
 
-PARAMS = {'annual_scale': 1.73,
+PARAMS = {'annual_scale': 1.50,
  'annual_residual_w': 1.0,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
