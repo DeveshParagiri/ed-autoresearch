@@ -17,8 +17,13 @@ from netCDF4 import Dataset
 from sklearn.linear_model import PoissonRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.inspection import permutation_importance
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import SplineTransformer, StandardScaler
+from sklearn.pipeline import FeatureUnion, make_pipeline
+from sklearn.preprocessing import (
+    PolynomialFeatures,
+    RobustScaler,
+    SplineTransformer,
+    StandardScaler,
+)
 from sklearn.tree import DecisionTreeRegressor, export_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -112,6 +117,7 @@ def main() -> int:
     event_only = "--event-only" in sys.argv
     broad_tree = "--broad-tree" in sys.argv
     broad_gam = "--broad-gam" in sys.argv
+    interaction_gam = "--interaction-gam" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -317,7 +323,7 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
-    if broad_tree or broad_gam:
+    if broad_tree or broad_gam or interaction_gam:
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
         raw_fields = {name: extract(name) for name in model.INPUTS}
@@ -363,7 +369,7 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
-    if broad_gam:
+    if broad_gam or interaction_gam:
         selected_names = (
             "incumbent",
             "trailing_annual",
@@ -390,17 +396,46 @@ def main() -> int:
             held = np.flatnonzero(folds == fold)
             if train.size > 500_000:
                 train = rng.choice(train, size=500_000, replace=False)
-            regressor = make_pipeline(
-                SplineTransformer(
-                    n_knots=5,
-                    degree=3,
-                    knots="quantile",
-                    include_bias=False,
-                    extrapolation="linear",
-                ),
-                StandardScaler(),
-                PoissonRegressor(alpha=0.003, max_iter=800, tol=1e-8),
-            )
+            if interaction_gam:
+                regressor = make_pipeline(
+                    RobustScaler(quantile_range=(25.0, 75.0)),
+                    FeatureUnion(
+                        (
+                            (
+                                "splines",
+                                SplineTransformer(
+                                    n_knots=5,
+                                    degree=3,
+                                    knots="quantile",
+                                    include_bias=False,
+                                    extrapolation="linear",
+                                ),
+                            ),
+                            (
+                                "pairs",
+                                PolynomialFeatures(
+                                    degree=2,
+                                    interaction_only=True,
+                                    include_bias=False,
+                                ),
+                            ),
+                        )
+                    ),
+                    StandardScaler(),
+                    PoissonRegressor(alpha=0.01, max_iter=800, tol=1e-8),
+                )
+            else:
+                regressor = make_pipeline(
+                    SplineTransformer(
+                        n_knots=5,
+                        degree=3,
+                        knots="quantile",
+                        include_bias=False,
+                        extrapolation="linear",
+                    ),
+                    StandardScaler(),
+                    PoissonRegressor(alpha=0.003, max_iter=800, tol=1e-8),
+                )
             regressor.fit(
                 x[train][:, selected],
                 y[train],
@@ -409,16 +444,16 @@ def main() -> int:
             for start in range(0, held.size, 200_000):
                 batch = held[start : start + 200_000]
                 out_of_fold[batch] = regressor.predict(x[batch][:, selected])
-            fold_coefficients.append(
-                regressor.named_steps["poissonregressor"].coef_
-            )
+            fold_coefficients.append(regressor.named_steps["poissonregressor"].coef_)
             print(
-                f"completed broad GAM fold={fold} train={train.size} held={held.size}",
+                f"completed {'interaction' if interaction_gam else 'broad'} GAM "
+                f"fold={fold} train={train.size} held={held.size}",
                 flush=True,
             )
         correlations = np.corrcoef(np.asarray(fold_coefficients))
         print(
-            "broad GAM coefficient correlation min="
+            f"{'interaction' if interaction_gam else 'broad'} GAM "
+            "coefficient correlation min="
             f"{correlations[np.triu_indices(3, 1)].min():.4f}",
             flush=True,
         )
@@ -431,7 +466,8 @@ def main() -> int:
             )
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
-            report(evaluator, f"broad GAM OOF strength={strength}", candidate)
+            label = "interaction GAM" if interaction_gam else "broad GAM"
+            report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
     if broad_tree:
         out_of_fold = np.zeros_like(y)
