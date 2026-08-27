@@ -4818,3 +4818,21 @@ not a duplicate: the footprint is monotone in managed access, the fragmentation 
 only suppresses recurrent crop/urban discontinuity, and annual closure targets humid
 natural overburn or cold thaw. Prefix causality is exact. One bounded exact run is
 justified; this is an annual-propensity candidate, not a claimed December timing fix.
+
+
+### Entry 146: managed-open recurrence does not generalize globally
+
+The held-block recurrence equilibrium was released once at `k=.5` and rejected exactly.
+Overall falls from .717563738 to **.715706776**: RMSE improves by .000331, but bias loses
+.001265, seasonality .001053, and spatial skill .006306. Nine of fourteen regions improve,
+including northern South America by .01581 and southern South America by .00908, but
+northern Africa loses .01059 and the global annual map contracts from 1.7771% to 1.7151%
+burned. The sampled productive-rangeland direction also fails to generalize, moving from
+1.050 to 1.075 times observed; crop and arid-low-fuel errors worsen.
+
+Operating-point removal clarifies why the local signal failed. Without the existing
+annual regime closure the recurrence equation gains .000480, versus a .001857 loss in the
+full stack, a destructive interaction of -.002336. Removing the footprint or fragmentation
+does not rescue the global score. The equation is causal and the future-half prefix test
+is bit-exact, but it duplicates the annual closure in consequential cells and redraws the
+spatial map. The family stops without an official evaluation or parameter bracket.
