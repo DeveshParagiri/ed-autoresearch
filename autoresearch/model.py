@@ -1657,7 +1657,21 @@ def _causal_memory_gam(
         )
 
     learned = np.exp(np.clip(eta, -30.0, 0.0))
-    blended = (1.0 - strength) * prediction + strength * learned
+    # The learned response diagnoses timing; the annual closure above owns the
+    # amount of fuel that can burn. Rescale the learned response by causal
+    # 12-month running means at each independent site so memory redistributes
+    # the available fire potential without creating a second annual source.
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
+    learned_state = learned[0].copy()
+    allocated = np.empty_like(learned)
+    for time in range(prediction.shape[0]):
+        baseline_state += alpha * (prediction[time] - baseline_state)
+        learned_state += alpha * (learned[time] - learned_state)
+        allocated[time] = learned[time] * baseline_state / (
+            learned_state + 1e-12
+        )
+    blended = (1.0 - strength) * prediction + strength * allocated
     return np.asarray(np.clip(blended, 0.0, 1.0), dtype=np.float32)
 
 
