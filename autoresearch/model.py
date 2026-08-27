@@ -61,6 +61,9 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
+ 'fire_season_w': 0.6,
+ 'fire_season_half': 0.04,
+ 'fire_season_dry_half': 500.0,
  'rare_ignition_scale': 0.02,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
@@ -2110,6 +2113,42 @@ def _rare_lightning_ignition(
     )
 
 
+def _state_dependent_fire_season(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Concentrate recurrent fire into the local combustible dry phase."""
+    strength = float(max(p.get("fire_season_w", 0.0), 0.0))
+    if "phenology" not in enabled or strength <= 0.0:
+        return prediction
+    fire_half = max(float(p.get("fire_season_half", 0.04)), 1e-4)
+    dry_half = max(float(p.get("fire_season_dry_half", 500.0)), 1e-3)
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    dry_phase = dryness / (dryness + dry_half)
+    trailing = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        start = max(0, time - 11)
+        annual = np.asarray(prediction[start : time + 1], dtype=np.float64).sum(
+            axis=0
+        )
+        trailing[time] = annual * 12.0 / (time - start + 1)
+    recurrent = trailing / (trailing + fire_half)
+    factor = np.exp(np.clip(strength * recurrent * dry_phase, -5.0, 5.0))
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    state = np.asarray(factor[0], dtype=np.float64).copy()
+    relative = np.empty_like(factor)
+    for time in range(factor.shape[0]):
+        state += alpha * (factor[time] - state)
+        relative[time] = factor[time] / (state + 1e-12)
+    return np.asarray(
+        np.clip(prediction * relative, 0.0, 1.0), dtype=np.float32
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2198,5 +2237,8 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
+    prediction = _state_dependent_fire_season(
+        prediction, data, fallback, enabled
+    )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
