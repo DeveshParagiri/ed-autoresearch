@@ -37,7 +37,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'causal_glm_w': {'type': 'float', 'low': 0.25, 'high': 0.75},
 }
 
-PARAMS = {'annual_scale': 1.75,
+PARAMS = {'annual_scale': 1.85,
  'annual_residual_w': 1.0,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
@@ -53,7 +53,7 @@ PARAMS = {'annual_scale': 1.75,
  'allocation_glm_w': 1.0,
  'memory_gam_w': 1.00,
  'memory_norm_months': 12.0,
- 'causal_glm_w': 0.30,
+ 'causal_glm_w': 0.25,
  'cool_crop_brake': 4.0,
  'wet_forest_brake': 1.0,
  'vpd_half': 0.29948860381280695,
