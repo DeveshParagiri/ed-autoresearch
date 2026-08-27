@@ -164,6 +164,7 @@ def main() -> int:
     target_weighted = "--target-weighted" in sys.argv
     full_train = "--full-train" in sys.argv
     log_target = "--log-target" in sys.argv
+    gamma_loss = "--gamma-loss" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -503,7 +504,7 @@ def main() -> int:
     y = (
         np.log(np.clip(ratio_target, 1e-4, 1e4))
         if annual_target_tree or log_target
-        else ratio_target
+        else np.clip(ratio_target, 1e-6, None) if gamma_loss else ratio_target
     )
     weights = offset + float(offset.mean()) * 0.02
     if target_weighted:
@@ -880,7 +881,7 @@ def main() -> int:
                 loss=(
                     "squared_error"
                     if annual_target_tree or log_target
-                    else "poisson"
+                    else "gamma" if gamma_loss else "poisson"
                 ),
                 learning_rate=(
                     0.05 if ultra_tree else (0.06 if deep_tree else 0.08)
