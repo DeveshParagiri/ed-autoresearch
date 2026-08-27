@@ -4281,3 +4281,23 @@ Europe, both South American regions, SEAS, and EQAS. Global area falls from 1.08
 tropical open woodland .983, productive rangeland .992, cropland .858, and arid low
 fuel 1.317. Morocco improves from 56.0 to 53.7 times observed but remains an explicit
 failure, not a solved guardrail. Prefix causality remains exactly zero.
+
+
+### Entry 120: rainfall-seasonality capacity reaches official .717
+
+The updated held-out diagnostics continue to rank rainfall variability as the
+strongest missing annual-state signal. The existing causal seasonality mechanism
+tracks trailing 12-month rainfall spread and increases fire capacity only where
+there is moderate realized opportunity, representing wet-season fuel production
+followed by a connected dry season. A direct physical bracket shows that its old
+strength .4 was conservative: .6 raises exact proxy from .715545 to .716869, while
+.8 falls back to .715645 and 1.2 collapses to .703781.
+
+Commit `b775a50` evaluates officially at **.717** (bias .754, RMSE .546, seasonal
+.862, spatial .877). The ecological regimes remain bounded: intact tropical closed
+canopy .854, temperate closed canopy 1.032, boreal forest 1.043, tropical open
+woodland 1.065, productive rangeland 1.008, cropland .921, and arid low fuel 1.322.
+This is an overall-score tradeoff rather than a regional Pareto gain: NHAF, SHAF,
+CEAS, and Australia improve, while TENA, CEAM, tropical South America, Europe, and
+MIDE decline. No new equation or parameter family was introduced, and the bracket
+closed cleanly beyond .6.
