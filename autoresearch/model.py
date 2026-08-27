@@ -19,7 +19,6 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
-          'vapor_pressure_deficit_mean',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'aboveground_biomass',
           'luh2_primary_fraction', 'lightning_flash_rate', 'soil_carbon',
@@ -27,7 +26,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'legacy', 'stubble', 'pasture', 'phenology', 'vpd_memory')
+              'cropland', 'legacy', 'stubble', 'pasture', 'phenology')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -56,7 +55,6 @@ PARAMS = {'annual_scale': 1.85,
  'memory_norm_months': 12.0,
  'causal_glm_w': 0.35,
  'absolute_glm_w': 0.50,
- 'vpd_memory_w': 0.50,
  'cool_crop_brake': 4.0,
  'wet_forest_brake': 1.0,
  'vpd_half': 0.29948860381280695,
@@ -1900,115 +1898,6 @@ def _absolute_causal_glm(
     )
 
 
-def _vpd_memory_response(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Resolve rapid fine-fuel drying against local hydroclimate memory.
-
-    Atmospheric demand above its three-month local state dries fine fuel and
-    opens a short fire-weather window. Antecedent productivity supports that
-    response, while cropland fragmentation and an already dominant monthly
-    fire share saturate it. A 24-month demand state distinguishes an isolated
-    pulse from a chronically dry, fuel-limited climate. Every response is one
-    globally shared smooth equation evaluated independently at each site.
-    """
-    strength = float(np.clip(p.get("vpd_memory_w", 0.0), 0.0, 1.0))
-    if "vpd_memory" not in enabled or strength <= 0.0:
-        return prediction
-
-    def running(values: np.ndarray, months: float) -> np.ndarray:
-        alpha = 1.0 - np.exp(-1.0 / months)
-        state = np.asarray(values[0], dtype=np.float64).copy()
-        output = np.empty_like(values, dtype=np.float64)
-        for time in range(values.shape[0]):
-            state += alpha * (values[time] - state)
-            output[time] = state
-        return output
-
-    def sigmoid(values: np.ndarray) -> np.ndarray:
-        return 1.0 / (1.0 + np.exp(np.clip(-values, -40.0, 40.0)))
-
-    vpd = np.asarray(data["vapor_pressure_deficit_mean"], dtype=np.float64)
-    vpd_3m = running(vpd, 3.0)
-    vpd_24m = running(vpd, 24.0)
-    departure_3m = (vpd - vpd_3m) / (vpd + vpd_3m + 0.2)
-    departure_24m = (vpd - vpd_24m) / (vpd + vpd_24m + 0.2)
-    pulse = np.maximum(departure_3m, 0.0)
-    background = vpd_24m / (vpd_24m + 0.7)
-
-    gpp_12m = running(np.asarray(data["gpp"], dtype=np.float64), 12.0)
-    fuel_bank = gpp_12m / (gpp_12m + 0.5)
-    annual_rain = np.asarray(data["annual_precipitation"], dtype=np.float64)
-    seasonal_climate = sigmoid((annual_rain - 400.0) / 150.0) * sigmoid(
-        (1700.0 - annual_rain) / 250.0
-    )
-    cropland = np.asarray(data["luh2_cropland_fraction"], dtype=np.float64)
-
-    share = np.empty_like(prediction, dtype=np.float64)
-    for time in range(prediction.shape[0]):
-        start = max(0, time - 11)
-        annual = np.asarray(prediction[start:time + 1], dtype=np.float64).sum(
-            axis=0
-        )
-        annual *= 12.0 / (time - start + 1)
-        share[time] = prediction[time] / (annual + 1e-12)
-    opportunity = sigmoid((share - 0.05) / 0.025)
-
-    features = (
-        departure_3m,
-        pulse,
-        np.minimum(departure_24m, 0.0),
-        pulse * fuel_bank,
-        pulse * seasonal_climate,
-        pulse * cropland,
-        pulse * opportunity,
-        background * fuel_bank,
-    )
-    coefficients = (
-        0.10130434895347319,
-        0.5778836254544044,
-        0.09691786947275069,
-        0.19064527275880744,
-        0.07860290953142078,
-        -0.09213217802550613,
-        -0.6641589796133057,
-        -0.22217525595005025,
-    )
-    centers = (
-        0.061765984500915076,
-        0.08466150909662987,
-        -0.02826529013280821,
-        0.039797189491972695,
-        0.06263580794937453,
-        0.013806193550170584,
-        0.07946361362751062,
-        0.2808333427735536,
-    )
-    scales = (
-        0.11299625739426111,
-        0.0690057484455778,
-        0.0756335730032516,
-        0.043586669579325096,
-        0.05509543215217291,
-        0.027212510499152822,
-        0.06796365347655642,
-        0.17689306400400903,
-    )
-    eta = np.full(prediction.shape, -0.09468675162879824, dtype=np.float64)
-    for coefficient, center, scale, values in zip(
-        coefficients, centers, scales, features, strict=True
-    ):
-        eta += coefficient * (values - center) / (scale + 1e-12)
-    factor = np.exp(np.clip(strength * eta, -8.0, 8.0))
-    return np.asarray(
-        np.clip(np.asarray(prediction, dtype=np.float64) * factor, 0.0, 1.0),
-        dtype=np.float32,
-    )
-
-
 def _ecological_regime_brakes(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2134,5 +2023,4 @@ def predict(
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
-    prediction = _vpd_memory_response(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
