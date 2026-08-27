@@ -67,7 +67,6 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_dry_half': 500.0,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
- 'crown_fire_event_scale': 0.25,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
  'vpd_half': 0.29948860381280695,
@@ -2150,44 +2149,6 @@ def _rare_lightning_ignition(
         * pulse_gap
     )
     ignition += rain_pulse_ignition
-    crown_scale = float(max(p.get("crown_fire_event_scale", 0.0), 0.0))
-    if crown_scale > 0.0:
-        # Crown-fire area is an event-size process, not a smooth multiplier of
-        # ordinary surface fire. A cold woody landscape must first accumulate
-        # a deep dry anomaly and receive lightning during a long fire-return
-        # gap; only then can one ignition release a large connected event.
-        dryness = np.clip(
-            np.asarray(data["dryness"], dtype=np.float64), 0.0, None
-        )
-        dryness_memory = _antecedent(
-            dryness, 1.0 - np.exp(-1.0 / 12.0)
-        )
-        drought_anomaly = np.maximum(
-            (dryness - dryness_memory)
-            / (dryness + dryness_memory + 100.0),
-            0.0,
-        )
-        lightning_memory = _antecedent(
-            lightning, 1.0 - np.exp(-1.0 / 12.0)
-        )
-        persistent_lightning = lightning_memory / (lightning_memory + 0.01)
-        deep_cold_forest = (
-            natural
-            * canopy / (canopy + 8.0)
-            * _falling(temperature_memory, 1.0 / 3.0, 2.0)
-        )
-        crown_fuel = deep_cold_forest * woody_fuel
-        crown_event = (
-            crown_scale
-            * crown_fuel
-            * persistent_lightning
-            * drought_anomaly
-            * dry_combustion
-            * thermal_window
-            * pulse_gap
-            * canopy_access
-        )
-        ignition += crown_event
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
         dtype=np.float32,
