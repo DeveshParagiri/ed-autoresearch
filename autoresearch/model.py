@@ -36,7 +36,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'memory_gam_w': {'type': 'float', 'low': 0.10, 'high': 0.40},
 }
 
-PARAMS = {'annual_scale': 0.9956870515976485,
+PARAMS = {'annual_scale': 1.30,
  'annual_residual_w': 1.0,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
