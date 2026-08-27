@@ -23,7 +23,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology', 'regime_capacity',
+              'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
