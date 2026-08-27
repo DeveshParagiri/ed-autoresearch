@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 from netCDF4 import Dataset
 from sklearn.linear_model import PoissonRegressor
+from sklearn.tree import DecisionTreeRegressor, export_text
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -218,6 +219,40 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
+    if "--tree" in sys.argv:
+        out_of_fold = np.zeros_like(y)
+        for fold in range(3):
+            train = folds != fold
+            held = ~train
+            tree = DecisionTreeRegressor(
+                criterion="poisson",
+                max_leaf_nodes=64,
+                min_samples_leaf=500,
+                random_state=503 + fold,
+            )
+            tree.fit(x[train], y[train], sample_weight=weights[train])
+            out_of_fold[held] = tree.predict(x[held])
+            print(f"completed tree fold={fold}", flush=True)
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                strength,
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"online tree OOF strength={strength}", candidate)
+        tree = DecisionTreeRegressor(
+            criterion="poisson",
+            max_leaf_nodes=64,
+            min_samples_leaf=500,
+            random_state=509,
+        )
+        tree.fit(x, y, sample_weight=weights)
+        print(export_text(tree, feature_names=list(names), decimals=5), flush=True)
+        return 0
+
     out_of_fold = np.zeros_like(y)
     coefficients: list[np.ndarray] = []
     for fold in range(3):
