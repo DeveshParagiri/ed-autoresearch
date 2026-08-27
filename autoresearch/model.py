@@ -2240,7 +2240,8 @@ def _rain_conditioned_crop_management(
     productive = annual_rain / (annual_rain + 400.0)
     highly_seasonal = _rising(rain_spread, 1.0 / 15.0, 60.0)
     fragmentation = crop * productive * highly_seasonal
-    adjusted = np.asarray(prediction, dtype=np.float64) * np.exp(
+    baseline = np.asarray(prediction, dtype=np.float64)
+    adjusted = baseline * np.exp(
         -brake_strength * fragmentation
     )
 
@@ -2273,6 +2274,19 @@ def _rain_conditioned_crop_management(
             * np.clip(warming / 5.0, 0.0, 1.0)
         )
         adjusted = 1.0 - (1.0 - adjusted) * np.exp(-residue_event)
+        # Residue burning changes the timing of a cultivated fuel stock; it
+        # does not manufacture additional annual fuel. Conserve that stock
+        # against a causal local 12-month reference.
+        baseline_state = baseline[0].copy()
+        adjusted_state = adjusted[0].copy()
+        allocated = np.empty_like(adjusted)
+        for time in range(adjusted.shape[0]):
+            baseline_state += alpha * (baseline[time] - baseline_state)
+            adjusted_state += alpha * (adjusted[time] - adjusted_state)
+            allocated[time] = adjusted[time] * baseline_state / (
+                adjusted_state + 1e-12
+            )
+        adjusted = allocated
     return np.asarray(np.clip(adjusted, 0.0, 1.0), dtype=np.float32)
 
 
