@@ -27,7 +27,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'softmin', 'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'drought_maturation')
+              'rare_ignition', 'drought_maturation', 'dead_fuel_pool')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -66,6 +66,9 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'drought_maturation_w': 2.0,
+ 'dead_fuel_pool_w': 1.0,
+ 'dead_fuel_decay': 0.08,
+ 'dead_fuel_consumption': 2.0,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
@@ -2385,6 +2388,86 @@ def _drought_maturation_response(
     )
 
 
+def _dead_fuel_pool_response(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Track a causal litter pool produced by vegetation curing.
+
+    Monthly productivity first enters live fuel. When GPP and leaf area fall
+    below their recent reservoirs, a fraction transfers into dead fine fuel.
+    That pool decomposes continuously, remains unavailable while wet, and is
+    consumed by fire. The resulting combustible stock reallocates a site's
+    existing fire potential toward months when accumulated litter has cured;
+    it does not use a completed climatology or create an external fuel source.
+    """
+    if "dead_fuel_pool" not in enabled:
+        return prediction
+    strength = float(max(p.get("dead_fuel_pool_w", 0.0), 0.0))
+    if strength <= 0.0:
+        return prediction
+    decay = float(np.clip(p.get("dead_fuel_decay", 0.08), 0.001, 0.5))
+    consumption = float(
+        np.clip(p.get("dead_fuel_consumption", 2.0), 0.0, 20.0)
+    )
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    lai = np.clip(
+        np.asarray(data["leaf_area_index"], dtype=np.float64), 0.0, None
+    )
+    gpp_recent = _antecedent(gpp, 1.0 - np.exp(-1.0 / 3.0))
+    gpp_bank = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
+    lai_recent = _antecedent(lai, 1.0 - np.exp(-1.0 / 3.0))
+    gpp_curing = np.maximum(
+        (gpp_recent - gpp) / (gpp_recent + gpp + 0.2), 0.0
+    )
+    lai_curing = np.maximum(
+        (lai_recent - lai) / (lai_recent + lai + 0.5), 0.0
+    )
+    production = gpp_bank / (gpp_bank + 0.35) * (
+        0.7 * gpp_curing + 0.3 * lai_curing
+    )
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_memory = _antecedent(rain, 1.0 - np.exp(-1.0 / 6.0))
+    drying = np.maximum(
+        (rain_memory - rain) / (rain_memory + rain + 10.0), 0.0
+    )
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = drying * dryness / (dryness + 500.0)
+
+    stock = np.asarray(production[0], dtype=np.float64).copy()
+    available = np.empty_like(production, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        stock = (1.0 - decay) * stock + production[time]
+        burn_pressure = prediction[time] / (prediction[time] + 0.04)
+        available[time] = stock / (stock + 0.5) * combustion[time]
+        stock *= np.exp(-consumption * burn_pressure * available[time])
+
+    factor = np.exp(np.clip(strength * available, 0.0, 4.0))
+    baseline = np.asarray(prediction, dtype=np.float64)
+    adjusted = baseline * factor
+    # The litter pool redistributes locally produced fuel across time. A causal
+    # running reference holds the site's available fire potential fixed.
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    baseline_state = baseline[0].copy()
+    adjusted_state = adjusted[0].copy()
+    allocated = np.empty_like(adjusted)
+    for time in range(adjusted.shape[0]):
+        baseline_state += alpha * (baseline[time] - baseline_state)
+        adjusted_state += alpha * (adjusted[time] - adjusted_state)
+        allocated[time] = adjusted[time] * baseline_state / (
+            adjusted_state + 1e-12
+        )
+    return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
+
+
 def _seasonal_rainfall_capacity(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2554,6 +2637,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _drought_maturation_response(
+        prediction, data, fallback, enabled
+    )
+    prediction = _dead_fuel_pool_response(
         prediction, data, fallback, enabled
     )
     prediction = _live_fuel_greenup_brake(
