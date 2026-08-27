@@ -5112,3 +5112,19 @@ area ratio from .7770 to about .7723 and deepen underburn in every represented e
 class. The incumbent convention is empirically supplying needed mass in already-underburned
 dominant cells. A unit-clean replacement would require a new physical source and coordinated
 recalibration, not a standalone repair, so neither advances to exact testing or tuning.
+
+
+### Entry 163: warm surface seasonality advances the official best to .719
+
+The canonical strength-2 capacity reproduces exact Overall **.718706140**, with bias
+.755816, RMSE .547214, seasonal .861783, and spatial .881504. A future-half perturbation
+across 96 diverse pointwise sites leaves the first 96 months bit-identical. Official
+evaluation records **.719** with bias .756, RMSE .547, seasonal .862, and spatial .882.
+
+Six of fourteen exact regional scores improve, led by northern Africa +.00456, Australia
++.00105, and central Asia +.00060. The largest losses are southern South America -.00826,
+northern South America -.00579, and Central America -.00534. The gain is therefore mixed
+rather than broad, but no state-defined ecological pathology appears: boreal and arid fire
+are nearly unchanged, intact tropical, temperate closed, productive rangeland, and crop
+underburn move toward one, and tropical open remains bounded at 1.053. The scalar step is
+accepted under the overall-first objective without claiming universal regional improvement.
