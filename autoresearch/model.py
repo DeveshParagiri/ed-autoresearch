@@ -15,7 +15,7 @@ _MONTH_DAYS = np.tile(
 )
 _MONTH_DAYS[np.asarray((3, 7, 11, 15)) * 12 + 1] = 29.0
 _MONTH_DURATION = (_MONTH_DAYS / _MONTH_DAYS.mean())[:, None, None]
-INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
+INPUTS = ('dryness', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'aboveground_biomass',
           'luh2_primary_fraction', 'lightning_flash_rate', 'soil_carbon',
@@ -2173,6 +2173,20 @@ def predict(
     unknown = enabled - set(COMPONENTS)
     if unknown:
         raise ValueError(f"unknown model components: {sorted(unknown)}")
+
+    # The prepared annual-precipitation field contains the completed calendar-
+    # year total in every month, so using it would let an early coupled timestep
+    # see later rainfall. Reconstruct an annual-scale moisture state from the
+    # monthly forcing available so far. Initialising from the first month is
+    # conservative for this finite offline record; a coupled run beginning in
+    # 1850 naturally carries the state forward through its full spin-up.
+    prepared = dict(data)
+    monthly_rain = np.asarray(data["monthly_precipitation"], dtype=np.float32)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    prepared["annual_precipitation"] = 12.0 * _antecedent(
+        monthly_rain, alpha_12
+    )
+    data = prepared
 
     # Build one globally shared pointwise fire-rate equation. Geographic boxes
     # and region-specific parameter sets are deliberately excluded: an ED site
