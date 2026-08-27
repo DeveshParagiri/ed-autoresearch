@@ -5317,3 +5317,20 @@ and productive rangeland .973 to .975. Tropical open, boreal, and arid ratios wo
 .0037, .0024, and .0009. A future-half perturbation leaves the earlier prefix bit-exact.
 This is a physically preferable no-complexity reorder and merits one canonical test, but
 its size does not justify tuning.
+
+
+### Entry 176: causal same-month normals do not survive exact translation
+
+Twelve independent online month-of-year states were tested at every site. A timestep uses
+only previous years of the same calendar month and updates its state afterward, with a
+neutral first year. Enriching a held-cell diagnostic with these states improves log-MAE
+from .69055 to .66743 in all four blocks, led by prior LAI and GPP variability, expected
+combustion phase, and temperature anomaly. This learned result is diagnostic only.
+
+The best smooth translation is an anomalous-dry capacity gated by combustion, connected
+surface fuel, and recurrence. It improves sampled annual error in all four folds but exact
+Overall only from .718995365 to **.718996699** at strength .1, a +.000001334 numerical-
+scale change with 4 of 14 regions; stronger responses damage the tropical Americas and
+TENA. A low-return stable-fuel gap is negative from its weakest setting, reaching .718988.
+Both equations are prefix-exact. Same-calendar memory therefore adds no model-level signal
+beyond the incumbent causal reservoirs and is closed without canonical or official use.
