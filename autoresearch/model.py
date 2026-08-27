@@ -37,6 +37,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 }
 
 PARAMS = {'annual_scale': 1.73,
+ 'event_scale_half': 0.01,
  'annual_residual_w': 1.0,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
@@ -2687,9 +2688,11 @@ def predict(
     # remains a causal function of current and accumulated local state.
     prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
     prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
-    prediction = np.clip(
-        prediction * fallback.get("annual_scale", 1.0), 0.0, 1.0
-    )
+    annual_scale = float(max(fallback.get("annual_scale", 1.0), 0.0))
+    event_half = float(max(fallback.get("event_scale_half", 0.01), 1e-8))
+    connected_event = prediction / (prediction + event_half)
+    event_scale = 1.0 + (annual_scale - 1.0) * connected_event
+    prediction = np.clip(prediction * event_scale, 0.0, 1.0)
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
