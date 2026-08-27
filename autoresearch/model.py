@@ -65,7 +65,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
- 'event_clustering_w': 0.05,
+ 'event_clustering_w': 0.15,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
@@ -2264,6 +2264,7 @@ def _live_fuel_greenup_brake(
 
 def _fire_event_clustering(
     prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
@@ -2280,6 +2281,35 @@ def _fire_event_clustering(
         return prediction
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     alpha = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_memory = _antecedent(gpp, alpha)
+    fine_fuel = gpp_memory / (gpp_memory + 0.25)
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    woody_fuel = biomass / (biomass + 1.0)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    managed_open = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64)
+        + np.asarray(data["luh2_pasture_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    open_cover = np.clip(
+        natural * 10.0 / (canopy + 10.0) + managed_open, 0.0, 1.0
+    )
+    connected_fuel = 1.0 - (
+        1.0 - fine_fuel * open_cover
+    ) * (
+        1.0 - woody_fuel * natural * canopy / (canopy + 8.0)
+    )
     hazard_state = np.asarray(hazard[0], dtype=np.float64).copy()
     clustered = np.empty_like(hazard, dtype=np.float64)
     for time in range(hazard.shape[0]):
@@ -2287,7 +2317,9 @@ def _fire_event_clustering(
         relative = np.clip(
             hazard[time] / (hazard_state + 1e-8), 0.05, 20.0
         )
-        clustered[time] = prediction[time] * np.power(relative, strength)
+        clustered[time] = prediction[time] * np.power(
+            relative, strength * connected_fuel[time]
+        )
 
     baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
     clustered_state = clustered[0].copy()
@@ -2399,5 +2431,5 @@ def predict(
     prediction = _live_fuel_greenup_brake(
         prediction, data, fallback, enabled
     )
-    prediction = _fire_event_clustering(prediction, fallback, enabled)
+    prediction = _fire_event_clustering(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
