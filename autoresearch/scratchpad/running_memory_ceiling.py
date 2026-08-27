@@ -132,6 +132,50 @@ def main() -> int:
     weights = y + float(y.mean()) * 0.02
     print(f"rows={x.shape[0]} features={x.shape[1]}", flush=True)
 
+    if "--bin-memory" in sys.argv:
+        name_to_index = {name: index for index, name in enumerate(names)}
+        incumbent_values = x[:, name_to_index["incumbent"]]
+        ratio = y / (incumbent_values + 1e-4)
+        ratio_weight = incumbent_values + float(incumbent_values.mean()) * 0.02
+
+        def ratio_matrix(left_name: str, right_name: str) -> None:
+            left = x[:, name_to_index[left_name]]
+            right = x[:, name_to_index[right_name]]
+            left_edges = np.unique(np.quantile(left, np.linspace(0.0, 1.0, 7)))
+            right_edges = np.unique(np.quantile(right, np.linspace(0.0, 1.0, 7)))
+            left_bin = np.clip(
+                np.searchsorted(left_edges, left, side="right") - 1,
+                0,
+                left_edges.size - 2,
+            )
+            right_bin = np.clip(
+                np.searchsorted(right_edges, right, side="right") - 1,
+                0,
+                right_edges.size - 2,
+            )
+            matrix = np.full((left_edges.size - 1, right_edges.size - 1), np.nan)
+            for i in range(matrix.shape[0]):
+                for j in range(matrix.shape[1]):
+                    selected = (left_bin == i) & (right_bin == j)
+                    if selected.sum() < 100:
+                        continue
+                    matrix[i, j] = np.average(
+                        ratio[selected], weights=ratio_weight[selected]
+                    )
+            print(f"ratio matrix {left_name} x {right_name}", flush=True)
+            print("left_edges=" + np.array2string(left_edges, precision=6), flush=True)
+            print("right_edges=" + np.array2string(right_edges, precision=6), flush=True)
+            print(np.array2string(matrix, precision=3), flush=True)
+
+        for pair in (
+            ("incumbent", "monthly_precipitation:departure_6m"),
+            ("monthly_precipitation:memory_12m", "monthly_precipitation:departure_6m"),
+            ("lightning_flash_rate:memory_24m", "monthly_precipitation:departure_6m"),
+            ("air_temperature:departure_3m", "monthly_precipitation:departure_6m"),
+        ):
+            ratio_matrix(*pair)
+        return 0
+
     evaluator = GFED5Evaluator(GFED5_PATH)
     report(evaluator, "incumbent", incumbent)
     if "--ebm" in sys.argv:
