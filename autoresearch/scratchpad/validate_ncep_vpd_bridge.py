@@ -82,43 +82,86 @@ def monthly_fields(prefix: str, year: int) -> tuple[np.ndarray, np.ndarray, np.n
 
 
 def main() -> int:
-    mean_20cr, duration_20cr, lat_20cr, lon_20cr = monthly_fields("20cr", 2001)
-    mean_ncep, duration_ncep, lat_ncep, lon_ncep = monthly_fields("ncep", 2001)
-    mean_20cr = target_grid(mean_20cr, lat_20cr, lon_20cr)
-    duration_20cr = target_grid(duration_20cr, lat_20cr, lon_20cr)
-    mean_ncep = bilinear_target(mean_ncep, lat_ncep, lon_ncep)
-    duration_ncep = bilinear_target(duration_ncep, lat_ncep, lon_ncep)
-
     land = load_land_mask()
     area = np.cos(np.deg2rad(-89.5 + np.arange(180)))[:, None]
     weights = np.tile(np.broadcast_to(area, land.shape)[land], 12)
-    for name, left, right in (
-        ("mean_vpd", mean_20cr, mean_ncep),
-        ("fraction_gt_1kpa", duration_20cr, duration_ncep),
-    ):
-        left = left[:, land].reshape(-1)
-        right = right[:, land].reshape(-1)
-        left_centered = left - np.average(left, weights=weights)
-        right_centered = right - np.average(right, weights=weights)
-        correlation = np.sum(weights * left_centered * right_centered) / np.sqrt(
-            np.sum(weights * left_centered**2) * np.sum(weights * right_centered**2)
+    all_20cr: dict[str, list[np.ndarray]] = {"mean_vpd": [], "fraction_gt_1kpa": []}
+    all_ncep: dict[str, list[np.ndarray]] = {"mean_vpd": [], "fraction_gt_1kpa": []}
+    yearly_correlations: dict[str, list[float]] = {name: [] for name in all_20cr}
+    for year in range(2001, 2016):
+        mean_20cr, duration_20cr, lat_20cr, lon_20cr = monthly_fields("20cr", year)
+        mean_ncep, duration_ncep, lat_ncep, lon_ncep = monthly_fields("ncep", year)
+        fields = {
+            "mean_vpd": (
+                target_grid(mean_20cr, lat_20cr, lon_20cr),
+                bilinear_target(mean_ncep, lat_ncep, lon_ncep),
+            ),
+            "fraction_gt_1kpa": (
+                target_grid(duration_20cr, lat_20cr, lon_20cr),
+                bilinear_target(duration_ncep, lat_ncep, lon_ncep),
+            ),
+        }
+        for name, (left_field, right_field) in fields.items():
+            left = left_field[:, land].reshape(-1)
+            right = right_field[:, land].reshape(-1)
+            left_centered = left - np.average(left, weights=weights)
+            right_centered = right - np.average(right, weights=weights)
+            correlation = np.sum(weights * left_centered * right_centered) / np.sqrt(
+                np.sum(weights * left_centered**2)
+                * np.sum(weights * right_centered**2)
+            )
+            yearly_correlations[name].append(float(correlation))
+            all_20cr[name].append(left)
+            all_ncep[name].append(right)
+        print(f"processed overlap year={year}", flush=True)
+
+    overlap_weights = np.tile(weights, 15)
+    calibration: dict[str, tuple[float, float]] = {}
+    for name in all_20cr:
+        left = np.concatenate(all_20cr[name])
+        right = np.concatenate(all_ncep[name])
+        right_mean = np.average(right, weights=overlap_weights)
+        left_mean = np.average(left, weights=overlap_weights)
+        covariance = np.average(
+            (right - right_mean) * (left - left_mean), weights=overlap_weights
         )
-        rmse = np.sqrt(np.average((left - right) ** 2, weights=weights))
+        variance = np.average((right - right_mean) ** 2, weights=overlap_weights)
+        slope = covariance / variance
+        intercept = left_mean - slope * right_mean
+        calibrated = intercept + slope * right
+        correlation = covariance / np.sqrt(
+            variance
+            * np.average((left - left_mean) ** 2, weights=overlap_weights)
+        )
+        rmse_raw = np.sqrt(np.average((left - right) ** 2, weights=overlap_weights))
+        rmse_calibrated = np.sqrt(
+            np.average((left - calibrated) ** 2, weights=overlap_weights)
+        )
+        calibration[name] = (intercept, slope)
         print(
-            f"overlap_2001 {name} weighted_r={correlation:.6f} rmse={rmse:.6f} "
-            f"mean_20cr={np.average(left, weights=weights):.6f} "
-            f"mean_ncep={np.average(right, weights=weights):.6f}",
+            f"overlap_2001_2015 {name} weighted_r={correlation:.6f} "
+            f"yearly_r_min={min(yearly_correlations[name]):.6f} "
+            f"yearly_r_max={max(yearly_correlations[name]):.6f} "
+            f"rmse_raw={rmse_raw:.6f} rmse_calibrated={rmse_calibrated:.6f} "
+            f"intercept={intercept:.6f} slope={slope:.6f} "
+            f"mean_20cr={left_mean:.6f} mean_ncep={right_mean:.6f}",
             flush=True,
         )
 
     mean_2016, duration_2016, lat_2016, lon_2016 = monthly_fields("ncep", 2016)
     mean_2016 = bilinear_target(mean_2016, lat_2016, lon_2016)
     duration_2016 = bilinear_target(duration_2016, lat_2016, lon_2016)
+    duration_intercept, duration_slope = calibration["fraction_gt_1kpa"]
+    calibrated_duration_2016 = np.clip(
+        duration_intercept + duration_slope * duration_2016, 0.0, 1.0
+    )
     print(
         f"ncep_2016 finite={np.isfinite(duration_2016).mean():.6f} "
         f"mean_vpd={np.average(mean_2016[:, land].reshape(-1), weights=weights):.6f} "
-        f"mean_fraction_gt_1kpa="
-        f"{np.average(duration_2016[:, land].reshape(-1), weights=weights):.6f}",
+        f"mean_fraction_gt_1kpa_raw="
+        f"{np.average(duration_2016[:, land].reshape(-1), weights=weights):.6f} "
+        f"mean_fraction_gt_1kpa_calibrated="
+        f"{np.average(calibrated_duration_2016[:, land].reshape(-1), weights=weights):.6f}",
         flush=True,
     )
     return 0
