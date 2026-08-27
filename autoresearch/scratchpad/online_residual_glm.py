@@ -176,6 +176,7 @@ def main() -> int:
     annual_target_tree = "--annual-target-tree" in sys.argv
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     causal_climate_tree = "--causal-climate-tree" in sys.argv
+    causal_gam = "--causal-gam" in sys.argv
     deep_tree = "--deep-tree" in sys.argv
     ultra_tree = "--ultra-tree" in sys.argv
     factorized_tree = "--factorized-tree" in sys.argv
@@ -404,6 +405,7 @@ def main() -> int:
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
+        or causal_gam
         or factorized_tree
         or cycle_target_tree
         or bin_physical
@@ -431,7 +433,7 @@ def main() -> int:
                 fields_list.extend(
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
                 )
-        if causal_climate_tree:
+        if causal_climate_tree or causal_gam:
             month = np.arange(baseline.shape[1], dtype=np.float64) % 12
             angle = 2.0 * np.pi * month / 12.0
             for harmonic in (1, 2, 3):
@@ -826,8 +828,28 @@ def main() -> int:
                 flush=True,
             )
         return 0
-    if broad_gam or interaction_gam:
+    if broad_gam or interaction_gam or causal_gam:
         selected_names = (
+            (
+                "incumbent",
+                "trailing_annual",
+                "fire_share",
+                "luh2_cropland_fraction:current",
+                "air_temperature:expanding_std",
+                "monthly_precipitation:expanding_std",
+                "monthly_precipitation:calendar_mean",
+                "monthly_precipitation:expanding_mean",
+                "aboveground_biomass:current",
+                "lightning_flash_rate:expanding_std",
+                "natural_vegetation_fraction:current",
+                "air_temperature:departure_3m",
+                "annual_precipitation:current",
+                "luh2_primary_fraction:current",
+                "luh2_rangeland_fraction:current",
+                "natural_canopy_height:current",
+            )
+            if causal_gam
+            else (
             "incumbent",
             "trailing_annual",
             "fire_share",
@@ -843,6 +865,7 @@ def main() -> int:
             "monthly_precipitation:departure_24m",
             "monthly_precipitation:memory_3m",
             "luh2_rangeland_fraction:current",
+            )
         )
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
@@ -854,7 +877,7 @@ def main() -> int:
             train_limit = 1_500_000 if full_train else 500_000
             if train.size > train_limit:
                 train = rng.choice(train, size=train_limit, replace=False)
-            if interaction_gam:
+            if interaction_gam or causal_gam:
                 regressor = make_pipeline(
                     RobustScaler(quantile_range=(25.0, 75.0)),
                     FeatureUnion(
@@ -904,13 +927,13 @@ def main() -> int:
                 out_of_fold[batch] = regressor.predict(x[batch][:, selected])
             fold_coefficients.append(regressor.named_steps["poissonregressor"].coef_)
             print(
-                f"completed {'interaction' if interaction_gam else 'broad'} GAM "
+                f"completed {'causal' if causal_gam else 'interaction' if interaction_gam else 'broad'} GAM "
                 f"fold={fold} train={train.size} held={held.size}",
                 flush=True,
             )
         correlations = np.corrcoef(np.asarray(fold_coefficients))
         print(
-            f"{'interaction' if interaction_gam else 'broad'} GAM "
+            f"{'causal' if causal_gam else 'interaction' if interaction_gam else 'broad'} GAM "
             "coefficient correlation min="
             f"{correlations[np.triu_indices(3, 1)].min():.4f}",
             flush=True,
@@ -924,7 +947,7 @@ def main() -> int:
             )
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
-            label = "interaction GAM" if interaction_gam else "broad GAM"
+            label = "causal GAM" if causal_gam else "interaction GAM" if interaction_gam else "broad GAM"
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
     if (
