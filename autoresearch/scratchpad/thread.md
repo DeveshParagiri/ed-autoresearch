@@ -4605,3 +4605,21 @@ and crop fragmentation yield a better ecological compromise at .696439. Its rati
 guards fall to .682154 and .673149. Future-input perturbation leaves the first 73 months
 bit-identical. The clean structural gain is genuine, but temperate and arid errors remain
 too large for canonical promotion or official evaluation.
+
+
+### Entry 134: self-organizing fuel state fails the spatial partition
+
+An independent prognostic family evolves climate-equilibrium woody cover, green and
+dead fuel, recruitment, turnover and fire topkill, with grass production and curing,
+canopy competition, finite combustion, and a Poisson burned-area response. Four global
+local-state structures were screened at four event scales using only the same clean
+causal inputs.
+
+The best root-depth partition scores only **.552251** (bias .634470, RMSE .479671,
+seasonal .750790, spatial .416652). It burns wet-warm woody, seasonal-open, and boreal
+systems at .19, .46, and .21 times observed while rangeland reaches 1.94 and arid
+low-rain fire 15.14 times observed. Trace precipitation-derived dead fuel becomes
+ubiquitously burnable in deserts, while woody shading removes genuine connected fuel.
+Short-record and future-half perturbation tests are bit-exact. This rejects the family
+without refinement: fuel stocks alone cannot recover the missing spatial vegetation
+state from the allowed meteorology and land-use inputs.
