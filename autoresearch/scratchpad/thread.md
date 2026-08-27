@@ -3676,3 +3676,27 @@ fire opportunity to dryness anomaly, and seasonal harmonics to temperature and G
 linear regime GLM gains only .003 out of fold and its joint variant fails, so neither is promoted.
 The next experiment will compress the nonlinear diagnostic into a small family of smooth thermal,
 moisture, ignition, and fuel-phenology gates before any tuning is considered.
+
+
+### Entry 95: causal site memory provides the first coupled-valid path above 0.8
+
+Several smooth climatological distillations were rejected. A 209-term thermal/moisture regime GLM
+reaches only .7465 out of fold, an 86-term annual opportunity-regime GLM reaches .7453, and a
+551-term tensor seasonal GAM reaches .7482 under its correct Poisson objective. Smooth cool-managed
+brakes improve TENA and Europe locally but reduce the global score, while a missed-window ignition
+pulse is neutral at low strength and damages RMSE when strong. These failures confirm that adding
+more fixed climatological gates is not the required step.
+
+A new diagnostic replaces future climatological state with exponentially decayed memory local to
+each ED site. With current and previous valid inputs plus 3, 6, 12, and 24 month reservoirs, a
+geography-free HGB reaches **0.8062** in sample and **0.7672** with whole cells held out, versus the
+official .7426 baseline. The dominant new information is precipitation departure from 6-12 month
+storage, longer precipitation and lightning memory, temperature departure, and short GPP carryover.
+This is a real +.0246 held-out structural gain and clears the meaningful-step threshold; it uses no
+future months, neighbours, coordinates, labels, region coefficients, or invalid forcings.
+
+The first 150-term multiplicative memory GLM fails at .7437 out of fold, showing that the booster
+gain depends on nonlinear conditional reservoir responses rather than one linear correction. No
+learner has been promoted. The next step is an explainable memory GAM to identify a small set of
+smooth moisture-storage, fuel-carryover, thermal-regime, and ignition interactions for mechanistic
+implementation. Optuna remains deferred until such an equation improves the actual model.
