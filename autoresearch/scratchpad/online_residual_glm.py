@@ -80,6 +80,35 @@ def running(values: np.ndarray, months: float) -> np.ndarray:
     return output
 
 
+def expanding_climatology(
+    values: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return causal long-run and calendar-month state for cell x time data."""
+    mean = np.empty_like(values, dtype=np.float64)
+    spread = np.empty_like(values, dtype=np.float64)
+    seasonal_mean = np.empty_like(values, dtype=np.float64)
+    seasonal_departure = np.empty_like(values, dtype=np.float64)
+    state_mean = np.zeros(values.shape[0], dtype=np.float64)
+    state_m2 = np.zeros(values.shape[0], dtype=np.float64)
+    month_mean = np.zeros((12, values.shape[0]), dtype=np.float64)
+    month_count = np.zeros(12, dtype=np.int64)
+    for time in range(values.shape[1]):
+        count = time + 1
+        delta = values[:, time] - state_mean
+        state_mean += delta / count
+        state_m2 += delta * (values[:, time] - state_mean)
+        mean[:, time] = state_mean
+        spread[:, time] = np.sqrt(state_m2 / max(count, 1))
+        month = time % 12
+        month_count[month] += 1
+        month_mean[month] += (
+            values[:, time] - month_mean[month]
+        ) / month_count[month]
+        seasonal_mean[:, time] = month_mean[month]
+        seasonal_departure[:, time] = values[:, time] - month_mean[month]
+    return mean, spread, seasonal_mean, seasonal_departure
+
+
 def sigmoid(values: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(np.clip(-values, -40.0, 40.0)))
 
@@ -127,6 +156,7 @@ def main() -> int:
     physical_ebm = "--physical-ebm" in sys.argv
     annual_target_tree = "--annual-target-tree" in sys.argv
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
+    causal_climate_tree = "--causal-climate-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -344,6 +374,7 @@ def main() -> int:
         or physical_ebm
         or annual_target_tree
         or seasonal_target_tree
+        or causal_climate_tree
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -368,6 +399,40 @@ def main() -> int:
                 )
                 fields_list.extend(
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
+                )
+        if causal_climate_tree:
+            for name in (
+                "monthly_precipitation",
+                "dryness",
+                "air_temperature",
+                "gpp",
+                "leaf_area_index",
+                "lightning_flash_rate",
+            ):
+                raw = raw_fields[name]
+                mean, spread, seasonal_mean, seasonal_departure = (
+                    expanding_climatology(raw)
+                )
+                previous_year = np.empty_like(raw)
+                previous_year[:, :12] = raw[:, :1]
+                previous_year[:, 12:] = raw[:, :-12]
+                names_list.extend(
+                    (
+                        f"{name}:expanding_mean",
+                        f"{name}:expanding_std",
+                        f"{name}:calendar_mean",
+                        f"{name}:calendar_departure",
+                        f"{name}:previous_year",
+                    )
+                )
+                fields_list.extend(
+                    (
+                        mean,
+                        spread,
+                        seasonal_mean,
+                        seasonal_departure,
+                        previous_year,
+                    )
                 )
         names = tuple(names_list)
         feature_fields = tuple(fields_list)
@@ -754,6 +819,7 @@ def main() -> int:
         or physical_tree
         or annual_target_tree
         or seasonal_target_tree
+        or causal_climate_tree
     ):
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
@@ -817,7 +883,11 @@ def main() -> int:
                 else (
                     "seasonal-target HGB"
                     if seasonal_target_tree
-                    else ("shallow HGB" if shallow_tree else "broad HGB")
+                    else (
+                        "causal-climate HGB"
+                        if causal_climate_tree
+                        else ("shallow HGB" if shallow_tree else "broad HGB")
+                    )
                 )
             )
             report(evaluator, f"{label} OOF strength={strength}", candidate)
