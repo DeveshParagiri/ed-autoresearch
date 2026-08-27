@@ -4040,3 +4040,36 @@ area. A stronger cold-continent version failed and `c32939a` restores the small
 proxy winner. The gain is too small for official evaluation or Optuna; the next
 step must combine fuel, combustion, ignition, management, and fire-return into
 one factorized mechanistic equation rather than stack another isolated gate.
+
+
+### Entry 113: transitive ML audit resets and rebuilds the mechanistic frontier
+
+The earlier ledger repair was incomplete. Although explicit diagnostic rows were
+removed, the later .730-.738 candidates still called a fitted annual Ridge, a
+76-group spline GAM, and two residual GLMs. Their physical additions were real but
+their scores were not surface-free. Disabling all four gave proxy **.5456**, and
+removing 1,718 lines of fitted/dead machinery was prediction-identical. Commit
+`f791279` is the first clean official baseline at **.546**. The ledger and progress
+plot now retain only four eligible evaluations: Model C .648, Model D .641, the
+surface-free reset .546, and the new clean candidate below. This establishes the
+transitive rule in `research.md`: a mechanistic edit atop an active fitted surface
+is still ML-dependent.
+
+The clean core exposed an accidental active soft-min that collapsed spatial skill.
+Returning to the multiplicative limiting-factor equation raised proxy to **.6806**.
+A globally shared warm-humid-tall-canopy moisture shield then cut intact tropical
+closed-canopy fire from 3.88 to 1.12 times observed and raised proxy to .6830.
+Stronger continuous crop and productive-rangeland fragmentation raised the audited
+official score to **.691** at `0f16d6f` (bias .732, RMSE .521, seasonal .838,
+spatial .846). The final audit has global area 1.16 times observed, intact tropical
+closed canopy 1.08, temperate closed canopy .81, boreal forest .92, tropical open
+woodland 1.27, productive rangeland .89, cropland 1.19, and arid low fuel 1.17.
+
+The incremental target is now .70 through annual event-pathway allocation, then .72
+through conserved conditional seasonal allocation, .75 through separate surface,
+woody, and residue hazards with dynamic fuel stores, and .78 through nonlinear
+multi-timescale combustion-window closure. The diagnostic whole-cell annual tree
+reaches .729 without coordinates, proving that the valid inputs contain enough map
+signal, while the old .751 seasonal allocation shows another roughly .008 is
+available from conserved timing. ML remains diagnostic only; no Optuna until a new
+physical family produces a material step.

@@ -45,6 +45,8 @@ Repeat indefinitely:
 
 Every distinct mechanistic `model.py` formulation that reaches a proxy score is an experiment and must be committed, including intermediate and non-improving results. Restore the mechanistic objective-best formulation in a later explicit commit rather than erasing a rejected experiment from history. Keep ML and GAM work in `scratchpad/` as diagnostic evidence only: it may identify response shapes and interactions, but its fitted surface must never be installed or committed as canonical `model.py` and must never receive an official evaluation.
 
+Eligibility is transitive: a physical mechanism added on top of an active fitted residual surface is still an ML-dependent model. Before official evaluation, verify that no learned coefficient, spline, tree, regional table, invalid input, neighbour state, or descendant of those remains active in the prediction path.
+
 ## Scientific judgment
 
 A lower Overall score can still justify another experiment when it improves a relevant region or metric, corrects a spatial or seasonal failure, or exposes a useful component through ablation, or might look like a promising research direction regardless. Do not accept or reject an input after one arbitrary transformation. Test distinct, physically plausible formulations as separate experiments exhaustively.
