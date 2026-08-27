@@ -65,6 +65,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_dry_half': 500.0,
  'drought_maturation_w': 2.0,
  'dead_fuel_pool_w': 3.0,
+ 'dead_fuel_capacity_w': 1.0,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
  'greenup_brake': 2.0,
@@ -2442,9 +2443,11 @@ def _dead_fuel_pool_response(
 
     stock = np.asarray(production[0], dtype=np.float64).copy()
     available = np.empty_like(production, dtype=np.float64)
+    stock_capacity = np.empty_like(production, dtype=np.float64)
     for time in range(prediction.shape[0]):
         stock = (1.0 - decay) * stock + production[time]
         burn_pressure = prediction[time] / (prediction[time] + 0.04)
+        stock_capacity[time] = stock / (stock + 0.5)
         available[time] = stock / (stock + 0.5) * combustion[time]
         stock *= np.exp(-consumption * burn_pressure * available[time])
 
@@ -2463,6 +2466,94 @@ def _dead_fuel_pool_response(
         allocated[time] = adjusted[time] * baseline_state / (
             adjusted_state + 1e-12
         )
+    # Annual event capacity is a separate process from seasonal allocation.
+    # Dead fine fuel and woody fuel must be continuous and accessible to either
+    # natural lightning or managed ignition. Cultivation and urban cover break
+    # that continuity, while humid closed canopy limits surface-fuel access.
+    capacity_strength = float(max(p.get("dead_fuel_capacity_w", 0.0), 0.0))
+    if capacity_strength > 0.0:
+        biomass = np.clip(
+            np.asarray(data["aboveground_biomass"], dtype=np.float64),
+            0.0,
+            None,
+        )
+        woody_fuel = biomass / (biomass + 1.0)
+        natural = np.clip(
+            np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+            0.0,
+            1.0,
+        )
+        canopy = np.clip(
+            np.asarray(data["natural_canopy_height"], dtype=np.float64),
+            0.0,
+            None,
+        )
+        rangeland = np.clip(
+            np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64),
+            0.0,
+            1.0,
+        )
+        pasture = np.clip(
+            np.asarray(data["luh2_pasture_fraction"], dtype=np.float64),
+            0.0,
+            1.0,
+        )
+        crop = np.clip(
+            np.asarray(data["luh2_cropland_fraction"], dtype=np.float64),
+            0.0,
+            1.0,
+        )
+        urban = np.clip(
+            np.asarray(data["luh2_urban_fraction"], dtype=np.float64),
+            0.0,
+            1.0,
+        )
+        open_cover = np.clip(
+            natural * 10.0 / (canopy + 10.0) + rangeland + pasture,
+            0.0,
+            1.0,
+        )
+        continuity = 1.0 - (
+            1.0 - stock_capacity * open_cover
+        ) * (
+            1.0 - woody_fuel * natural * canopy / (canopy + 8.0)
+        )
+        lightning = np.clip(
+            np.asarray(data["lightning_flash_rate"], dtype=np.float64),
+            0.0,
+            None,
+        )
+        lightning_memory = _antecedent(
+            lightning, 1.0 - np.exp(-1.0 / 12.0)
+        )
+        natural_ignition = lightning_memory / (lightning_memory + 0.01)
+        managed_ignition = np.clip(crop + rangeland + pasture, 0.0, 1.0)
+        ignition_access = 1.0 - (
+            1.0 - natural_ignition
+        ) * (
+            1.0 - 0.5 * managed_ignition
+        )
+        annual_rain = np.clip(
+            np.asarray(data["annual_precipitation"], dtype=np.float64),
+            0.0,
+            None,
+        )
+        temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+        humid_closed = (
+            _rising(temperature, 0.5, 20.0)
+            * _rising(annual_rain, 1.0 / 250.0, 1200.0)
+            * _rising(canopy, 1.0 / 3.0, 15.0)
+            * natural
+        )
+        access = np.exp(-3.0 * humid_closed - 1.5 * crop - 8.0 * urban)
+        event_capacity = continuity * ignition_access * access
+        capacity_state = _antecedent(
+            event_capacity, 1.0 - np.exp(-1.0 / 12.0)
+        )
+        annual_factor = np.exp(
+            np.clip(capacity_strength * (capacity_state - 0.15), -3.0, 3.0)
+        )
+        allocated *= annual_factor
     return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
 
 
