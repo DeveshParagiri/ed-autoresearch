@@ -4428,3 +4428,12 @@ site-independent inputs, neither the full causal held-out learner (~.723 in the 
 audit) nor this high-weight focused learner (~.721) supports an honest path to .8. The
 in-sample .8 surfaces are benchmark-fitting diagnostics and must not be promoted. Optuna
 remains unjustified because the structural families are flat or negative.
+
+
+### Entry 125: pruned canonical line confirmed official .717
+
+The drought-maturation-pruned canonical model at `d62a22b` evaluates officially at
+**.717** (bias .754, RMSE .546, seasonal .862, spatial .877). This is the current
+mechanistic official, contains no fitted or geographic runtime, and matches the exact
+proxy .716889. The evaluation records the simplified thirteen-component line after the
+negative structural round; no diagnostic candidate enters the ledger.
