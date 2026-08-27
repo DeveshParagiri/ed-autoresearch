@@ -98,7 +98,7 @@ PARAMS = {'annual_scale': 1.73,
  'crop_k': 1.22,
  'crop_n': 1.514,
  'crop_rain_management_w': 1.5,
- 'crop_residue_event_scale': 0.02,
+ 'crop_residue_event_scale': 0.05,
  'nb_w': 0.5431013864547594,
  'nb_diag': 0.5,
  'leg_w': 0.3,
@@ -2234,13 +2234,12 @@ def _rain_conditioned_crop_management(
         )
         rain_mean[time] = mean
         rain_spread[time] = np.sqrt(np.maximum(variance, 0.0))
-    seasonality = rain_spread / (rain_mean + rain_spread + 25.0)
-
     annual_rain = np.clip(
         np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
     )
     productive = annual_rain / (annual_rain + 400.0)
-    fragmentation = crop * productive * (1.0 - seasonality)
+    highly_seasonal = _rising(rain_spread, 1.0 / 15.0, 60.0)
+    fragmentation = crop * productive * highly_seasonal
     adjusted = np.asarray(prediction, dtype=np.float64) * np.exp(
         -brake_strength * fragmentation
     )
@@ -2266,7 +2265,7 @@ def _rain_conditioned_crop_management(
         residue_event = (
             event_scale
             * crop
-            * seasonality
+            * _falling(rain_spread, 1.0 / 15.0, 60.0)
             * residue
             * drying
             * combustion
