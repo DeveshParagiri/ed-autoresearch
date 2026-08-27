@@ -56,6 +56,7 @@ PARAMS = {'annual_scale': 1.85,
  'causal_glm_w': 0.35,
  'absolute_glm_w': 0.50,
  'cool_crop_brake': 4.0,
+ 'warm_crop_brake': 2.0,
  'wet_forest_brake': 1.0,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
@@ -1923,6 +1924,18 @@ def _ecological_regime_brakes(
         cropland = current_state("luh2_cropland_fraction")
         cool_cultivation = cropland * _falling(temperature, 1.0 / 3.0, 18.0)
         log_brake += p.get("cool_crop_brake", 0.0) * cool_cultivation
+        annual_rain = current_state("annual_precipitation")
+        productivity = current_state("gpp")
+        warm_productive_cultivation = (
+            cropland
+            * _rising(temperature, 1.0 / 3.0, 18.0)
+            * _rising(annual_rain, 1.0 / 120.0, 300.0)
+            * _falling(annual_rain, 1.0 / 250.0, 1800.0)
+            * productivity / (productivity + 0.3)
+        )
+        log_brake += (
+            p.get("warm_crop_brake", 0.0) * warm_productive_cultivation
+        )
     if "fuel" in enabled:
         annual_rain = current_state("annual_precipitation")
         canopy = current_state("natural_canopy_height")
