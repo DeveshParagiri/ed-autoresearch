@@ -3620,3 +3620,33 @@ by fractional 1-degree overlap, and eight observable ecological regimes. It expo
 failure clearly: global fire is 0.495 of observed, NHAF 0.380, SHAF 0.323, AUST 0.232, and boreal
 forest 0.172, while TENA is 2.231. The intact tropical closed-canopy total is 0.991 of observed but
 its peak is four months wrong, so a near-one area ratio alone is not sufficient plausibility.
+
+
+### Entry 93: global annual GAM recovers 0.745; strict site independence is 0.743
+
+Refitting the annual residual equation after deleting regional coefficient dispatch raises the
+five-fold spatial OOF score from 0.5124 to 0.7105 with coefficient correlations .970-.977. The
+combined candidate reaches proxy 0.7445 and official **0.745** at `244eff2`, with bias .786, RMSE
+.581, seasonal .851, and spatial .924. This recovers 99 percent of the earlier 0.751 structural
+milestone without invalid climate inputs, neighbours, coordinates, region labels, or regional
+coefficient tables.
+
+The all-country audit prevents accepting the scalar alone. Global burned area is 1.132 times
+observed, intact tropical closed canopy is 1.451 times observed with its peak five months wrong,
+TENA is 3.742 times observed, and cool-country false fire is severe; Australia remains only 0.408.
+The next equations must improve these state-defined failures rather than compensate geographically.
+
+A stricter code audit found two residual cross-site reductions: global normalization of the intact-
+forest brake and runtime global median/IQR calibration. The brake contributes only 0.0014 and was
+disabled in `da9647e`; the calibration scales were frozen in `8a85780`, making the spatial response
+reproducible at an isolated ED site. Official Overall is now **0.743** (bias .785, RMSE .579,
+seasonal .851, spatial .921). The historical 0.776 and interim 0.745 are not the coupled-ready best.
+
+Reverse-ML boundaries are now sharper. A current/previous-month-only HGB ceiling is 0.775, so
+local climate-memory state is needed to cross 0.8; this can be implemented as running site state,
+not future or cross-site information. With local climatological state, the coupled-valid ceiling is
+0.8479. Fixed-map depth-one boosting gains almost nothing, depth two reaches 0.752, depth four
+0.766, and the full interaction model reaches 0.788 with the annual map fixed. The missing signal
+is therefore hierarchical interaction among incumbent opportunity, absolute temperature, current
+and antecedent rain, annual rain regime, dryness, fuel, lightning, and land use, not another
+univariate curve or scalar tune.
