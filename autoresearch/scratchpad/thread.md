@@ -5015,3 +5015,19 @@ to .047173 in three of four blocks. Removing either complete bank is clearly har
 the diagnosis is specific to duplicate managed storage rather than the bank families.
 This mass-conservation repair is physically justified and stable enough for one exact
 mechanistic test; it does not justify coefficient tuning.
+
+
+### Entry 157: duplicate managed-bank pruning fails the exact grid
+
+The managed sub-bank was removed cleanly together with its six parameters and private
+moisture-bucket code while retaining both the preceding surface bank and the crop, woody,
+background, fuel-recovery, and litter pathways. Exact proxy scoring falls from .718363
+to **.7169**. Bias and spatial skill are effectively flat, but seasonal skill falls from
+.8617 to .8557 and RMSE also declines slightly. The sampled operator improvement therefore
+does not survive the complete grid's seasonal weighting.
+
+The raw share overlap remains a real algebraic defect, but the active storage coefficients
+and managed recurrence gate keep its effective stored fraction below one, with a sampled
+maximum of .99276. It is not causing negative hazard or runaway mass. The candidate is
+rejected without official evaluation or tuning, and the exact incumbent is restored in a
+separate commit.

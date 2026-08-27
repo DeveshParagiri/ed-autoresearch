@@ -49,12 +49,18 @@ PARAMS = {'annual_scale': 1.73,
  'cold_thaw_capacity_boost': 1.0,
  'surface_bank_w': 1.0,
  'surface_bank_release': 8.0,
+ 'managed_bank_store': 0.9429500974702053,
+ 'managed_bank_release': 13.738787487060241,
  'crop_bank_store': 0.9923980795361608,
  'crop_bank_release': 40.07825420342421,
  'woody_bank_store': 0.4,
  'woody_bank_release': 12.0,
  'background_bank_store': 0.1,
  'background_bank_release': 8.0,
+ 'managed_moisture_capacity': 15.0,
+ 'managed_moisture_drydown': 2.0,
+ 'managed_moisture_threshold': 0.55,
+ 'managed_moisture_blend': 0.5,
  'surface_fuel_recovery_months': 6.0,
  'crop_fuel_recovery_months': 24.0,
  'woody_fuel_recovery_months': 120.0,
@@ -1716,6 +1722,34 @@ def _drying_window_flash_occupancy(
     return occupancy
 
 
+def _fuel_moisture_bucket(
+    rain: np.ndarray,
+    temperature: np.ndarray,
+    dryness: np.ndarray,
+    capacity_mm: float,
+    drydown_months: float,
+    threshold_fraction: float,
+) -> np.ndarray:
+    """Return a smooth dry-fuel gate from a finite causal water store."""
+    thermal = _rising(temperature, 0.25, 5.0)
+    combustion = dryness / (dryness + 500.0)
+    demand = (0.15 + 0.85 * thermal) * (0.15 + 0.85 * combustion)
+    state = np.minimum(capacity_mm, np.maximum(rain[0], 0.0)).astype(np.float64)
+    gate = np.empty_like(rain, dtype=np.float64)
+    for time in range(rain.shape[0]):
+        if time > 0:
+            state = np.clip(
+                state
+                + rain[time]
+                - capacity_mm / drydown_months * demand[time],
+                0.0,
+                capacity_mm,
+            )
+        fraction = state / capacity_mm
+        gate[time] = _falling(fraction, 10.0, threshold_fraction)
+    return gate
+
+
 def _multi_pathway_opportunity_bank(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -1725,23 +1759,27 @@ def _multi_pathway_opportunity_bank(
     """Release finite pathway hazards in their own combustible windows.
 
     Natural surface-fire timing is handled by the earlier surface bank. This
-    extension separates crop residue, woody fuel, and an unresolved background
-    share. Managed surface fuel is not stored again here because the preceding
-    surface bank already routes it. Each remaining pathway stores only its own
-    existing hazard and releases that stock through globally shared causal
-    local-state equations; no burned area is fitted or geographically dispatched.
+    extension separates managed fine fuel, crop residue, woody fuel, and an
+    unresolved background share. Each pathway stores only its own existing
+    hazard and releases that stock through globally shared causal local-state
+    equations; no burned area is fitted or geographically dispatched.
     """
     if "surface_opportunity_bank" not in enabled:
         return prediction
 
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
     alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
 
     rain = np.clip(
         np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
     )
+    rain_6 = _antecedent(rain, alpha_6)
     rain_12 = _antecedent(rain, alpha_12)
+    deficit_6 = np.maximum(
+        (rain_6 - rain) / (rain_6 + rain + 10.0), 0.0
+    )
     deficit_12 = np.maximum(
         (rain_12 - rain) / (rain_12 + rain + 10.0), 0.0
     )
@@ -1800,10 +1838,33 @@ def _multi_pathway_opportunity_bank(
     )
     crop_capacity = crop * fine_fuel
     total_capacity = 0.05 + surface_capacity + woody_capacity + crop_capacity
+    managed_share = (
+        np.clip(rangeland + pasture, 0.0, 1.0)
+        * fine_fuel
+        / total_capacity
+    )
     crop_share = crop_capacity / total_capacity
     woody_share = woody_capacity / total_capacity
     background_share = 0.05 / total_capacity
 
+    bucket_dryness = _fuel_moisture_bucket(
+        rain,
+        temperature,
+        dryness,
+        max(p.get("managed_moisture_capacity", 15.0), 1e-6),
+        max(p.get("managed_moisture_drydown", 2.0), 1e-6),
+        p.get("managed_moisture_threshold", 0.55),
+    )
+    moisture_blend = float(
+        np.clip(p.get("managed_moisture_blend", 0.0), 0.0, 1.0)
+    )
+    managed_dryness = (
+        (1.0 - moisture_blend) * deficit_6
+        + moisture_blend * bucket_dryness
+    )
+    managed_readiness = (
+        managed_dryness * combustion * curing_gate * thermal_window
+    )
     crop_readiness = (
         combustion * curing_gate * thermal_window * warm_departure_3
     )
@@ -1819,7 +1880,18 @@ def _multi_pathway_opportunity_bank(
         )
     )
     background_readiness = deficit_12 * combustion * thermal_window
+    annual_hazard = _trailing_annual_hazard(hazard)
+    managed_storage_gate = 0.2 / (annual_hazard + 0.2)
+
     adjusted_hazard = hazard.copy()
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        managed_share,
+        managed_readiness,
+        p.get("managed_bank_store", 0.0),
+        p.get("managed_bank_release", 0.0),
+        managed_storage_gate,
+    )
     adjusted_hazard += _pathway_bank_delta(
         hazard,
         crop_share,

@@ -12,7 +12,9 @@ bank cannot store the same hazard through overlapping managed and crop shares.
 from __future__ import annotations
 
 import gc
+import subprocess
 import sys
+import types
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +31,7 @@ from autoresearch.scratchpad.heating_lightning_sample_falsification_75fe945 impo
     select_cells,
 )
 from scripts.fast_ilamb import GFED5Evaluator  # noqa: E402
-from scripts.runtime import GFED5_PATH, load_model  # noqa: E402
+from scripts.runtime import GFED5_PATH  # noqa: E402
 
 
 EXPECTED_BLOB = "39ee93ebf1155af9ae9d70e05847b9c3f086887d"
@@ -159,14 +161,12 @@ def run_variant(model, data, replacements):
 
 
 def main():
-    model = load_model()
-    if getattr(model, "__file__", None) is None:
-        raise ValueError("model has no source file")
-    import hashlib
-
-    blob = hashlib.sha1((f"blob {Path(model.__file__).stat().st_size}\0").encode() + Path(model.__file__).read_bytes()).hexdigest()
-    if blob != EXPECTED_BLOB:
-        raise ValueError(f"expected model blob {EXPECTED_BLOB}, got {blob}")
+    source = subprocess.check_output(
+        ("git", "cat-file", "blob", EXPECTED_BLOB), cwd=ROOT
+    )
+    model = types.ModuleType("operator_audit_pinned_model")
+    model.__file__ = f"git-blob:{EXPECTED_BLOB}"
+    exec(compile(source, model.__file__, "exec"), model.__dict__)
 
     evaluator = GFED5Evaluator(GFED5_PATH)
     rows, cols, area, reference_weight, retained = select_cells(evaluator)
@@ -189,6 +189,33 @@ def main():
         )
 
     identity = lambda prediction, data_, p_, enabled_: prediction
+    incoming = {}
+    original_multipath = model._multi_pathway_opportunity_bank
+
+    def capture_multipath(prediction, data_, p_, enabled_):
+        incoming["prediction"] = np.asarray(prediction, dtype=np.float64).copy()
+        return original_multipath(prediction, data_, p_, enabled_)
+
+    run_variant(model, data, {"_multi_pathway_opportunity_bank": capture_multipath})
+    incoming_prediction = incoming["prediction"]
+    hazard, ready, managed_gate = readiness(
+        model, data, incoming_prediction, model.PARAMS
+    )
+    effective_store = (
+        model.PARAMS["managed_bank_store"] * current_shares[0] * managed_gate
+        + model.PARAMS["crop_bank_store"] * current_shares[1]
+        + model.PARAMS["woody_bank_store"] * current_shares[2]
+        + model.PARAMS["background_bank_store"] * current_shares[3]
+    )
+    print(
+        f"EFFECTIVE_STORE mean={np.mean(effective_store):.8f} "
+        f"p95={np.quantile(effective_store, 0.95):.8f} "
+        f"p99={np.quantile(effective_store, 0.99):.8f} "
+        f"max={np.max(effective_store):.8f} "
+        f"fraction_gt_1={np.mean(effective_store > 1.0):.8f}"
+    )
+    del incoming_prediction, hazard, ready, managed_gate, effective_store
+
     variants = {
         "canonical": {},
         "skip_surface_bank": {"_surface_fire_opportunity_bank": identity},
@@ -202,8 +229,6 @@ def main():
         prediction = run_variant(model, data, replacements)
         results[label] = metrics(prediction, observed, area, reference_weight, folds)
         print(label.upper() + " " + format_metrics(results[label][0]), flush=True)
-
-    original_multipath = model._multi_pathway_opportunity_bank
 
     def partitioned(prediction, data_, p_, enabled_):
         if "surface_opportunity_bank" not in enabled_:
@@ -235,14 +260,19 @@ def main():
     print("DELTAS_VS_CANONICAL")
     for label, (global_metrics, fold_metrics) in results.items():
         delta = tuple(value - reference for value, reference in zip(global_metrics, base))
-        improving_folds = sum(
-            candidate[0] < incumbent[0]
-            for candidate, incumbent in zip(fold_metrics, results["canonical"][1])
+        incumbent_folds = results["canonical"][1]
+        improving = (
+            sum(candidate[0] < incumbent[0] for candidate, incumbent in zip(fold_metrics, incumbent_folds)),
+            sum(candidate[1] < incumbent[1] for candidate, incumbent in zip(fold_metrics, incumbent_folds)),
+            sum(candidate[2] < incumbent[2] for candidate, incumbent in zip(fold_metrics, incumbent_folds)),
+            sum(candidate[3] > incumbent[3] for candidate, incumbent in zip(fold_metrics, incumbent_folds)),
         )
         print(
             f"{label} alloc={delta[0]:+.8f} annual_log={delta[1]:+.8f} "
             f"raw_cycle={delta[2]:+.8f} phase={delta[3]:+.8f} "
-            f"area_ratio={delta[4]:+.8f} alloc_improving_folds={improving_folds}/4"
+            f"area_ratio={delta[4]:+.8f} improving_folds="
+            f"alloc:{improving[0]}/4,annual:{improving[1]}/4,"
+            f"raw_cycle:{improving[2]}/4,phase:{improving[3]}/4"
         )
 
 
