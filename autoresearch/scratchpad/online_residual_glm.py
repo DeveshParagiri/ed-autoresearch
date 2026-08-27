@@ -160,6 +160,7 @@ def main() -> int:
     deep_tree = "--deep-tree" in sys.argv
     ultra_tree = "--ultra-tree" in sys.argv
     factorized_tree = "--factorized-tree" in sys.argv
+    cycle_target_tree = "--cycle-target-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -379,6 +380,7 @@ def main() -> int:
         or seasonal_target_tree
         or causal_climate_tree
         or factorized_tree
+        or cycle_target_tree
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -469,6 +471,12 @@ def main() -> int:
             observed_cells / (observed_trailing + 1e-8)
         ).reshape(-1)
         offset = share.reshape(-1) + 1e-5
+    elif cycle_target_tree:
+        observed_cycle = observed.reshape(16, 12, 180, 360).mean(axis=0)
+        target = np.tile(
+            observed_cycle[:, rows, cols].T, (1, 16)
+        ).reshape(-1)
+        offset = baseline.reshape(-1) + 1e-4
     else:
         target = np.asarray(observed[:, rows, cols].T, dtype=np.float64).reshape(-1)
         offset = baseline.reshape(-1) + 1e-4
@@ -834,6 +842,7 @@ def main() -> int:
         or seasonal_target_tree
         or causal_climate_tree
         or factorized_tree
+        or cycle_target_tree
     ):
         out_of_fold = np.zeros_like(y)
         annual_out_of_fold = np.zeros_like(y) if factorized_tree else None
@@ -975,7 +984,11 @@ def main() -> int:
                     else (
                         "causal-climate HGB"
                         if causal_climate_tree
-                        else ("shallow HGB" if shallow_tree else "broad HGB")
+                        else (
+                            "cycle-target HGB"
+                            if cycle_target_tree
+                            else ("shallow HGB" if shallow_tree else "broad HGB")
+                        )
                     )
                 )
             )
