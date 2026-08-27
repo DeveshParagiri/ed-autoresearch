@@ -3785,3 +3785,23 @@ the correct month but burns only .501; boreal forest is .228 and arid low fuel .
 and rangeland remain high at 1.561 and 1.640. These broad state-defined deficits, plus weak BONA
 and TENA seasonality, are the next mechanistic targets. Optuna remains deferred because the held-
 out causal ceiling is still about .75, not because the current scalar settings are untuned.
+
+
+### Entry 100: absolute causal residual closure raises the honest model to .729
+
+An absolute-target extension of the named causal-memory diagnostic tests whether local reservoir
+state can correct annual amount as well as monthly allocation. The 150-term whole-cell OOF model
+reaches .7435 from the .7258 incumbent with minimum fold coefficient correlation .980; reduced
+80- and 20-term surfaces retain .7430 and .7353. The stable signal is a joint response to accumulated
+drying, fuel storage, GPP and LAI curing, climate state, rangeland, and incumbent fire opportunity.
+
+Commit `6a4587b` implements only the compact 20-term response as a globally shared exponential
+surface over current and past local state. It does not reproduce the diagnostic's completed-period
+monthly averaging. Official Overall rises to **.729** (bias .772, RMSE .565, seasonal .835,
+spatial .908), and halving every input after month 96 changes prior predictions by exactly zero.
+The physical audit also improves: global burn is 1.087 times observed, intact tropical closed canopy
+1.077, DRC .820, Republic of Congo .833, and cropland 1.363. Productive rangeland remains high at
+1.840, while boreal forest and arid low-fuel land remain low at .215 and .192. The next probe must
+explain those state-defined contrasts and the four-month global peak error without geography or
+region-specific coefficients. Optuna remains deferred because this is a real step but not a new
+held-out ceiling near .8.
