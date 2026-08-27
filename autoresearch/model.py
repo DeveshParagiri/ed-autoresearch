@@ -31,15 +31,12 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spre
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
 
-# Tune the new causal seasonal-onset allocation independently from the
-# retained annual-propensity parent.
+# Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'alloc_vpd_rise_w': {'type': 'float', 'low': 0.0, 'high': 1.2},
-    'alloc_vpd_rise_half': {'type': 'float', 'low': 100.0, 'high': 1500.0, 'log': True},
-    'alloc_vpd_rise_n': {'type': 'float', 'low': 0.5, 'high': 3.0},
-    'alloc_dry_scale': {'type': 'float', 'low': 10.0, 'high': 80.0, 'log': True},
-    'alloc_dry_w': {'type': 'float', 'low': 0.3, 'high': 1.5},
-    'lag_w': {'type': 'float', 'low': 0.10, 'high': 0.28},
+    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
+    'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
+    'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
+    'seasonal_residual_w': {'type': 'float', 'low': 0.40, 'high': 1.60},
 }
 
 PARAMS = {'annual_scale': 0.95,
