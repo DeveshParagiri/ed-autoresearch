@@ -4142,3 +4142,44 @@ a negligible scalar gain while overburning Mongolia and arid land, so it was
 rejected on ecological grounds. The remaining score headroom is approximately
 equal between annual-map and seasonal-cycle structure; another scalar tune cannot
 plausibly supply the jump to .72, let alone .8.
+
+
+### Entry 116: finite pathway banks improve seasonal structure to official .709
+
+A stage-by-stage reconstruction of the clean .706 stack showed where timing is
+earned and lost. The dead-fuel pool, green-up brake, and natural-surface bank raise
+the amplitude ratio from .426 to .514; the local footprint raises it to .570; the
+annual signed-state closure then trades some amplitude back to .537 while improving
+the annual map. This identified finite pathway storage as the one late-stage family
+with demonstrated leverage on the centered monthly RMSE.
+
+The successful extension partitions only existing hazard into managed fine fuel,
+crop residue, woody fuel, and an unresolved background share. For pathway `j`, a
+finite amount `s_j = w_j q_j h` enters a causal local bank and is released as
+
+    u_j = 1 - exp[-(1/24 + g_j h/(h + EMA12(h)) R_j)].
+
+Managed readiness requires six-month rain deficit, combustion dryness, cured GPP,
+and warmth; crop readiness additionally requires a rapid warm departure; woody
+readiness requires mature drought, anomalous warmth, trailing lightning, and no wet
+anomaly; the small background share requires mature drying and warmth. Every
+coefficient is globally shared, every state is prefix-causal and site-local, and the
+equation reallocates a bounded hazard stock rather than creating observed-area
+targets. It remains under the existing `surface_opportunity_bank` component so the
+15-component ablation contract is preserved.
+
+Commit `30ed65e` raises the exact proxy from .706105 to .708897 and evaluates
+officially at **.709** (bias .749, RMSE .537, seasonal .856, spatial .864). Eight of
+fourteen regions improve, led by BOAS, CEAS, SEAS, EQAS, SHAF, Europe, and Australia;
+the main losses are small declines in CEAM, TENA, and MIDE. The ecological audit
+passes: global area is 1.032 times observed, intact tropical closed canopy .859,
+tropical open woodland .966, productive rangeland .930, cropland 1.000, boreal
+forest .809, and arid low fuel 1.316. Halving every future input after month 96
+changes the first 96 predictions by exactly zero.
+
+A fresh three-fold whole-cell held-out causal-memory HGB reaches **.7436** when
+blended halfway with this model, improving every global metric. This is diagnostic
+headroom only, but it proves another roughly .035 remains recoverable from the same
+valid site-local state before new forcings are needed. The next task is to distil
+its conditional moisture, fuel, ignition, and incumbent-opportunity interactions;
+the learner itself never enters `model.py` or the official ledger.
