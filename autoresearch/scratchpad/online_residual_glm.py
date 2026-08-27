@@ -123,6 +123,7 @@ def main() -> int:
     shallow_tree = "--shallow-tree" in sys.argv
     tensor_gam = "--tensor-gam" in sys.argv
     bin_top = "--bin-top" in sys.argv
+    physical_tree = "--physical-tree" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -335,6 +336,7 @@ def main() -> int:
         or shallow_tree
         or tensor_gam
         or bin_top
+        or physical_tree
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
@@ -364,6 +366,9 @@ def main() -> int:
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
     )
+    if physical_tree:
+        x = x[:, 3:]
+        names = names[3:]
     with Dataset(GFED5_PATH) as dataset:
         reference = np.asarray(dataset.variables["burntArea"][:192])
     observed = reference.reshape(192, 180, 2, 360, 2).mean(axis=(2, 4)) / 100.0
@@ -639,7 +644,7 @@ def main() -> int:
             label = "interaction GAM" if interaction_gam else "broad GAM"
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
-    if broad_tree or shallow_tree:
+    if broad_tree or shallow_tree or physical_tree:
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
         held_for_importance: np.ndarray | None = None
