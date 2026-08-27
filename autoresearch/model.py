@@ -1294,7 +1294,22 @@ def _local_fire_footprint(
     activity = open_cover * (
         0.7 * natural_ignition + 0.3 * managed_access
     )
-    footprint = np.clip(background + strength * activity, 0.1, 3.0)
+    surface_footprint = np.clip(background + strength * activity, 0.1, 3.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    residue_capacity = crop * fine_fuel
+    surface_share = surface_capacity / (
+        0.05 + surface_capacity + woody_capacity + residue_capacity
+    )
+    footprint = 1.0 + surface_share * (surface_footprint - 1.0)
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     return np.asarray(
         1.0 - np.exp(-np.clip(hazard * footprint, 0.0, 50.0)),
