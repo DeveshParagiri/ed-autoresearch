@@ -101,7 +101,7 @@ def main() -> int:
     annual_rain = extract("annual_precipitation")
     rangeland = extract("luh2_rangeland_fraction")
     cropland = extract("luh2_cropland_fraction")
-    vpd = extract("vapor_pressure_deficit_mean")
+    vpd = extract("vapor_pressure_deficit_mean") if vpd_only else None
     baseline = np.asarray(incumbent[:, rows, cols].T, dtype=np.float64)
 
     rain_memory = {months: running(rain, months) for months in (6.0, 12.0, 24.0)}
@@ -170,6 +170,7 @@ def main() -> int:
         opportunity_008,
     )
     if vpd_only:
+        assert vpd is not None
         vpd_3m = running(vpd, 3.0)
         vpd_24m = running(vpd, 24.0)
         departure_3m = (vpd - vpd_3m) / (vpd + vpd_3m + 0.2)
