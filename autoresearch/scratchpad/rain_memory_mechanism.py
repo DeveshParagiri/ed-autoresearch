@@ -155,6 +155,18 @@ def main() -> int:
             relative = factor / (normalizer + 1e-12)
             candidate = np.clip(incumbent * relative, 0.0, 1.0).astype(np.float32)
             report(evaluator, f"{label} strength={strength:g}", candidate)
+
+    dryness_12m = running(np.asarray(data["dryness"], dtype=np.float64), 12.0)
+    accumulated_fuel = gpp_24m / (gpp_24m + 0.005)
+    persistent_drought = dryness_12m / (dryness_12m + 700.0)
+    drought_attrition = accumulated_fuel * persistent_drought
+    for strength in (0.025, 0.05, 0.1, 0.2, 0.4):
+        candidate = incumbent * np.exp(-strength * drought_attrition)
+        report(
+            evaluator,
+            f"persistent-drought-attrition strength={strength:g}",
+            np.asarray(candidate, dtype=np.float32),
+        )
     return 0
 
 
