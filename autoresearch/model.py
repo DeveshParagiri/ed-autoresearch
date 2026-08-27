@@ -1608,6 +1608,10 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
-    prediction = _coupled_valid_closure(prediction, data, fallback, enabled)
+    # First set the long-term fire potential from local fuel, climate and
+    # ignition state; then distribute that potential through the seasonal
+    # phenology equation. This factorisation keeps magnitude and timing as
+    # distinct ecological processes.
     prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
+    prediction = _coupled_valid_closure(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
