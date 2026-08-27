@@ -26,7 +26,7 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
-              'drydown_transition', 'conditional_allocation')
+              'conditional_allocation')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -39,7 +39,6 @@ PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
  'surface_bank_w': 0.6,
- 'drydown_transition_w': 2.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1241,102 +1240,6 @@ def _surface_fire_opportunity_bank(
     )
 
 
-def _drydown_transition_allocation(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Concentrate seasonal open-land fire at the curing transition.
-
-    Fire in recurrent savanna-like systems peaks after wet-season production
-    begins curing, not at the driest possible month. The response therefore
-    requires a current rainfall decline relative to both short and annual
-    stores, falling live productivity, combustible air and continuous open fine
-    fuel. A causal local normalizer reallocates existing fire potential and the
-    globally shared state equation remains inactive in aseasonal, forested or
-    fuel-poor sites.
-    """
-    if "drydown_transition" not in enabled:
-        return prediction
-    strength = float(max(p.get("drydown_transition_w", 0.0), 0.0))
-    if strength <= 0.0:
-        return prediction
-
-    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
-    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    rain_3 = _antecedent(rain, alpha_3)
-    rain_12 = _antecedent(rain, alpha_12)
-    short_drying = np.maximum(
-        (rain_3 - rain) / (rain_3 + rain + 10.0), 0.0
-    )
-    deep_drying = np.maximum(
-        (rain_12 - rain) / (rain_12 + rain + 10.0), 0.0
-    )
-    rain_departure = rain - rain_12
-    rain_variability = np.sqrt(
-        np.maximum(_antecedent(rain_departure * rain_departure, alpha_12), 0.0)
-    )
-    seasonal_rain = rain_variability / (rain_variability + 40.0)
-
-    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
-    gpp_3 = _antecedent(gpp, alpha_3)
-    gpp_12 = _antecedent(gpp, alpha_12)
-    fine_fuel = gpp_12 / (gpp_12 + 0.35)
-    curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
-    dryness = np.clip(
-        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
-    )
-    combustion = dryness / (dryness + 500.0)
-
-    natural = np.clip(
-        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    canopy = np.clip(
-        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
-    )
-    rangeland = np.clip(
-        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    pasture = np.clip(
-        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    crop = np.clip(
-        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    open_cover = np.clip(
-        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
-    )
-    recurrent_surface = (
-        (1.0 - crop) * open_cover * fine_fuel * seasonal_rain
-    )
-    curing_transition = (
-        np.sqrt(np.clip(short_drying * deep_drying, 0.0, 1.0))
-        * combustion
-        * (0.25 + 0.75 * curing / (curing + 0.05))
-    )
-    factor = np.exp(
-        np.clip(strength * recurrent_surface * curing_transition, 0.0, 4.0)
-    )
-    baseline = np.asarray(prediction, dtype=np.float64)
-    adjusted = baseline * factor
-    baseline_state = baseline[0].copy()
-    adjusted_state = adjusted[0].copy()
-    allocated = np.empty_like(adjusted)
-    for time in range(adjusted.shape[0]):
-        baseline_state += alpha_12 * (baseline[time] - baseline_state)
-        adjusted_state += alpha_12 * (adjusted[time] - adjusted_state)
-        allocated[time] = adjusted[time] * baseline_state / (
-            adjusted_state + 1e-12
-        )
-    return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
-
-
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1391,9 +1294,6 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _surface_fire_opportunity_bank(
-        prediction, data, fallback, enabled
-    )
-    prediction = _drydown_transition_allocation(
         prediction, data, fallback, enabled
     )
     prediction = _conditional_fire_allocation(
