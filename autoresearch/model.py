@@ -36,7 +36,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
- 'pathway_mix_w': 0.70,
+ 'pathway_mix_w': 0.35,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
