@@ -73,7 +73,6 @@ PARAMS = {'annual_scale': 1.73,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
- 'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 6.5,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
@@ -514,10 +513,9 @@ def _ecological_fire_capacity(
     """Resolve fire-size regimes from local vegetation and climate state.
 
     Cold natural forest can carry rare crown fires even below the warm-season
-    ignition threshold. Warm arid open land can retain a small antecedent grass
-    bank that burns after curing. Conversely, productive managed rangeland is
-    fragmented and grazed, limiting the contiguous fuel available to a front.
-    These are smooth local-state mechanisms with one coefficient set globally.
+    ignition threshold. Conversely, productive managed rangeland is fragmented
+    and grazed, limiting the contiguous fuel available to a front. These are
+    smooth local-state mechanisms with one coefficient set globally.
     """
     if "regime_capacity" not in enabled:
         return prediction
@@ -525,10 +523,6 @@ def _ecological_fire_capacity(
     temperature = _antecedent(
         np.asarray(data["air_temperature"], dtype=np.float64),
         1.0 - np.exp(-1.0 / 24.0),
-    )
-    gpp = _antecedent(
-        np.asarray(data["gpp"], dtype=np.float64),
-        1.0 - np.exp(-1.0 / 12.0),
     )
     biomass = np.asarray(data["aboveground_biomass"], dtype=np.float64)
     natural = np.asarray(data["natural_vegetation_fraction"], dtype=np.float64)
@@ -542,15 +536,6 @@ def _ecological_fire_capacity(
         * canopy / (canopy + 8.0)
         * natural
     )
-    open_land = np.clip(
-        natural * 10.0 / (canopy + 10.0) + rangeland, 0.0, 1.0
-    )
-    arid_fine_fuel = (
-        _rising(temperature, 1.0 / 3.0, 10.0)
-        * _falling(annual_rain, 1.0 / 150.0, 600.0)
-        * gpp / (gpp + 0.2)
-        * open_land
-    )
     productive_range = (
         rangeland
         * _rising(annual_rain, 1.0 / 120.0, 250.0)
@@ -559,7 +544,6 @@ def _ecological_fire_capacity(
     )
     log_capacity = (
         p.get("cold_forest_capacity", 0.0) * cold_forest
-        + p.get("arid_fine_fuel_capacity", 0.0) * arid_fine_fuel
         - p.get("productive_range_brake", 0.0) * productive_range
     )
     return np.asarray(
