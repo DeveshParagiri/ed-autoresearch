@@ -64,6 +64,8 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
+ 'fuel_memory_w': 0.25,
+ 'fuel_memory_months': 24.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
@@ -148,7 +150,17 @@ def _fire_rate(
         factors.append(term)
         rate = rate * term
     if "fuel" in enabled:
-        term = _hump(p["gpp_af"] * data["gpp"], p["gpp_b"], p["gpp_d"])
+        # Fine fuel is a stock accumulated from prior productivity, not this
+        # month's live carbon flux. Blend a causal slow GPP reservoir into the
+        # instantaneous signal so dormant-season litter remains available to
+        # burn after photosynthesis declines, without reading future months.
+        memory_weight = float(np.clip(p.get("fuel_memory_w", 0.0), 0.0, 1.0))
+        gpp = np.asarray(data["gpp"], dtype=np.float64)
+        if memory_weight > 0.0:
+            months = max(float(p.get("fuel_memory_months", 24.0)), 1.0)
+            gpp_memory = _antecedent(gpp, 1.0 - np.exp(-1.0 / months))
+            gpp = (1.0 - memory_weight) * gpp + memory_weight * gpp_memory
+        term = _hump(p["gpp_af"] * gpp, p["gpp_b"], p["gpp_d"])
         factors.append(term)
         rate = rate * term
     if "temperature" in enabled:
