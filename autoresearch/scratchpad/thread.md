@@ -5189,3 +5189,17 @@ amplification. Tropical-open and temperate-closed ratios move toward one, boreal
 are flat, while intact-tropical and crop underburn deepen only slightly. This is a credible
 globally shared physical refinement but not an overwhelming held-block result; it warrants
 exactly one full-grid proxy test and no Optuna.
+
+
+### Entry 168: persistent desiccation raises the exact official incumbent
+
+The canonical gate reaches exact Overall **.718882578**, a +.000176438 improvement over
+the ungated .719 model. Bias rises .000657 and RMSE .000243; seasonal and spatial lose only
+.000084 and .000176. Seven regions improve versus the previous official candidate, including
+SHSA +.00212, CEAM +.00200, NHSA +.00179, and TENA +.00093, while NHAF changes by only
+-.00001. A diverse 96-site future perturbation leaves the entire preceding prefix exact.
+
+Official evaluation remains **.719** after three-decimal rounding, with bias .756, RMSE
+.547, seasonal .862, and spatial .881. The refinement is retained because its exact global
+score is higher and it recovers much of the American regional cost without creating a new
+ecological failure. No Optuna follows a sub-thousandth structural step.
