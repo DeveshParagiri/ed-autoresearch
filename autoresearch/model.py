@@ -2051,10 +2051,40 @@ def _rare_lightning_ignition(
         0.0,
         1.0,
     )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    leaf_area = np.clip(
+        np.asarray(data["leaf_area_index"], dtype=np.float64), 0.0, None
+    )
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
     rangeland = np.clip(
         np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
     )
-    burnable_land = np.clip(natural + 0.5 * rangeland, 0.0, 1.0)
+    temperature_memory = _antecedent(
+        temperature, 1.0 - np.exp(-1.0 / 24.0)
+    )
+    open_natural = natural * 10.0 / (canopy + 10.0)
+    cold_forest = (
+        natural
+        * canopy / (canopy + 8.0)
+        * _falling(temperature_memory, 1.0 / 3.0, 8.0)
+    )
+    humid_closed_canopy = (
+        _rising(temperature, 0.5, 20.0)
+        * _rising(annual_rain, 1.0 / 250.0, 1200.0)
+        * _rising(canopy, 1.0 / 3.0, 15.0)
+        * _rising(leaf_area, 2.0, 2.5)
+        * natural
+    )
+    canopy_access = np.exp(-4.0 * humid_closed_canopy)
+    burnable_land = np.clip(
+        (open_natural + cold_forest + 0.5 * rangeland) * canopy_access,
+        0.0,
+        1.0,
+    )
 
     trailing = np.empty_like(prediction, dtype=np.float64)
     for time in range(prediction.shape[0]):
