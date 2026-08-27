@@ -5220,3 +5220,20 @@ Tropical-open and productive-rangeland ratios improve, while intact tropical, bo
 arid ratios move by less than .0006. A future-input perturbation leaves the earlier prefix
 bit-exact. The equation is a bounded mechanistic candidate, but the step is too small for
 Optuna and requires a clean canonical reproduction before official evaluation.
+
+
+### Entry 170: boreal Asia needs managed-open contrast, not a forest brake
+
+BOAS burns only .485 times observed and has very weak spatial skill, but the missing-fire
+residual is negatively associated with closed organic-fuel states in every held block.
+This identifies insufficient managed/open event contrast rather than a generic need for
+more boreal capacity. A wet-organic shield superficially raises global Overall by at most
+.000032, yet lowers BOAS spatial skill from .12018 to .09355, worsens all four BOAS folds,
+collapses the global boreal ratio from 1.054 to .842, and costs BONA .0178.
+
+A bounded cold managed-residue event is ecologically safer and raises BOAS Overall from
+.60660 to .60778, but its best exact global gain is only .000028. It improves two held
+folds and 5 of 14 regions, while MIDE loses .00184. Both equations are rejected without
+canonical installation, tuning, or official evaluation. The diagnosis remains useful:
+the present frozen aggregate states do not identify a stable managed/open boreal regime
+well enough to repair BOAS without damaging closed forest or other regions.
