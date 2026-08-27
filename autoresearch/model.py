@@ -65,6 +65,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
+ 'event_clustering_w': 0.25,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
@@ -2261,6 +2262,45 @@ def _live_fuel_greenup_brake(
     return np.asarray(allocated, dtype=np.float32)
 
 
+def _fire_event_clustering(
+    prediction: np.ndarray,
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Concentrate a site's fire potential into connected fire events.
+
+    Once monthly hazard rises above its recent local background, fronts join
+    across contiguous cured fuels and burned area grows superlinearly. Below
+    that background, isolated ignitions remain small. A causal 12-month
+    running reference defines the transition, and a second running reference
+    conserves the site's fire potential instead of creating annual fire mass.
+    """
+    strength = float(max(p.get("event_clustering_w", 0.0), 0.0))
+    if "phenology" not in enabled or strength <= 0.0:
+        return prediction
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    hazard_state = np.asarray(hazard[0], dtype=np.float64).copy()
+    clustered = np.empty_like(hazard, dtype=np.float64)
+    for time in range(hazard.shape[0]):
+        hazard_state += alpha * (hazard[time] - hazard_state)
+        relative = np.clip(
+            hazard[time] / (hazard_state + 1e-8), 0.05, 20.0
+        )
+        clustered[time] = prediction[time] * np.power(relative, strength)
+
+    baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
+    clustered_state = clustered[0].copy()
+    allocated = np.empty_like(clustered)
+    for time in range(clustered.shape[0]):
+        baseline_state += alpha * (prediction[time] - baseline_state)
+        clustered_state += alpha * (clustered[time] - clustered_state)
+        allocated[time] = clustered[time] * baseline_state / (
+            clustered_state + 1e-12
+        )
+    return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2359,4 +2399,5 @@ def predict(
     prediction = _live_fuel_greenup_brake(
         prediction, data, fallback, enabled
     )
+    prediction = _fire_event_clustering(prediction, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
