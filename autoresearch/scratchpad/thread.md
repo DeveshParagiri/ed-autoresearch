@@ -5046,3 +5046,20 @@ warm-open recurrence, recurrent surface opportunity, cold-open thaw, and urban-t
 fragmentation. The remaining honest headroom exposed by these coarse interactions is only
 .00482 and is predominantly spatial allocation; there is no evidence for a universal new
 seasonal clock or an Optuna-worthy step.
+
+
+### Entry 159: turnover memory is not the cause of managed-open underburn
+
+A finite disturbance-age formulation uses a 24-month causal memory of absolute LUH2 state
+changes to limit warm, fuelled, continuous managed-open capacity. Every tested strength
+improves annual-log error in all four held blocks; at strength .5 it moves .842724 to
+.833033 and raises the sampled area ratio from .856 to .894. The identical capacity without
+transition memory is better at .827434 in every fold, however, so disturbance memory removes
+roughly 37% of the useful signal rather than explaining it.
+
+The transition-gated form also slightly worsens seasonal allocation. Its ecological moves
+are mixed but bounded: intact tropical, productive rangeland, and cropland underburn improve,
+while tropical open crosses from .981 to 1.032 and temperate closed from 1.017 to 1.064.
+The gain comes from broad managed-open capacity already covered by the failed recurrence
+and partitioned-closure families, not from land-use turnover. Neither form advances to an
+exact candidate, tuning, or official evaluation.
