@@ -17,6 +17,8 @@ from netCDF4 import Dataset
 from sklearn.linear_model import PoissonRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import SplineTransformer, StandardScaler
 from sklearn.tree import DecisionTreeRegressor, export_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -109,6 +111,7 @@ def main() -> int:
     duration_only = "--duration-only" in sys.argv
     event_only = "--event-only" in sys.argv
     broad_tree = "--broad-tree" in sys.argv
+    broad_gam = "--broad-gam" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -314,7 +317,7 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
-    if broad_tree:
+    if broad_tree or broad_gam:
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
         raw_fields = {name: extract(name) for name in model.INPUTS}
@@ -360,6 +363,76 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
+    if broad_gam:
+        selected_names = (
+            "incumbent",
+            "trailing_annual",
+            "fire_share",
+            "annual_precipitation:current",
+            "luh2_cropland_fraction:current",
+            "air_temperature:memory_24m",
+            "natural_vegetation_fraction:current",
+            "dryness:current",
+            "gpp:departure_3m",
+            "air_temperature:departure_3m",
+            "aboveground_biomass:current",
+            "lightning_flash_rate:memory_24m",
+            "monthly_precipitation:departure_24m",
+            "monthly_precipitation:memory_3m",
+            "luh2_rangeland_fraction:current",
+        )
+        name_to_index = {name: index for index, name in enumerate(names)}
+        selected = np.asarray([name_to_index[name] for name in selected_names])
+        out_of_fold = np.zeros_like(y)
+        fold_coefficients: list[np.ndarray] = []
+        for fold in range(3):
+            train = np.flatnonzero(folds != fold)
+            held = np.flatnonzero(folds == fold)
+            if train.size > 500_000:
+                train = rng.choice(train, size=500_000, replace=False)
+            regressor = make_pipeline(
+                SplineTransformer(
+                    n_knots=5,
+                    degree=3,
+                    knots="quantile",
+                    include_bias=False,
+                    extrapolation="linear",
+                ),
+                StandardScaler(),
+                PoissonRegressor(alpha=0.003, max_iter=800, tol=1e-8),
+            )
+            regressor.fit(
+                x[train][:, selected],
+                y[train],
+                poissonregressor__sample_weight=weights[train],
+            )
+            for start in range(0, held.size, 200_000):
+                batch = held[start : start + 200_000]
+                out_of_fold[batch] = regressor.predict(x[batch][:, selected])
+            fold_coefficients.append(
+                regressor.named_steps["poissonregressor"].coef_
+            )
+            print(
+                f"completed broad GAM fold={fold} train={train.size} held={held.size}",
+                flush=True,
+            )
+        correlations = np.corrcoef(np.asarray(fold_coefficients))
+        print(
+            "broad GAM coefficient correlation min="
+            f"{correlations[np.triu_indices(3, 1)].min():.4f}",
+            flush=True,
+        )
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                strength,
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"broad GAM OOF strength={strength}", candidate)
+        return 0
     if broad_tree:
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
