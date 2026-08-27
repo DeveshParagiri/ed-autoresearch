@@ -4718,3 +4718,18 @@ was removed from canonical `INPUTS` in the preceding commit because this mechani
 not need it and it must not be treated as an exclusive natural-cover fraction. No ML or
 GAM surface, regional coefficient, neighbour, invalid climate forcing, or future state
 enters the prediction path.
+
+
+### Entry 141: causal operating-point pruning finds no dead component
+
+An exact leave-one-component-out audit on the .717405 precursor finds all thirteen
+components positive. Removal costs range from .000224 for the dead-fuel pool and .000797
+for phenology through .003014 for rare ignition and .068286 for temperature. Removing
+dead fuel and phenology together costs .001617, more than their summed individual cost
+of .001020, so they are complementary rather than redundant.
+
+Both weak components trade magnitude against timing. Removing phenology improves RMSE
+and reduces arid and boreal overburn, but loses .002695 seasonal and .002237 spatial
+skill while deepening intact-tropical and crop underburn. The next justified change is
+to split its seasonal allocator from its green-up brake, not remove the component. No
+canonical pruning follows this audit.
