@@ -20,28 +20,24 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
-          'wind_speed_mean', 'vapor_pressure_deficit_mean',
-          'maximum_consecutive_dry_days', 'wet_day_fraction', 'aboveground_biomass',
+          'aboveground_biomass',
           'luh2_primary_fraction', 'lightning_flash_rate', 'soil_carbon',
           'leaf_area_index', 'natural_canopy_height', 'secondary_canopy_height',
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
-          'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction',
-          'population_density')
+          'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
-              'vpd')
+              'cropland', 'legacy', 'stubble', 'pasture', 'phenology')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
     'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
     'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
-    'seasonal_residual_w': {'type': 'float', 'low': 0.40, 'high': 1.60},
 }
 
 PARAMS = {'annual_scale': 0.9956870515976485,
- 'annual_residual_w': 0.7639511753318237,
- 'seasonal_residual_w': 0.9875939036594337,
+ 'annual_residual_w': 0.75,
+ 'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.7482273413045754,
  'annual_vpd_half': 1.7380558910922053,
@@ -52,7 +48,7 @@ PARAMS = {'annual_scale': 0.9956870515976485,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
- 'allocation_glm_w': 0.8563551223030834,
+ 'allocation_glm_w': 1.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -1026,6 +1022,471 @@ def _annual_propensity_correction(
     return prediction * correction[None, ...]
 
 
+
+_COUPLED_ANNUAL_DRIVERS = (
+    "dryness", "annual_precipitation", "monthly_precipitation", "air_temperature",
+    "gpp", "aboveground_biomass", "soil_carbon", "leaf_area_index",
+    "natural_canopy_height", "secondary_canopy_height",
+    "natural_vegetation_fraction", "secondary_vegetation_fraction",
+    "lightning_flash_rate", "luh2_cropland_fraction", "luh2_pasture_fraction",
+    "luh2_rangeland_fraction", "luh2_primary_fraction",
+    "luh2_secondary_fraction", "luh2_urban_fraction",
+)
+_COUPLED_ANNUAL_STATIC = {
+    "annual_precipitation", "luh2_cropland_fraction", "luh2_pasture_fraction",
+    "luh2_rangeland_fraction", "luh2_primary_fraction",
+    "luh2_secondary_fraction", "luh2_urban_fraction",
+}
+_COUPLED_ANNUAL_COEFFICIENTS = np.asarray((
+    0.246466443790, -0.476229779858, -1.12735543323, -0.614900384368, 0.236850964152,
+    0.705664252899, 0.551356794819, 0.562623480246, 2.70541633389, -0.0356181519258,
+    -0.0515023670421, 0.798927073386, -0.382637461780, -0.393110168624, 3.11034646116,
+    -0.125740208603, -0.114968084928, -3.49366140604, -0.0347577139745, -0.0431263755626,
+    0.378344059089, -0.0347591372986, -0.0431278413778, 0.378336606268, 0.0853733882942,
+    0.0875034972308, 0.795458101888, -0.0823549173879, -0.118235571840, -0.0239173560126,
+    0.0415858811461, 0.0422111627846, 0.336989299334, 0.340683916759, 0.263744335258,
+    2.66531125649, 0.786680752966, 3.00449675940, -0.653198813315, 0.453462353061,
+    0.402325754141, 1.53481715048, -0.357793617062, -0.168984134716, -1.39897169135,
+    0.321028913289, 0.321879167262, 18.0655306923, 0.0584571169751, 0.0596786792172,
+    -20.9261659070, -0.0230997114738, -0.0232028338185, 44.0431542047, -0.296041297718,
+    -0.296199548082, -39.5270847350, -0.184376453806, -0.189530437298, 0.986669017964,
+    -0.0218742314155, -0.0311291678392, 2.76294177176, -0.291948041706, -0.283968500227,
+    -19.9225463389, 0.416428264461, 0.421393924434, 5.10792918990, -0.103133580626,
+    -0.120768119142, 0.766308079452, -0.00902423794335, 0.00556162225860, -2.49312772501,
+    -0.0694296655280, -0.0884576800587, 1.35072183008, -0.137172961897, -0.148602019280,
+    -0.368407982247, -0.522221148313, -0.555745406986, -1.99178493305, -0.251948485494,
+    -0.259959861804, 13.7518049266, -0.00653254520243, -0.00762227761722, 5.10569628694,
+    1.22805481084, 1.34869982621, -1.45294709037, 0.0378929722022, 0.0370908078669,
+    9.68556395402, -0.0454671524383, -0.0441131716953, -14.4605972287, 0.160079276284,
+    0.159981417558, 11.9352201230, -0.104027476346, -0.105099027013, 2.25808075995,
+    -0.0841966483469, -0.116461857297, 0.301309262132, 0.0147884780591, 0.0240642653776,
+    -2.25697496000, 0.306683299865, 0.335157208092, 0.965283275497, -0.175562201380,
+    -0.177950025367, -0.871819711935, 0.0234026741133, 0.0197991564994, 0.697765640448,
+    0.00225685369651, 0.00225685369652, 0.00000000000, 0.0354013905251, 0.0276541059422,
+    1.31456059049, -0.00982120299406, -0.00976582448346, -0.128392089138, 0.0269095386431,
+    0.0272848583300, 0.310139693491, 0.00225685367546, 0.00225685367546, 0.00000000000,
+    0.0245951732305, 0.0246227168835, 0.543880139949, 0.0122721827052, 0.0127246942982,
+    -0.0908107212718, 0.193994347579, 0.197297790885, 0.637951581846, -0.0180364355387,
+    -0.0201241312395, 0.397421406060, -0.0191884493423, -0.0191771587093, -17.2621802489,
+    -0.126414153802, -0.133768245038, 1.54695839014, 0.0187483727572, 0.0184009064023,
+    16.8029280366, 0.0415971101238, 0.0415971101237, 0.00000000000, 0.0122019025583,
+    0.0123387344856, -1.37553105753, 0.0979919919393, 0.148406343956, -0.0217526464619,
+    0.199880689685, 0.00000000000, 0.199880689685, -0.0273768893976, -0.0274324466305,
+    33.2317022141, 0.0238076718413, 0.0202931721517, 0.0139503628502, 0.237521714860,
+    0.343244654934, 0.0260771729186, -0.0271540192792, -0.233544393025, -0.0324490496535,
+    0.0526063848952,
+), dtype=np.float64)
+
+
+def _coupled_land(data: Mapping[str, np.ndarray]) -> np.ndarray:
+    """Derive the local land domain without coordinates or neighbour state."""
+    return (
+        (np.asarray(data["annual_precipitation"]).max(axis=0) > 0.0)
+        | (np.asarray(data["air_temperature"]).max(axis=0) != 0.0)
+        | (np.asarray(data["natural_vegetation_fraction"]).max(axis=0) > 0.0)
+        | (np.asarray(data["secondary_vegetation_fraction"]).max(axis=0) > 0.0)
+    )
+
+
+def _coupled_annual_correction(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Calibrate annual fire opportunity using only 1850-compatible local state."""
+    strength = float(np.clip(p.get("annual_residual_w", 0.0), 0.0, 1.5))
+    if "fuel" not in enabled or strength <= 0.0:
+        return prediction
+
+    cycle = np.asarray(prediction, dtype=np.float64).reshape(16, 12, 180, 360)
+    incumbent = cycle.mean(axis=0).sum(axis=0)
+    log_current = np.log10(incumbent + 1e-6)
+    coefficients = _COUPLED_ANNUAL_COEFFICIENTS
+    index = 0
+    residual = np.full((180, 360), 5.055400062066274, dtype=np.float64)
+
+    def add(values: np.ndarray) -> None:
+        nonlocal index, residual
+        residual += coefficients[index] * values
+        index += 1
+
+    add(log_current)
+    for threshold in (-5.0, -4.0, -3.0, -2.0, -1.0):
+        add(np.maximum(log_current - threshold, 0.0))
+
+    land = _coupled_land(data)
+    summaries: dict[str, dict[str, np.ndarray]] = {}
+    for name in _COUPLED_ANNUAL_DRIVERS:
+        climatology = np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=0)
+        raw = {
+            "mean": climatology.mean(axis=0),
+            "std": climatology.std(axis=0),
+            "p10": np.quantile(climatology, 0.10, axis=0),
+            "p90": np.quantile(climatology, 0.90, axis=0),
+        }
+        if name in _COUPLED_ANNUAL_STATIC:
+            raw = {"mean": raw["mean"]}
+        summaries[name] = {}
+        for statistic, values in raw.items():
+            selected = values[land]
+            center = np.median(selected)
+            scale = np.quantile(selected, 0.75) - np.quantile(selected, 0.25)
+            z = np.clip((values - center) / (scale + 1e-8), -4.0, 4.0)
+            summaries[name][statistic] = z
+            add(z)
+            add(np.maximum(z, 0.0))
+            add(np.minimum(z, 0.0))
+
+    for left, left_stat, right, right_stat in (
+        ("monthly_precipitation", "std", "air_temperature", "p10"),
+        ("monthly_precipitation", "std", "aboveground_biomass", "p10"),
+        ("monthly_precipitation", "mean", "gpp", "mean"),
+        ("monthly_precipitation", "p10", "dryness", "mean"),
+        ("air_temperature", "std", "gpp", "mean"),
+        ("leaf_area_index", "std", "dryness", "mean"),
+        ("lightning_flash_rate", "mean", "aboveground_biomass", "mean"),
+        ("luh2_cropland_fraction", "mean", "luh2_secondary_fraction", "mean"),
+        ("luh2_rangeland_fraction", "mean", "aboveground_biomass", "mean"),
+        ("soil_carbon", "mean", "air_temperature", "p10"),
+    ):
+        add(summaries[left][left_stat] * summaries[right][right_stat])
+
+    if index != coefficients.size:
+        raise RuntimeError(
+            f"coupled annual basis mismatch: {index} != {coefficients.size}"
+        )
+    correction = np.exp(strength * np.clip(residual, -5.0, 5.0))
+    return prediction * correction[None, ...]
+
+
+_COUPLED_SEASONAL_DYNAMIC = (
+    "monthly_precipitation", "dryness", "air_temperature", "gpp",
+    "leaf_area_index", "secondary_vegetation_fraction",
+    "secondary_canopy_height", "soil_carbon", "lightning_flash_rate",
+    "aboveground_biomass", "natural_canopy_height",
+)
+_COUPLED_SEASONAL_STATIC = (
+    "annual_precipitation", "air_temperature", "gpp", "aboveground_biomass",
+    "soil_carbon", "leaf_area_index", "luh2_primary_fraction",
+    "luh2_secondary_fraction", "luh2_cropland_fraction",
+    "luh2_rangeland_fraction", "luh2_pasture_fraction", "lightning_flash_rate",
+)
+_COUPLED_SEASONAL_COEFFICIENTS = np.asarray((
+    -0.0428385121232, 1.38365053008, 1.96953995191, 1.40257814507, 0.446958437798,
+    -1.79688575897, -1.37961053551, -0.181419433822, -0.433213290461, 0.0114823906180,
+    -0.111372506157, -0.139240814516, -0.207467236723, -0.00378806040935, -0.0786747355629,
+    -0.179496338312, -0.154570993215, -0.0861336037050, -0.0497796661818, -0.0414686077139,
+    -0.0861325412265, 0.296531440349, 0.00000642089218347, -0.0220108193530, -0.0811222475667,
+    -0.0119477469485, -0.0721455869581, 0.0204351730741, 0.0575388839364, 0.153449308279,
+    0.211395740692, 0.0337912576093, 0.100278802223, -0.143780428593, -0.0291023654181,
+    0.339832334890, 0.146534324808, 0.0906370296756, 0.350646236331, -0.197676745798,
+    0.0324675120239, -0.0652066445585, 0.148851355365, -0.211539300383, -0.0251872499669,
+    -0.0727355607054, 0.0291098259675, -0.127327724455, 1.03784134877, -0.0493529130641,
+    0.0128201728136, 0.0270013369633, -0.0784370678921, 0.0784202123882, 0.00587718339113,
+    0.0652234014936, 0.0189749246124, 0.465850942064, -0.121359511086, -0.000102625502488,
+    -0.166657705545, -0.105958878584, 0.125095735020, -0.0392765891141, 0.366922677330,
+    0.502925985272, -0.345905532766, -0.00755165830078, -0.0129985363756, 0.0275317638276,
+    -0.0297676508073, 0.0125510967164, -0.0128118096881, 0.0734103755367, -0.168413872362,
+    0.0499196410292, -0.00492161568662, 0.00391728223845, -0.0464025194773, -0.00848175994431,
+    0.0251070017791, 0.0301762724190, 0.0814080418567, -0.00965768262580, 0.177851891619,
+    1.23028686940, -0.0350769059969, -0.0445929378951, -0.0706129917293, -0.0286101850477,
+    -0.0401837440932, 0.0807900308191, -0.160848047187, 0.123251802003, 0.0248598844482,
+    -0.00760530284562, 0.150989898585, -0.0695769073883, 0.0339439994149, -0.00816275988934,
+    0.132308225955, 0.0293995814963, -0.100794292522, 0.0136652442212, 0.0127833526174,
+    0.0179808293669, -0.0142772431037, 0.0530972457424, 0.0116424799269, -0.0566134135117,
+    -0.0450368635098, 0.0945491803170, -0.0757612101236, -0.586981182461, 0.0455568021763,
+    0.0455860806688, -0.0552577296680, 0.110676289981, -0.168463324674, 0.0684003637253,
+    0.00742059389494, 0.0205137934297, -0.00816717249145, -0.0566733395647, 0.00459979813359,
+    -0.0157736073924, 0.0670109946139, 0.0522430801635, 0.0137846134557, 0.0436782223507,
+    0.0124992482976, 0.00504298334222, -0.00402886986335, -0.0899633830278, 0.000988361587326,
+    -0.0380417783682, 0.00299874692816, 0.0541477670063, -0.0217561574868, -0.0215955970895,
+    0.160938430268, -0.0354282758631, 0.143618259091, -0.00157203842784, -0.0902052260174,
+    -0.0375754655851, 0.0212559991948, -0.0672029434904, -0.0334118061835, 0.0231986309269,
+    0.0137954186482, 0.0165381911307, 0.100971436879, 0.0493340072561, -0.0180063356376,
+    -0.0179948051907, -0.0357251161809, 0.000976117071339, -0.00643956929433, -0.0253421811903,
+    0.0296288816874, -0.000215408448896, -0.0716673723744, 0.0333610568263, 0.226897408720,
+    -0.237296195996, -0.157855255410, 0.213197934205, -0.166893805452, 0.0563228480357,
+    0.185590457949, 0.509468539335, 0.00000000000, -0.0230634858376, 0.0159070326951,
+    -0.0160026182243, 0.0348763505911, 0.0282949155983, 0.0250314845406, -0.00456055082362,
+    -0.0427448858095, -0.0256485191511, 0.00000000000, 0.00944565815409, 0.0122854069459,
+    -0.0243881889774, -0.0356282486620, -0.0103644931816, -0.00557022209055, 0.00826784663674,
+    0.0158072381890, 0.0417354425773, 0.128576092710, -0.0112113269774, 0.0310163252269,
+    -0.0136761859344, -0.0219203823935, 0.0859390314445, -0.0365206115369, -0.000558218219707,
+    0.0199782599970, -0.00946650546907, 0.0153466741821, -0.0186472034329, 0.101793785896,
+    -0.350199093642, 0.0454136240907, 0.00480977630119, -0.0127732479738, 0.0656087195286,
+    0.0299836658093, 0.0342720884838, 0.0128955217170, 0.403630559123, 0.0892338813901,
+    0.0286601194026, -0.179465299287, -0.0547899995888, -0.00849080983221, -0.00900831533066,
+    0.0507731573816, -0.00910829371446, 0.0431202022446, 0.00471133122216, 0.0865627294285,
+    0.0331886615967, -0.00718709439391, -0.101367535607, -0.00438709705185, 0.375393699936,
+    -0.0722012977652, 0.0566304025608, 0.0303401220518, -0.0783281486041, -0.0598449833478,
+    -0.0407406002338, -0.0120925862197, 0.177529298677, -0.0141443714162, -0.0126776802509,
+    0.0836513157120, 0.0267552802878, -0.00881799630622, -0.0218124859650, 0.0272081569253,
+    0.0233487087115, 0.0237867605969, -0.0256214408953, 0.0568874124138, 0.0206756546093,
+    0.00518186152927, 0.0424116269840, 0.207563980742, -0.0151226494927, -0.273203532456,
+    0.919668651157, 0.551583920893, -1.19556601681, 0.253603754867, 0.259498944071,
+    -0.358374276447, -0.362983175855, 0.792516504467, 0.0869026858848, -1.33892755715,
+    -1.26827682142, -0.913884464340, 1.77006333936, 1.76839584104, 1.94974763410,
+    -0.863343769206, -0.621981701677, 0.703208084422, 0.616151845264, 0.211498734938,
+    0.405695441396, -0.195115744344, -0.198728675362, 0.167651680242, -0.207855693880,
+    0.0214519339552, -0.524964989221, -0.442125440794, 3.13214888925, -2.86423817185,
+    -0.944816971198, -0.978556725232, 1.79797105718, 0.120094387033, 0.171894311343,
+    0.285724385719, -0.162297537716, -0.214562998602, -0.852066460949, 0.296431205801,
+    0.220824981057, -0.308277656958, -0.862639332011, 0.836871460849, -1.71955074732,
+    1.07917242601, 0.329123134314, -0.679364932887, 0.0173213459765, -0.979420314205,
+    -0.476530559980, 0.152313845607, 0.0946467725901, -0.209373235801, -0.0235071974527,
+    0.0231779497793, -0.250689237026, 0.0102830404498, 0.461793869502, 0.0258733519551,
+    -0.177824567613, 0.00170981992713, -0.428259701768, -0.0223402996142, -0.142219939891,
+    -0.0165316144346, 0.411009848328, -0.0139053075142, 0.0527764248981, -0.0135747956284,
+    0.600486480518, -0.0000541489830733, 0.142176870314, -0.000129112778248, -0.954583652603,
+    -0.00000326677226337, -0.379163054527, 0.000198379421249, -0.109286324039, -0.000199648427434,
+    0.0538890805901, -0.000194344716621, 0.0236630174506, 0.0103263349199, 0.256136691473,
+    0.0159239393502, 0.0161855129533, 0.0167794318013, 1.05762772189, -0.0509386539288,
+    -1.41142120791, -0.00666283574313, -0.738229032478, -0.0212242022879, -0.0894042979686,
+    -0.300962668704, -0.306676758849, -0.364285548133, 1.17336566541, 0.0310062760238,
+    0.0321250605813, 0.511142560099, -1.23491785798, 0.0682606668933, -0.577942729197,
+    0.789314779973, -0.878149243887, -0.0752831497594, -0.626334407101, -0.0588297647056,
+    0.550267978766, 0.0642383234327, 1.05149722852, 0.141080739683, 1.34969392457,
+    0.157971672900, -0.469810671326, 0.126880108565, -0.150653590679, -0.157821115527,
+    -0.424925771635, -0.174583218714, -0.0190405955842, -0.120801816721, -0.306048963701,
+    0.305796575116, 0.155649735132, 0.295012635714, 0.808644915463, -0.0949902896040,
+    0.266845004430, 0.0597324461202, -0.0806861774101, 0.0000496949315639, -0.656013552737,
+    -0.000663678419393, 0.0569704131430, 0.0204176047378, 1.34172213843, -0.266256780479,
+    1.06029359801, 0.0855425815932, 0.205327743419, 0.0234603762187, -0.186435531108,
+    0.0218150875085, -0.494702283381, 0.0592718724927, 0.0197124245364, 0.0317731569204,
+    0.656168422313, -0.154337702356, -0.230296035844, -0.107501986491, -0.130510988832,
+    -0.0362871778135, -0.0334518465335, -0.0525638846913, 0.380246569236, -0.0285616398989,
+    0.264863083235, 0.0541921850371, -0.965228215258, 0.0924217519647, 1.41049489475,
+    -0.0160387551250, -0.0929217802727, 0.0294088955021, -0.0114312950518, -0.0902388660695,
+    0.0106069442857, -0.0713267626927, -0.0141272819021, -0.000688155072119, -0.0116204665441,
+    -0.0875053131479, 0.143743152316, 0.0423444439493, -0.126289103280, 0.110554575080,
+    -0.0278300179775, 0.0290449314162, -0.00266586338876, 0.0945082197645, -0.0278366989439,
+    0.0577262723149, -0.00544270180655, -0.00495350153766, 0.00104901970560, -0.0598117624333,
+    -0.0150366014437, 0.00885076670540, -0.0125339362175, 0.000338936083677, 0.0499956652058,
+    0.0992502630785, -0.00752990639337, -0.0395793706572, -0.0189622305570, -0.0535576104386,
+    0.0123123520276, -0.0364548919974, -0.00233765803371,
+), dtype=np.float64)
+
+
+def _coupled_seasonal_allocation(
+    current: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Allocate fire seasonally from pointwise weather and vegetation phenology."""
+    strength = float(np.clip(p.get("allocation_glm_w", 0.0), 0.0, 2.0))
+    if "phenology" not in enabled or strength <= 0.0:
+        return current
+
+    coefficients = _COUPLED_SEASONAL_COEFFICIENTS
+    index = 0
+    eta = np.zeros_like(current, dtype=np.float64)
+
+    def add(values: np.ndarray) -> None:
+        nonlocal index, eta
+        eta += coefficients[index] * values
+        index += 1
+
+    add(np.log(current + 1e-6))
+    add(np.sqrt(current))
+    for threshold in (0.03, 0.06, 0.10, 0.16, 0.24):
+        add(np.maximum(current - threshold, 0.0))
+
+    month = np.arange(12, dtype=np.float64)[:, None, None]
+    angle = 2.0 * np.pi * month / 12.0
+    harmonics = {
+        "sin1": np.sin(angle), "cos1": np.cos(angle),
+        "sin2": np.sin(2.0 * angle), "cos2": np.cos(2.0 * angle),
+        "sin3": np.sin(3.0 * angle), "cos3": np.cos(3.0 * angle),
+    }
+    for wave in harmonics.values():
+        add(wave)
+
+    cycles: dict[str, np.ndarray] = {}
+    anomalies: dict[str, np.ndarray] = {}
+    means: dict[str, np.ndarray] = {}
+    for name in dict.fromkeys(
+        _COUPLED_SEASONAL_DYNAMIC + _COUPLED_SEASONAL_STATIC
+    ):
+        cycle = np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=0)
+        mean = cycle.mean(axis=0)
+        cycles[name] = cycle
+        means[name] = mean
+        anomalies[name] = np.clip(
+            (cycle - mean[None, ...]) / (cycle.std(axis=0)[None, ...] + 1e-6),
+            -4.0,
+            4.0,
+        )
+
+    previous: dict[str, np.ndarray] = {}
+    for name in _COUPLED_SEASONAL_DYNAMIC:
+        value = anomalies[name]
+        previous[name] = np.roll(value, 1, axis=0)
+        add(cycles[name])
+        add(value)
+        add(previous[name])
+        add(np.maximum(value, 0.0))
+        add(np.minimum(value, 0.0))
+        for threshold in (-1.5, -0.75, 0.75, 1.5):
+            add(np.maximum(value - threshold, 0.0))
+
+    land = _coupled_land(data)
+    gates: dict[str, np.ndarray] = {}
+    for name in _COUPLED_SEASONAL_STATIC:
+        selected = means[name][land]
+        center = np.median(selected)
+        scale = np.quantile(selected, 0.75) - np.quantile(selected, 0.25)
+        gate = np.clip((means[name] - center) / (scale + 1e-6), -4.0, 4.0)[
+            None, ...
+        ]
+        gates[name] = gate
+        add(gate)
+
+    for driver in (
+        "monthly_precipitation", "air_temperature", "gpp", "leaf_area_index",
+        "secondary_vegetation_fraction", "secondary_canopy_height",
+        "soil_carbon", "lightning_flash_rate",
+    ):
+        for gate in (
+            "annual_precipitation", "gpp", "aboveground_biomass",
+            "luh2_primary_fraction", "luh2_cropland_fraction",
+            "luh2_rangeland_fraction", "soil_carbon", "leaf_area_index",
+            "luh2_secondary_fraction", "lightning_flash_rate",
+        ):
+            add(anomalies[driver] * gates[gate])
+
+    for wave in harmonics.values():
+        for gate in (
+            "annual_precipitation", "air_temperature", "gpp",
+            "aboveground_biomass", "luh2_primary_fraction",
+            "luh2_cropland_fraction", "luh2_rangeland_fraction",
+            "lightning_flash_rate",
+        ):
+            add(wave * gates[gate])
+
+    for driver in (
+        "monthly_precipitation", "dryness", "air_temperature", "gpp",
+        "leaf_area_index", "secondary_vegetation_fraction",
+        "secondary_canopy_height", "soil_carbon", "lightning_flash_rate",
+    ):
+        for threshold in (0.02, 0.05, 0.08, 0.13, 0.20, 0.30):
+            add(anomalies[driver] * np.maximum(current - threshold, 0.0))
+
+    for left, right in (
+        ("dryness", "gpp"),
+        ("air_temperature", "monthly_precipitation"),
+        ("monthly_precipitation", "gpp"),
+        ("leaf_area_index", "dryness"),
+        ("lightning_flash_rate", "dryness"),
+        ("secondary_vegetation_fraction", "dryness"),
+        ("secondary_canopy_height", "dryness"),
+    ):
+        add(anomalies[left] * anomalies[right])
+
+    for driver in (
+        "monthly_precipitation", "dryness", "air_temperature", "gpp",
+        "leaf_area_index", "aboveground_biomass", "soil_carbon",
+        "secondary_canopy_height", "natural_canopy_height",
+    ):
+        for threshold in (0.02, 0.05, 0.08, 0.13, 0.20, 0.30):
+            opportunity = np.maximum(current - threshold, 0.0)
+            add(previous[driver] * opportunity)
+            add(cycles[driver] * opportunity)
+
+    for driver in (
+        "monthly_precipitation", "gpp", "leaf_area_index", "aboveground_biomass",
+    ):
+        for gate in (
+            "annual_precipitation", "gpp", "aboveground_biomass",
+            "luh2_primary_fraction", "luh2_cropland_fraction", "soil_carbon",
+            "leaf_area_index",
+        ):
+            add(previous[driver] * gates[gate])
+
+    for antecedent, current_driver in (
+        ("gpp", "monthly_precipitation"),
+        ("air_temperature", "gpp"),
+        ("monthly_precipitation", "dryness"),
+        ("leaf_area_index", "dryness"),
+        ("aboveground_biomass", "dryness"),
+        ("soil_carbon", "dryness"),
+        ("secondary_canopy_height", "dryness"),
+        ("natural_canopy_height", "dryness"),
+        ("lightning_flash_rate", "dryness"),
+    ):
+        add(previous[antecedent] * anomalies[current_driver])
+
+    if index != coefficients.size:
+        raise RuntimeError(
+            f"coupled seasonal basis mismatch: {index} != {coefficients.size}"
+        )
+    learned = np.exp(np.clip(strength * eta, -30.0, 30.0))
+    return learned / (learned.sum(axis=0, keepdims=True) + 1e-12)
+
+
+def _coupled_valid_closure(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Separate annual capacity and seasonal timing without cross-cell state."""
+    monthly = np.asarray(prediction).reshape(16, 12, 180, 360)
+    hazard = -np.log1p(-np.clip(monthly, 0.0, 1.0 - 1e-7))
+    total_hazard = hazard.sum(axis=1, keepdims=True)
+    allocation = hazard / (total_hazard + 1e-12)
+    annual_burn = monthly.sum(axis=1, keepdims=True)
+
+    if "fuel" in enabled and p.get("annual_intact_w", 0.0) > 0.0:
+        biomass = np.clip(data["aboveground_biomass"], 0.0, None).reshape(
+            16, 12, 180, 360
+        ).mean(axis=1, keepdims=True)
+        primary = np.clip(data["luh2_primary_fraction"], 0.0, 1.0).reshape(
+            16, 12, 180, 360
+        ).mean(axis=1, keepdims=True)
+        intact_brake = 1.0 - primary * biomass / (
+            biomass + p["annual_intact_half"] + 1e-12
+        )
+        intact_brake = np.clip(intact_brake, 1e-4, None)
+        weight = annual_burn * _CELL_AREA
+        center = np.exp(
+            (np.log(intact_brake) * weight).sum() / (weight.sum() + 1e-12)
+        )
+        target = annual_burn * np.power(
+            intact_brake / (center + 1e-12), p["annual_intact_w"]
+        )
+        target *= weight.sum() / ((target * _CELL_AREA).sum() + 1e-12)
+        annual_burn = np.clip(target, 0.0, 11.5)
+
+    annual_burn = np.clip(
+        annual_burn * p.get("annual_scale", 1.0), 0.0, 11.5
+    )
+    lam = total_hazard.copy()
+    for _ in range(8):
+        survival = np.exp(-lam * allocation)
+        produced = (1.0 - survival).sum(axis=1, keepdims=True)
+        slope = (allocation * survival).sum(axis=1, keepdims=True)
+        lam = np.clip(
+            lam - (produced - annual_burn) / (slope + 1e-12), 0.0, 1e4
+        )
+    baseline = 1.0 - np.exp(-lam * allocation)
+    baseline_cycle = baseline.mean(axis=0)
+    current = baseline_cycle / (
+        baseline_cycle.sum(axis=0, keepdims=True) + 1e-12
+    )
+    learned = _coupled_seasonal_allocation(current, data, p, enabled)
+    calibrated = annual_burn * learned[None, ...]
+    return np.asarray(np.clip(calibrated, 0.0, 1.0), dtype=np.float32).reshape(
+        prediction.shape
+    )
+
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -1121,6 +1582,6 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
-    prediction = _annual_seasonal_closure(prediction, data, fallback, enabled)
-    prediction = _annual_propensity_correction(prediction, data, fallback, enabled)
+    prediction = _coupled_valid_closure(prediction, data, fallback, enabled)
+    prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
