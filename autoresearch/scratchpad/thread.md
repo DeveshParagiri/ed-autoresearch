@@ -4686,3 +4686,19 @@ The prepared LUH2 secondary field is near one across almost all evaluator land a
 six aggregate LUH fields do not sum to one, so these higher results are ineligible.
 They are retained as falsification evidence only; the same equation must be rerun with
 a valid natural-cover share before canonical promotion.
+
+
+### Entry 139: primary-only rare onset is eligible at .717564
+
+The squared rain-establishment source was rerun with two valid natural-share choices.
+ED natural plus secondary vegetation reaches .717478. LUH2 primary divided smoothly by
+primary plus managed cover reaches **.717564**, a +.000158 exact step, with bias .754840,
+RMSE .546218, seasonal .861309, and spatial .879234. Seven of fourteen regions improve
+and a future-half perturbation leaves the first 96 months bit-identical.
+
+The eligible ratios remain bounded: intact tropical closed .909, temperate closed 1.060,
+boreal 1.059, tropical open 1.075, productive rangeland 1.050, crop .925, and arid
+low-fuel 1.311 times observed. The equation uses one global .003 source scale and
+`[A/(A+250)]^2 exp(-A/3000)` fuel establishment for `A = 12 EMA12(rain)`. The step is
+small but physically distinct and safe enough for canonical installation; it does not
+justify Optuna.
