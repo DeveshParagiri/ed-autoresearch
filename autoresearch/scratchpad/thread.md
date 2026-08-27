@@ -5361,3 +5361,21 @@ after the local footprint, .717428 after annual closure, and .716901 at the end.
 capacity substantially improves BONA and the tropical Americas but costs Australia,
 NHAF, and SHAF, revealing a strong geographic compensation rather than a better global
 mechanism. No canonical edit, tuning, or official evaluation follows.
+
+
+### Entry 179: current residual headroom is small and mostly incumbent feedback
+
+On 2,235 whole held cells carrying 85% of observed fire, a depth-two learner with prior
+incumbent-fire state reaches exact **.726371**, +.007376 over the pinned model. The gain is
+not physical: intact tropical, temperate closed, productive rangeland, and crop ratios rise
+to 1.303, 1.333, 1.394, and 1.326. Dominant rules cross previous fire with dryness,
+lightning, and secondary cover, relearning the already tested conditional-return family.
+
+Removing every incumbent-fire feature leaves an exogenous-only OOF ceiling of **.722923**,
+only +.003928, with 10 of 14 regions but residual compensation in tropical open, managed,
+and arid systems. Stable annual interactions reduce to dryness reliability, managed-open
+thermal carrying, secondary-open ignition, and primary-canopy continuity, all substantially
+covered by active mechanisms. Stable seasonal interactions reduce to post-growth curing,
+rain deficit, and ignition-limited surface fire; their causal centered corrections lower
+exact Overall to .718577 or worse. ML therefore identifies no new high-leverage mechanism
+and remains diagnostic only; Optuna and official evaluation are not justified.
