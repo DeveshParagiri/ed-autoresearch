@@ -5143,3 +5143,18 @@ and boreal overburn; removing background storage gains .000012965 while raising 
 Every other managed, crop, surface, litter, footprint, closure, pathway, and recurrence
 subterm is load-bearing. No prune clears the threshold for canonical release, tuning, or
 official evaluation.
+
+
+### Entry 165: multi-year rain and GPP memory add no stable information
+
+On 2,235 whole held cells carrying 85.00% of observed-fire weight, adding seventeen
+24-, 36-, and 60-month rain/GPP memories and finite stocks to the same short-state learner
+changes annual-residual OOF MAE from .449092 to .448849. Two folds improve and two worsen;
+the best blended score leverage is virtually identical with or without the long states.
+
+A wet-open fuel carryover source improves aggregate annual loss but worsens one fold,
+seasonal allocation, tropical-open fire, and intact-closed fire. A drought-deadwood source
+is positive in all four folds only at microscopic scale, while two direct drought-continuity
+brakes are flat or harmful. All equations are prefix-exact. The multi-year family adds no
+stable mechanism beyond the incumbent short memories and finite fuel banks, so it receives
+no exact candidate, tuning, or official evaluation.
