@@ -53,6 +53,7 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> Non
 
 
 def main() -> int:
+    absolute_target = "--absolute" in sys.argv
     model = load_model()
     data = load_inputs(model.INPUTS)
     incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
@@ -222,13 +223,25 @@ def main() -> int:
             )
 
     x = np.column_stack(columns).astype(np.float64)
-    target_rows = observed_alloc[months, rows, cols]
-    offset = incumbent_rows + 1e-4
+    target_rows = (
+        observed_cycle[months, rows, cols]
+        if absolute_target
+        else observed_alloc[months, rows, cols]
+    )
+    offset = (
+        incumbent_cycle[months, rows, cols]
+        if absolute_target
+        else incumbent_rows
+    ) + 1e-4
     y = target_rows / offset
-    weights = np.repeat(
-        observed_annual[cell_rows, cell_cols] + float(observed_annual.mean()) * 0.01,
-        12,
-    ) * offset
+    if absolute_target:
+        weights = offset + float(offset.mean()) * 0.02
+    else:
+        weights = np.repeat(
+            observed_annual[cell_rows, cell_cols]
+            + float(observed_annual.mean()) * 0.01,
+            12,
+        ) * offset
     x_mean = np.average(x, axis=0, weights=weights)
     x_scale = np.sqrt(
         np.average(np.square(x - x_mean), axis=0, weights=weights)
@@ -244,8 +257,13 @@ def main() -> int:
         learned[months, rows, cols] = offset * np.power(
             np.clip(ratio, 1e-6, 1e6), strength
         )
-        learned /= learned.sum(axis=0, keepdims=True) + 1e-12
-        prediction = np.tile(incumbent_annual[None, ...] * learned, (16, 1, 1))
+        if absolute_target:
+            prediction = np.tile(learned, (16, 1, 1))
+        else:
+            learned /= learned.sum(axis=0, keepdims=True) + 1e-12
+            prediction = np.tile(
+                incumbent_annual[None, ...] * learned, (16, 1, 1)
+            )
         return prediction.astype(np.float32)
 
     rng = np.random.default_rng(479)
