@@ -2392,14 +2392,14 @@ def _dead_fuel_pool_response(
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
-    """Track a causal litter pool produced by vegetation curing.
+    """Track distinct causal herbaceous and woody litter pools.
 
-    Monthly productivity first enters live fuel. When GPP and leaf area fall
-    below their recent reservoirs, a fraction transfers into dead fine fuel.
-    That pool decomposes continuously, remains unavailable while wet, and is
-    consumed by fire. The resulting combustible stock reallocates a site's
-    existing fire potential toward months when accumulated litter has cured;
-    it does not use a completed climatology or create an external fuel source.
+    Herbaceous litter follows rapid GPP and leaf-area curing on open land.
+    Woody litter accumulates slowly under biomass and canopy, but becomes
+    burnable only during mature drought with anomalous warmth and lightning.
+    Warm wet conditions accelerate decomposition in both stores; cold or dry
+    conditions preserve litter between years. Fire consumes each available
+    pool. The response is causal, site-local, and uses one global equation.
     """
     if "dead_fuel_pool" not in enabled:
         return prediction
@@ -2432,21 +2432,88 @@ def _dead_fuel_pool_response(
         np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
     )
     rain_memory = _antecedent(rain, 1.0 - np.exp(-1.0 / 6.0))
+    rain_long = _antecedent(rain, 1.0 - np.exp(-1.0 / 12.0))
     drying = np.maximum(
         (rain_memory - rain) / (rain_memory + rain + 10.0), 0.0
+    )
+    mature_drought = np.maximum(
+        (rain_long - rain) / (rain_long + rain + 10.0), 0.0
     )
     dryness = np.clip(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     combustion = drying * dryness / (dryness + 500.0)
 
-    stock = np.asarray(production[0], dtype=np.float64).copy()
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    open_cover = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
+    )
+    woody_cover = natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_memory = _antecedent(
+        temperature, 1.0 - np.exp(-1.0 / 12.0)
+    )
+    warm = _rising(temperature, 1.0 / 4.0, 15.0)
+    warm_anomaly = _rising(temperature - temperature_memory, 1.0 / 2.0, 3.0)
+    wet = rain / (rain + rain_memory + 10.0)
+    decomposition = decay * (0.25 + 1.5 * warm * wet)
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_memory = _antecedent(
+        lightning, 1.0 - np.exp(-1.0 / 12.0)
+    )
+    woody_ignition = lightning_memory / (lightning_memory + 0.01)
+    woody_production = woody_cover * gpp_bank / (gpp_bank + 0.35)
+
+    fine_stock = np.asarray(production[0], dtype=np.float64).copy()
+    woody_stock = np.asarray(woody_production[0], dtype=np.float64).copy()
     available = np.empty_like(production, dtype=np.float64)
     for time in range(prediction.shape[0]):
-        stock = (1.0 - decay) * stock + production[time]
+        fine_stock = (
+            fine_stock * np.exp(-decomposition[time]) + production[time]
+        )
+        woody_stock = (
+            woody_stock * np.exp(-0.25 * decomposition[time])
+            + 0.04 * woody_production[time]
+        )
         burn_pressure = prediction[time] / (prediction[time] + 0.04)
-        available[time] = stock / (stock + 0.5) * combustion[time]
-        stock *= np.exp(-consumption * burn_pressure * available[time])
+        fine_available = (
+            fine_stock / (fine_stock + 0.5)
+            * combustion[time]
+            * (0.35 + 0.65 * open_cover[time])
+        )
+        woody_available = (
+            woody_stock / (woody_stock + 1.0)
+            * mature_drought[time]
+            * warm_anomaly[time]
+            * woody_ignition[time]
+        )
+        available[time] = fine_available + 0.5 * woody_available
+        fine_stock *= np.exp(
+            -consumption * burn_pressure * fine_available
+        )
+        woody_stock *= np.exp(
+            -0.5 * consumption * burn_pressure * woody_available
+        )
 
     factor = np.exp(np.clip(strength * available, 0.0, 4.0))
     baseline = np.asarray(prediction, dtype=np.float64)
