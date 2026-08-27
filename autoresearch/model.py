@@ -65,6 +65,8 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'rare_ignition_scale': 0.02,
+ 'rain_pulse_ignition_scale': 0.01,
+ 'rain_pulse_opportunity_half': 0.02,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2107,6 +2109,45 @@ def _rare_lightning_ignition(
         * burnable_land
         * opportunity_gap
     )
+    precipitation_memory = _antecedent(
+        rain, 1.0 - np.exp(-1.0 / 12.0)
+    )
+    rain_built_fuel = (
+        precipitation_memory / (precipitation_memory + 25.0)
+        * _falling(annual_rain, 1.0 / 250.0, 1400.0)
+    )
+    low_woody_biomass = 1.0 / (1.0 + biomass / 0.7)
+    managed_open = np.clip(
+        rangeland
+        + np.asarray(data["luh2_pasture_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    open_fuel_land = np.clip(open_natural + managed_open, 0.0, 1.0)
+    dry_combustion = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    dry_combustion = dry_combustion / (dry_combustion + 500.0)
+    ignition_access = 1.0 - (1.0 - lightning_chance) * (
+        1.0 - 0.5 * managed_open
+    )
+    pulse_half = max(
+        float(p.get("rain_pulse_opportunity_half", 0.02)), 1e-4
+    )
+    pulse_gap = 1.0 / (
+        1.0 + np.power(np.maximum(trailing, 0.0) / pulse_half, 0.75)
+    )
+    rain_pulse_ignition = (
+        max(float(p.get("rain_pulse_ignition_scale", 0.0)), 0.0)
+        * rain_built_fuel
+        * low_woody_biomass
+        * open_fuel_land
+        * dry_combustion
+        * thermal_window
+        * ignition_access
+        * pulse_gap
+    )
+    ignition += rain_pulse_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
         dtype=np.float32,
