@@ -4437,3 +4437,72 @@ The drought-maturation-pruned canonical model at `d62a22b` evaluates officially 
 mechanistic official, contains no fitted or geographic runtime, and matches the exact
 proxy .716889. The evaluation records the simplified thirteen-component line after the
 negative structural round; no diagnostic candidate enters the ledger.
+
+
+### Entry 126: modern fire-weather adds information but not a safe mechanism
+
+A four-fold held-cell audit on the 2,234 cells carrying 85.00% of reference fire
+weight puts the current coupled-valid-input diagnostic at .723390. Adding
+20CR/NCEP monthly mean VPD raises that to .724566, an incremental .001176; the
+installed TerraClimate mean VPD gives .001159, installed wind .000400, daily VPD
+duration .000356, and dry-spell fields .000080. All modern weather fields together
+reach .724755. Their best corrections affect the normalized seasonal cycle rather
+than supplying the missing annual map, so they remain far below the structural gain
+needed for .8.
+
+Direct physical translations are weaker. A causal fraction-of-high-VPD-days release
+window reaches .717490 (+.000601), while monthly mean VPD persistence plus departure
+reaches .717202 (+.000314). The latter improves spatial score by .001346 but worsens
+bias and seasonality and increases existing overburn in American, boreal, and arid
+systems. Moisture-demand and event-intensity roles are flat. Every prefix test is
+exact, but neither family clears the threshold for procurement, promotion, Optuna,
+or official evaluation.
+
+
+### Entry 127: current vegetation proxies cannot recover the missing fire state
+
+Three physically distinct attempts to infer fuel state from the frozen monthly
+fields fail for complementary reasons. Snowmelt-supported standing crop is
+directionally useful but not selective: its best exact result is .717247 (+.000359),
+and stronger forms move Kazakhstan and Mongolia toward spring only by falsely moving
+Ukraine and over-amplifying Canadian and boreal spring fire. A smooth local fuel-
+percolation law reaches only .716963 (+.000074). Cells with inferred connectivity
+below .01 contain 7.27% of observed fire and are underpredicted at .492 times
+observed, while cells above .22 contain 34.03% and are already overpredicted at
+1.22--1.29 times observed. Connectivity therefore targets the wrong residual.
+
+An organic-horizon drawdown term based on total soil carbon is selective and causal
+but exactly flat: its best eligible endpoint is .716888870 (+.000000364) and fails
+the required tropical and boreal signs. Total soil carbon cannot substitute for the
+combustible litter pool. A final held-block residual audit tests herbaceous turnover,
+low-LAI turnover, primary-open, secondary-residue, hydraulic, and secondary-open
+warming disequilibria. Every global equation loses; the best reaches .716050. The
+counterintuitive diagnostic explains the null: score-dominant underburn cells have
+less inferred fine fuel, rainfall, curing, and drought deficit than excess-fire cells.
+No candidate is promoted or evaluated officially.
+
+
+### Entry 128: the frozen ED fields have a provenance and state gap
+
+The public `EDv3_global_simulation_1981_2016.nc` contains the frozen AGB, total soil
+carbon, LAI, canopy-height and vegetation-fraction fields used here, but not the
+native monthly litter, patch moisture, snow, or cohort fuel states. Source inspection
+shows that the fire calculation needs precisely that omitted state: ground litter or
+small-cohort fuel together with a nonlinear patch-moisture gate. The minimum useful
+clean export is therefore pre-fire fast and structural ground litter, grass and short
+woody AGB, fuel-weighted dry fraction, and a separable snow or SWE diagnostic from the
+exact ED version intended for coupling. No compatible public monthly global archive
+was found.
+
+The same audit exposes a stricter provenance problem. The published AD 851--2016 ED
+v3 transient prescribed GFED4 burned area, using the 1996--2016 mean before 1996 and
+annual GFED4 thereafter. Its AGB, soil carbon, LAI, height and vegetation fractions
+are consequently descendants of an observed burned-area product, even though burned
+area itself is not passed to `model.py`. Their official score remains a reproducible
+evaluator measurement, but it is not certified clean under the no-benchmark-descendant
+rule. The replacement GPP comes from a separate global-baseline ED dump whose fire
+flag, restart ancestry and within-month timing were not preserved, so its correct
+status is unresolved rather than clean or proven contaminated. A clean export now
+requires the exact source commit, runtime configuration, restart hashes, endogenous
+fire throughout the ancestry, and pre-fire output timing. Score dependence on the
+uncertain frozen states is being measured before the canonical line is changed.
