@@ -24,7 +24,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'dead_fuel_pool',
+              'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure')
 
