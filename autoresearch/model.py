@@ -2139,17 +2139,11 @@ def _state_dependent_fire_season(
     recurrent = trailing / (trailing + fire_half)
     factor = np.exp(np.clip(strength * recurrent * dry_phase, -5.0, 5.0))
     alpha = 1.0 - np.exp(-1.0 / 12.0)
-    baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
-    weighted_state = baseline_state * factor[0]
+    state = np.asarray(factor[0], dtype=np.float64).copy()
     relative = np.empty_like(factor)
     for time in range(factor.shape[0]):
-        baseline_state += alpha * (prediction[time] - baseline_state)
-        weighted_state += alpha * (
-            prediction[time] * factor[time] - weighted_state
-        )
-        relative[time] = (
-            factor[time] * baseline_state / (weighted_state + 1e-12)
-        )
+        state += alpha * (factor[time] - state)
+        relative[time] = factor[time] / (state + 1e-12)
     return np.asarray(
         np.clip(prediction * relative, 0.0, 1.0), dtype=np.float32
     )
