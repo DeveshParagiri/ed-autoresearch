@@ -4959,3 +4959,21 @@ annual magnitude, but slightly worsens per-cell timing in one fold plus Ukraine 
 Both equations are globally smooth and prefix-exact. The signals are physical but solve
 different halves of the failure and do not combine into a safe exact candidate, so neither
 is released to full-grid or official evaluation.
+
+
+### Entry 154: causal LUH2 net transitions add no stable missing signal
+
+The first unused land-use direction was tested as a held-cell diagnostic on 1,927
+score-dominant cells containing 82.01% of observed-fire weight. Current LUH2 state and
+causal local climate/fuel/fire features were compared against the same learner augmented
+with current, twelve-month, and EMA land-use changes. The files contain annual states
+repeated monthly, not gross transition matrices; the near-ubiquitous secondary aggregate
+is not used as an exclusive cover or trajectory.
+
+Transition features worsen annual OOF loss from .343923 to .344317 and improve only one
+of four folds. Their mass-conserving cycle gain is just .000228 RMSE, improves two of four
+folds, and is split among geographically unstable primary, managed, urban, and rangeland
+changes. More importantly, annual log underprediction decreases rather than increases
+with primary-loss by managed-gain intensity. A global clearing-fire source would therefore
+target cells where the incumbent is already less deficient. Net LUH2 changes do not justify
+a mechanistic candidate, exact sweep, Optuna, or official evaluation.
