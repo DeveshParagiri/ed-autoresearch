@@ -2060,9 +2060,6 @@ def _rare_lightning_ignition(
     annual_rain = np.clip(
         np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
     )
-    rangeland = np.clip(
-        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
     temperature_memory = _antecedent(
         temperature, 1.0 - np.exp(-1.0 / 24.0)
     )
@@ -2081,7 +2078,7 @@ def _rare_lightning_ignition(
     )
     canopy_access = np.exp(-4.0 * humid_closed_canopy)
     burnable_land = np.clip(
-        (open_natural + cold_forest + 0.5 * rangeland) * canopy_access,
+        (open_natural + cold_forest) * canopy_access,
         0.0,
         1.0,
     )
