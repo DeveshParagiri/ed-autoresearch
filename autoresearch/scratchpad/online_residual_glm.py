@@ -408,6 +408,22 @@ def main() -> int:
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
                 )
         if causal_climate_tree:
+            month = np.arange(baseline.shape[1], dtype=np.float64) % 12
+            angle = 2.0 * np.pi * month / 12.0
+            for harmonic in (1, 2, 3):
+                names_list.extend(
+                    (f"sin_month_{harmonic}", f"cos_month_{harmonic}")
+                )
+                fields_list.extend(
+                    (
+                        np.broadcast_to(
+                            np.sin(harmonic * angle), baseline.shape
+                        ),
+                        np.broadcast_to(
+                            np.cos(harmonic * angle), baseline.shape
+                        ),
+                    )
+                )
             for name in (
                 "monthly_precipitation",
                 "dryness",
