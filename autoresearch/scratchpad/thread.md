@@ -4007,3 +4007,14 @@ one, is still committed and restored explicitly if rejected. Official evaluation
 run only on those mechanistic commits so `results.tsv` and `progress.png` represent
 actual ED-fire candidates. The next step is to compress the GAM's repeated patterns
 into globally shared fuel, curing, ignition, management, and fire-return equations.
+
+
+### Entry 111: diagnostic evaluations removed from the official ledger
+
+Seven rows produced by explicit GAM or ML checkpoints were removed from
+`results.tsv`: `a26cdc3`, `cffd5af`, `244eff2`, `930591d`, `469b5e3`,
+`ae4973a`, and `20661b5`. Their commits remain recoverable as diagnostic history,
+but they no longer affect the official running-best graph. `progress.png` was
+regenerated from 61 retained evaluations. The latest eligible coupled-valid
+mechanistic evaluation is **.738** at `d540d4c`; no new official evaluation was
+run during this repair.
