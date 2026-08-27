@@ -61,6 +61,7 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
+ 'productive_range_growth_brake': 1.0,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -1999,10 +2000,18 @@ def _ecological_fire_capacity(
         * _falling(annual_rain, 1.0 / 250.0, 1500.0)
         * biomass / (biomass + 0.2)
     )
+    productive_range_growth = (
+        rangeland
+        * _rising(annual_rain, 1.0 / 120.0, 250.0)
+        * _falling(annual_rain, 1.0 / 250.0, 1500.0)
+        * gpp / (gpp + 0.2)
+    )
     log_capacity = (
         p.get("cold_forest_capacity", 0.0) * cold_forest
         + p.get("arid_fine_fuel_capacity", 0.0) * arid_fine_fuel
         - p.get("productive_range_brake", 0.0) * productive_range
+        - p.get("productive_range_growth_brake", 0.0)
+        * productive_range_growth
     )
     return np.asarray(
         np.clip(prediction * np.exp(np.clip(log_capacity, -5.0, 5.0)), 0.0, 1.0),
