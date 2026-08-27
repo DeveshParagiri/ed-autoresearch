@@ -3908,3 +3908,45 @@ onset failed at .7252, and progressively stronger closure reached proxy .7312 an
 NHAF, SHAF, and SEAS while NHSA, SHSA, CEAM, Europe, and TENA decline. All formulations remain in
 history; the balanced ecological .730 model is restored next. This is not a meaningful structural
 step for Optuna.
+
+
+### Entry 106: historical event forcing is valid but adds little online signal
+
+NOAA 20CRv3 daily precipitation is available from 1850 and NCEP/NCAR Reanalysis 1
+provides a finite 2016 continuation. In the 2001 overlap, 20CR versus CPC wet-day
+fraction correlates .764 and maximum consecutive dry days .808; 20CR versus NCEP
+correlations are .856 and .842. The actual online whole-cell event tree reaches only
+.7316, so procuring the full 166-year field is not justified for the active model.
+A causal two-store drought-code family and stronger cool-crop brake also fail, with
+all formulations preserved through `94e7861`.
+
+Rare lightning opportunity is the useful structural step. A fuel-gated term lifts
+proxy to .7352 and official Overall to .735. The first version burns intact tropical
+closed canopy at 1.854 times observed and is rejected. A globally shared humid-canopy
+shield reduces that ratio to 1.092 while retaining official .735 and large boreal
+gains. A focused three-parameter Optuna run then plateaus at .734 proxy after seven
+trials; it confirms tuning cannot replace the mechanism and is not pursued further.
+
+
+### Entry 107: held-out ML exposes conditional fire return and yields official .736
+
+A causal HGB over 3.52 million site-months, with whole cells held out and only the 19
+coupled-valid inputs, raises proxy Overall from .7342 to **.7640**. All four components
+improve: bias .805, RMSE .607, seasonal .881, and spatial .920. The dominant residual
+structure is trailing annual fire crossed with current dryness and slow lightning,
+followed by precipitation regime, cropland, natural cover, biomass, and rapid GPP and
+temperature departures. Additive, polynomial-interaction, and smooth tensor GAM
+distillations peak at .7366, .7393, and .7397; the black-box ceiling is therefore not
+copied into runtime.
+
+Direct residual bins show severe underprediction below about .008 annual fire and
+overprediction above about .04, conditional on ignition and dry state. Managed patch
+ignition helps only .0008 and strong versions add mass. Universal fuel depletion fails
+at .6901. The successful mathematical distillation instead concentrates recurrent fire
+into the local dry phase with a smooth trailing-fire gate and causal 12-month
+normalization. Commit `179b61a` is the new official best at **.736** (bias .774, RMSE
+.566, seasonal .864, spatial .908). The gain is broad across major regions. The audit
+remains plausible but identifies the next targets: global area 1.100 times observed,
+intact tropical closed canopy 1.114, boreal forest 1.084, productive rangeland 1.342,
+cropland 1.385, and arid low-fuel land .331. A weighted-conservation variant removes
+mass drift but scores .7354 and is rejected; `53af1c4` restores the exact official best.
