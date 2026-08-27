@@ -3968,3 +3968,24 @@ global area rises from 1.100 to 1.110 times observed, cropland rises 1.385 to 1.
 and boreal forest rises 1.084 to 1.152 with its peak shifted two months. Every tested
 strength is committed through `1953354`; `b771157` restores the broader ecological
 official best. Optuna remains unjustified because the official scalar did not improve.
+
+
+### Entry 109: causal climate-state ML sets a ceiling but is not the model
+
+The mechanistic sequence of rain-pulse ignition, warm-greenup suppression, and a
+trailing rainfall-variability fuel pump raised the official best to **.738** at
+`d540d4c`. A 118-feature HGB then used only the same 19 pointwise inputs plus causal
+local memories, expanding variability, calendar-month state, and previous-year state.
+Whole cells were held out in three folds. Its stitched held-out prediction reached
+**.7932**, while a full fit reached **.8229** and official **.823** at `20661b5`.
+
+That official row is a diagnostic ceiling, not a promoted model. The surface is a
+300-tree learner fitted to GFED's own 2001-2016 climatology and is not a mechanistic
+fire equation. Although it has no coordinates, regions, neighbours, or future inputs,
+the extra gain over held-out cells can overfit the benchmark through correlated local
+state. The ecological audit also finds uneven low-fire behavior: global area is .909
+of observed and intact tropical closed canopy is a plausible .931, but Morocco is
+6.607 times observed, Czechia 3.681, Afghanistan 3.069, and the United Kingdom .021.
+Commit `9a4a7cc` therefore restores the exact .738 mechanistic model. Subsequent ML is
+restricted to diagnosis and distillation; only interpretable ecological equations may
+enter `model.py`.
