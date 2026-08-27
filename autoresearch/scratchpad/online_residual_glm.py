@@ -161,6 +161,7 @@ def main() -> int:
     ultra_tree = "--ultra-tree" in sys.argv
     factorized_tree = "--factorized-tree" in sys.argv
     cycle_target_tree = "--cycle-target-tree" in sys.argv
+    target_weighted = "--target-weighted" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -487,6 +488,8 @@ def main() -> int:
         else ratio_target
     )
     weights = offset + float(offset.mean()) * 0.02
+    if target_weighted:
+        weights = target + offset + float(target.mean()) * 0.02
     x_mean = np.average(x, axis=0, weights=weights)
     x_scale = np.sqrt(
         np.average(np.square(x - x_mean), axis=0, weights=weights)
