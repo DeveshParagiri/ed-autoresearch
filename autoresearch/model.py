@@ -28,12 +28,12 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure')
 
-# Calibrate only the two pathway banks that supplied the validated structural gain.
+# Calibrate only the managed-surface temperature response after its validated step.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'managed_bank_store': {'type': 'float', 'low': 0.2, 'high': 1.0},
-    'managed_bank_release': {'type': 'float', 'low': 4.0, 'high': 24.0},
-    'crop_bank_store': {'type': 'float', 'low': 0.4, 'high': 1.0},
-    'crop_bank_release': {'type': 'float', 'low': 12.0, 'high': 48.0},
+    'open_temp_k': {'type': 'float', 'low': 0.25, 'high': 0.8},
+    'open_temp_c': {'type': 'float', 'low': 13.0, 'high': 18.0},
+    'open_temp_rain_center': {'type': 'float', 'low': 250.0, 'high': 600.0},
+    'open_temp_strength': {'type': 'float', 'low': 0.5, 'high': 3.0},
 }
 
 PARAMS = {'annual_scale': 1.73,
