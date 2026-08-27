@@ -3955,3 +3955,16 @@ input is halved. Scaling every frozen ED state field by .5 changes area-weighted
 predictions 23.87 percent and total burn to .8397 of baseline; scaling them by 1.5
 changes predictions 25.47 percent and total burn to 1.1943. The coupled response is
 finite, material, and sublinear in aggregate.
+
+
+### Entry 108: spring residue ignition improves boreal scores but fails breadth
+
+The HGB-ranked cropland-by-temperature-departure signal was implemented as rare
+crop-residue ignition during a local warming planting shoulder, restricted to sites
+with low trailing fire opportunity. Proxy peaks at .7364 with scale .15. Official
+Overall remains **.736**, while BONA improves .710 to .736, BOAS .665 to .677, and
+CEAS .647 to .655. The compensation is not acceptable: Europe declines .630 to .624,
+global area rises from 1.100 to 1.110 times observed, cropland rises 1.385 to 1.415,
+and boreal forest rises 1.084 to 1.152 with its peak shifted two months. Every tested
+strength is committed through `1953354`; `b771157` restores the broader ecological
+official best. Optuna remains unjustified because the official scalar did not improve.
