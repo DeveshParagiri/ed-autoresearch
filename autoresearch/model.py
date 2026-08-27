@@ -39,7 +39,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 }
 
 PARAMS = {'annual_scale': 1.85,
- 'annual_residual_w': 1.0,
+ 'annual_residual_w': 1.1,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.0,
