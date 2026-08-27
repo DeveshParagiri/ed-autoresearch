@@ -65,6 +65,10 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'rare_ignition_scale': 0.02,
+ 'crop_residue_ignition_scale': 0.02,
+ 'crop_residue_temperature': 8.0,
+ 'crop_residue_width': 5.0,
+ 'crop_residue_opportunity_half': 0.01,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2107,6 +2111,36 @@ def _rare_lightning_ignition(
         * burnable_land
         * opportunity_gap
     )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    previous_temperature = np.empty_like(temperature)
+    previous_temperature[0] = temperature[0]
+    previous_temperature[1:] = temperature[:-1]
+    warming = np.clip((temperature - previous_temperature) / 5.0, 0.0, 1.0)
+    residue_width = max(float(p.get("crop_residue_width", 5.0)), 1e-3)
+    planting_shoulder = np.exp(
+        -np.square(
+            (temperature - float(p.get("crop_residue_temperature", 8.0)))
+            / residue_width
+        )
+    )
+    crop_half = max(
+        float(p.get("crop_residue_opportunity_half", 0.01)), 1e-4
+    )
+    crop_gap = 1.0 / (
+        1.0 + np.power(np.maximum(trailing, 0.0) / crop_half, 0.75)
+    )
+    crop_ignition = (
+        max(float(p.get("crop_residue_ignition_scale", 0.0)), 0.0)
+        * crop
+        * warming
+        * planting_shoulder
+        * fine_fuel
+        * rain_window
+        * crop_gap
+    )
+    ignition += crop_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
         dtype=np.float32,
