@@ -3821,3 +3821,23 @@ forcing rather than a harder fit to GFED5.
 The active prediction remains official **.729** at `6a4587b`. Dead `REGION_PARAMS` and
 `REGION_BOXES` constants were removed in `7c9e0a7`, so `model.py` no longer even carries an
 inactive regional coefficient table. This cleanup is prediction-neutral.
+
+
+### Entry 102: historical VPD route validates, but its online mechanism does not
+
+Adding the four prepared candidate forcings raises the causal-memory HGB whole-cell OOF ceiling
+from .7525 to **.7627**; an in-sample .8083 is rejected. Permutation importance identifies VPD
+departure from a three-month local state as the only large new signal, with 12-24 month VPD
+background secondary. NOAA 20CRv3 daily 2-m temperature and humidity were therefore tested as an
+1850 bridge. The downloaded 1850 files are complete and finite, while a 2001 overlap derives VPD
+with area-weighted correlation .959 against TerraClimate and monthly spatial correlations
+.953-.973. The source route is credible, but the full forcing is not installed, so VPD remains
+excluded from the coupled-ready model.
+
+A reduced eight-term smooth equation distilled the VPD clue into rapid drying, antecedent fuel,
+seasonal-climate, cropland-fragmentation, opportunity-saturation, and long-background terms. Its
+climatological whole-cell OOF score was .7368 from .7290, but the decisive 3.52-million-row online
+whole-cell fit scored only .7289 at its weakest strength and declined monotonically thereafter.
+All formulations and reversions are retained in commits `15c7037` through `2f91f0c`. The
+climatological gain was an averaging artifact, not deployable physics; no Optuna is justified.
+The active model is restored and reverified at proxy and official **.729**.
