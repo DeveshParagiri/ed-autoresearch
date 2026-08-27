@@ -4892,3 +4892,20 @@ rounds to the previous three-decimal best, while the exact proxy improves by .00
 adding a correction. Its regional and ecological trade is documented in Entry 147; no
 learned surface, invalid forcing, geography, neighbour state, or future information enters
 the prediction path.
+
+
+### Entry 150: partitioning the annual closure resolves the recurrence collision
+
+The failed managed-recurrence candidate was not discarded as a direction. A 3,349-cell
+held-block decomposition retaining 84.02% of observed-fire weight shows the cold-thaw
+source earns strongly in every fold, while the persistent warm brake hurts two folds and
+helps two. The warm brake earns only at intermediate managed share and is harmful in the
+two most-managed bins. This explains the destructive interaction in Entry 146.
+
+A consolidated closure preserves the cold source exactly and partitions only the warm
+correction between smooth natural-open and managed-open shares. Natural-open cells retain
+the incumbent brake; managed-open cells retain it in proportion to recurrence and receive
+bounded rain-built capacity only when recurrence is low. At strength .25, held annual-log
+RMSE improves 1.34070 to 1.33115 in all four folds; .5 improves further to 1.32395, with
+small cycle gains and bounded sampled ecology. The safer .25 version is the sole candidate
+justified for exact testing on the newly pruned canonical model.
