@@ -26,8 +26,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology', 'regime_capacity',
-              'missed_window')
+              'softmin', 'cropland', 'phenology', 'regime_capacity')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -61,9 +60,6 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
- 'missed_window_w': 0.15,
- 'missed_window_threshold': 0.15,
- 'missed_window_width': 0.04,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2006,78 +2002,6 @@ def _ecological_fire_capacity(
     )
 
 
-def _missed_fire_window(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Open a missed fire window after strong fuel drying.
-
-    A process model can lock a month near zero after one limiting factor vetoes
-    the multiplicative rate, even when antecedent fuel has cured enough to burn.
-    Reopen only that low-opportunity tail when a trailing rainfall reservoir is
-    sharply drying and vegetation is curing, then causally conserve the site's
-    running fire potential. The threshold was diagnosed on held-out online
-    trajectories; the deployed response is a smooth fire-physics equation.
-    """
-    strength = float(np.clip(p.get("missed_window_w", 0.0), 0.0, 1.0))
-    if "missed_window" not in enabled or strength <= 0.0:
-        return prediction
-
-    rain = np.asarray(data["monthly_precipitation"], dtype=np.float64)
-    gpp = np.asarray(data["gpp"], dtype=np.float64)
-    rain_memory = _antecedent(rain, 1.0 - np.exp(-1.0 / 12.0))
-    gpp_memory = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
-    drying = (rain_memory - rain) / (rain_memory + rain + 10.0)
-    curing = (gpp_memory - gpp) / (gpp_memory + gpp + 0.2)
-    fuel = gpp_memory / (gpp_memory + 0.5)
-    lightning = np.asarray(data["lightning_flash_rate"], dtype=np.float64)
-    ignition = 0.2 + lightning / (lightning + 0.01)
-
-    share = np.empty_like(prediction, dtype=np.float64)
-    annual = np.empty_like(prediction, dtype=np.float64)
-    for time in range(prediction.shape[0]):
-        start = max(0, time - 11)
-        total = np.asarray(prediction[start:time + 1], dtype=np.float64).sum(
-            axis=0
-        )
-        total *= 12.0 / (time - start + 1)
-        annual[time] = total
-        share[time] = prediction[time] / (total + 1e-12)
-
-    opportunity = 1.0 / (
-        1.0 + np.exp(np.clip(-(share - 0.03) / 0.025, -40.0, 40.0))
-    )
-    drying_signal = opportunity * np.maximum(drying, 0.0)
-    threshold = p.get("missed_window_threshold", 0.15)
-    width = max(float(p.get("missed_window_width", 0.04)), 1e-4)
-    drying_gate = 1.0 / (
-        1.0
-        + np.exp(np.clip(-(drying_signal - threshold) / width, -40.0, 40.0))
-    )
-    curing_gate = 1.0 / (
-        1.0 + np.exp(np.clip(-curing / 0.03, -40.0, 40.0))
-    )
-    missed = np.exp(-share / 0.02)
-    pulse = missed * drying_gate * curing_gate * fuel * ignition
-    proposal = np.asarray(prediction, dtype=np.float64) + (
-        strength * annual / 12.0 * pulse
-    )
-
-    alpha = 1.0 - np.exp(-1.0 / 12.0)
-    baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
-    proposal_state = proposal[0].copy()
-    allocated = np.empty_like(proposal)
-    for time in range(proposal.shape[0]):
-        baseline_state += alpha * (prediction[time] - baseline_state)
-        proposal_state += alpha * (proposal[time] - proposal_state)
-        allocated[time] = proposal[time] * baseline_state / (
-            proposal_state + 1e-12
-        )
-    return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
-
-
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2165,6 +2089,5 @@ def predict(
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
-    prediction = _missed_fire_window(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
