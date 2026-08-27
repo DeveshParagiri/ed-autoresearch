@@ -65,7 +65,7 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'rare_ignition_scale': 0.02,
- 'rain_pulse_ignition_scale': 0.003,
+ 'rain_pulse_ignition_scale': 0.03,
  'rain_pulse_opportunity_half': 0.02,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
@@ -2128,6 +2128,11 @@ def _rare_lightning_ignition(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     dry_combustion = dry_combustion / (dry_combustion + 500.0)
+    fuel_drying = np.maximum(
+        (precipitation_memory - rain)
+        / (precipitation_memory + rain + 10.0),
+        0.0,
+    )
     ignition_access = 1.0 - (1.0 - lightning_chance) * (
         1.0 - 0.5 * managed_open
     )
@@ -2143,6 +2148,7 @@ def _rare_lightning_ignition(
         * low_woody_biomass
         * open_fuel_land
         * dry_combustion
+        * fuel_drying
         * thermal_window
         * ignition_access
         * pulse_gap
