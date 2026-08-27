@@ -122,6 +122,7 @@ def main() -> int:
     interaction_gam = "--interaction-gam" in sys.argv
     shallow_tree = "--shallow-tree" in sys.argv
     tensor_gam = "--tensor-gam" in sys.argv
+    bin_top = "--bin-top" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -327,7 +328,14 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
-    if broad_tree or broad_gam or interaction_gam or shallow_tree or tensor_gam:
+    if (
+        broad_tree
+        or broad_gam
+        or interaction_gam
+        or shallow_tree
+        or tensor_gam
+        or bin_top
+    ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
         raw_fields = {name: extract(name) for name in model.INPUTS}
@@ -373,6 +381,54 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
+    if bin_top:
+        name_to_index = {name: index for index, name in enumerate(names)}
+        sample = rng.choice(x.shape[0], size=min(600_000, x.shape[0]), replace=False)
+
+        def ratio_matrix(left_name: str, right_name: str) -> None:
+            left = x[sample, name_to_index[left_name]]
+            right = x[sample, name_to_index[right_name]]
+            quantiles = np.linspace(0.0, 1.0, 7)
+            left_edges = np.unique(np.quantile(left, quantiles))
+            right_edges = np.unique(np.quantile(right, quantiles))
+            left_bins = np.clip(
+                np.searchsorted(left_edges, left, side="right") - 1,
+                0,
+                left_edges.size - 2,
+            )
+            right_bins = np.clip(
+                np.searchsorted(right_edges, right, side="right") - 1,
+                0,
+                right_edges.size - 2,
+            )
+            matrix = np.full(
+                (left_edges.size - 1, right_edges.size - 1), np.nan
+            )
+            for left_bin in range(matrix.shape[0]):
+                for right_bin in range(matrix.shape[1]):
+                    selected_rows = (
+                        (left_bins == left_bin) & (right_bins == right_bin)
+                    )
+                    if selected_rows.sum() < 100:
+                        continue
+                    selected_sample = sample[selected_rows]
+                    matrix[left_bin, right_bin] = np.average(
+                        y[selected_sample], weights=weights[selected_sample]
+                    )
+            print(f"ratio matrix {left_name} x {right_name}", flush=True)
+            print("left_edges=" + np.array2string(left_edges, precision=6), flush=True)
+            print("right_edges=" + np.array2string(right_edges, precision=6), flush=True)
+            print(np.array2string(matrix, precision=3), flush=True)
+
+        for left_name, right_name in (
+            ("trailing_annual", "dryness:current"),
+            ("trailing_annual", "lightning_flash_rate:memory_24m"),
+            ("incumbent", "luh2_cropland_fraction:current"),
+            ("incumbent", "annual_precipitation:current"),
+            ("trailing_annual", "natural_vegetation_fraction:current"),
+        ):
+            ratio_matrix(left_name, right_name)
+        return 0
     if tensor_gam:
         selected_names = (
             "incumbent",
