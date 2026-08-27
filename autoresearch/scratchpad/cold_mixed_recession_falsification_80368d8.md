@@ -1,0 +1,19 @@
+# Cold-mixed held-block falsification
+
+This scratch result is pinned to canonical model blob `39ee93ebf1155af9ae9d70e05847b9c3f086887d` after the stale arid fine-fuel capacity was pruned. The pre-pruning comparison blob was `7a8511b761e83788a5af3a824389099761e06432`. No full-grid or official evaluation was run.
+
+The union sample contains 12,119 cells and includes all 6,132 cells in the Entry 142 cold-mixed complement plus complete boreal, temperate-closed, cropland, arid-low-fuel, Canada, Mongolia, and Ukraine post-prediction guardrails. Country and ecological masks are never runtime features.
+
+The current cold-mixed baseline burns 0.318406746 times observed, has aggregate seasonal L1 0.392449499, and peaks in July rather than observed April. Its per-cell normalized-cycle MAE is 0.083526621.
+
+After removing incumbent fire, trailing incumbent fire, opportunity gap, and every engineered interaction containing them, an input-only annual GradientBoostingRegressor still improves held-block annual log-residual MAE from 2.765334332 to 0.686553759, 2.468425015 to 0.592632213, 2.501402898 to 0.532599968, and 2.555835977 to 0.715520346. Its out-of-fold correlation is 0.769546851. Mean natural cover is top-eight in all four fits, as are warming variability, biomass, and rain-deficit variability; drying variability is top-eight in three. This rules out the claim that the annual signal is only the learner recognizing the incumbent zero-fire lock.
+
+The smallest annual translation reuses the canonical rare-onset timing and fuel terms but replaces primary-natural cover with a smooth low-natural, biomass-supported, non-closed surface carrier under a cold causal background. At scale 0.01 it improves annual log error in all four held blocks by 0.008961349, 0.050834606, 0.006388320, and 0.057351980, but only raises the aggregate ratio from 0.318406746 to 0.327687900. It worsens aggregate cycle L1 in three blocks and increases already-high Canada from 1.349415336 to 1.363918339 and Mongolia from 1.266233943 to 1.285474045. A managed-open carrier is weaker. This is a stable annual diagnostic direction but not a safe candidate.
+
+The cycle learner identifies a distinct partial-snow-recession window rather than a new snow-derived fuel source: positive residual is concentrated at 0--9 C, appreciable melt, intermediate residual snow, and non-heavy rain. The smallest translation stores a bounded fraction of existing local Poisson hazard outside that window and releases the finite bank during it, with smooth cold and non-closed-surface eligibility and a slow background return. It uses no calendar, region, target, future statistic, or additive snow fuel.
+
+At bank strength 0.1, the cold-mixed annual ratio is nearly preserved at 0.317645693, seasonal L1 improves from 0.392449499 to 0.370283585, and aggregate L1 improves in all four held blocks by 0.020806919, 0.018913766, 0.016427604, and 0.018665649. However, per-cell cycle MAE worsens in the third block by 0.000300829, Ukraine seasonal L1 worsens by 0.003514490, and Canada per-cell cycle MAE worsens by 0.000694870. Stronger banks deepen those failures. The future-half perturbation prefix test is exact with maximum absolute difference zero.
+
+The supported physical finding is therefore narrow: partial snow recession contains real timing information for cold mixed systems, while a low-natural onset contains real annual-propensity information. They are separate deficiencies. The globally smooth translations tested here cannot combine them without repeating the prior Ukraine/Canada leakage or leaving the annual deficit essentially untouched, so neither warrants exact full-grid release.
+
+The executable evidence is `autoresearch/scratchpad/cold_mixed_recession_falsification_80368d8.py`. The complete run took 41.83 seconds and peaked at 2,279,342,080 bytes RSS, about 2.12 GiB.

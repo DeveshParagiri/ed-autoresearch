@@ -4941,3 +4941,21 @@ overburn rise slightly, however, and the score-bearing temporal metrics do not f
 held-block annual gain. Prefix causality is bit-exact. Because the first exact candidate is
 flat-negative, the stronger .5 form and tuning are not justified; the incumbent closure is
 retained without official evaluation.
+
+
+### Entry 153: cold-mixed underburn separates annual capacity from snow timing
+
+The 6,132-cell cold-mixed regime burns only .318 times observed and peaks in July against
+an April observed peak. An input-only held-block learner, with every incumbent-prediction
+feature removed, still reduces annual-log MAE from 2.47-2.77 to .53-.72 in all four folds.
+Stable information comes from low natural cover, drying and warming variability, biomass,
+and rain-deficit variability, so this is not merely the model's zero-lock.
+
+A minimal cold low-natural rare-onset source improves annual error in all four folds but
+only raises the ratio to .328, worsens cycle allocation, and increases already-high fire
+in Canada and Mongolia. A separate finite hazard bank released during smooth partial snow
+recession improves aggregate seasonal L1 from .392 to .370 in all four folds while holding
+annual magnitude, but slightly worsens per-cell timing in one fold plus Ukraine and Canada.
+Both equations are globally smooth and prefix-exact. The signals are physical but solve
+different halves of the failure and do not combine into a safe exact candidate, so neither
+is released to full-grid or official evaluation.
