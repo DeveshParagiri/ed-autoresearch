@@ -4549,3 +4549,20 @@ official sensitivity result and the online use of ED prognostic state remains
 mechanistically legitimate, but a leakage-free validation now requires a clean
 endogenous-fire ED ancestry and pre-fire exports of native fuel, moisture, and snow
 state before further parameter tuning or an official claim toward .8.
+
+
+### Entry 131: completed-year rain replaced by causal memory
+
+The installed `annual_precipitation` is the complete calendar-year total repeated in
+all twelve months. Its within-year range is zero and it matches the sum of that year's
+monthly precipitation, so January could see February through December. This violates
+the prefix rule even though perturbing already-assembled future input rows does not
+expose the upstream construction.
+
+The canonical model now removes this field from `INPUTS` and reconstructs annual rain
+as twelve times a causal twelve-month precipitation EMA initialized from month zero.
+The exact proxy improves from .716889 to **.717405**; the official score at `75fe945`
+is **.717** (bias .755, RMSE .546, seasonal .861, spatial .879). Seven of fourteen
+regions improve. Intact tropical closed fire moves from .842 to .902 times observed
+and arid fire from 1.322 to 1.299, with no new ecological pathology. A future-half
+perturbation leaves the entire preceding prefix bit-identical.
