@@ -3700,3 +3700,23 @@ gain depends on nonlinear conditional reservoir responses rather than one linear
 learner has been promoted. The next step is an explainable memory GAM to identify a small set of
 smooth moisture-storage, fuel-carryover, thermal-regime, and ignition interactions for mechanistic
 implementation. Optuna remains deferred until such an equation improves the actual model.
+
+
+### Entry 96: causal memory improves the score but fails the physical audit
+
+A dense additive diagnostic with 76 globally shared causal response curves reaches .7517 in
+whole-cell holdout; reduced 12, 20, 30, and 40-curve versions reach only .7404, .7441, .7475, and
+.7484. The full smooth formulation was therefore implemented as a site-local running-memory GAM
+in `930591d`. It uses current, previous, and exponentially decayed 3, 6, 12, and 24 month states
+without future climate, neighbours, coordinates, labels, regional coefficients, or geographic
+branches. Official Overall rises from .743 to **.752** (bias .792, RMSE .585, seasonal .868,
+spatial .929), confirming that causal memory contains deployable predictive information.
+
+The broader audit rejects this exact implementation as the new physical best. Global burned area
+rises from 1.058 to 1.634 times observed, intact tropical closed-canopy fire regresses from 1.239
+to 2.012, and arid low-fuel fire rises to 6.167 times observed. The failure is mathematical: the
+memory GAM was trained to improve monthly allocation but was blended as an absolute burned-area
+prediction, so it creates annual fire mass. The next formulation must center the memory response
+as a multiplicative anomaly or otherwise conserve the annual fire potential supplied by the
+mechanistic closure. The preferred coupled-valid physical model remains `3fb7bd1` at .743 until
+that constraint is satisfied; no Optuna tuning will legitimize the rejected absolute blend.

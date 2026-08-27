@@ -118,6 +118,43 @@ def main() -> int:
 
     evaluator = GFED5Evaluator(GFED5_PATH)
     report(evaluator, "incumbent", incumbent)
+    if "--ebm" in sys.argv:
+        from interpret.glassbox import ExplainableBoostingRegressor
+
+        learner = ExplainableBoostingRegressor(
+            feature_names=names,
+            max_bins=64,
+            max_interaction_bins=32,
+            interactions=40,
+            validation_size=0.15,
+            outer_bags=4,
+            inner_bags=0,
+            learning_rate=0.04,
+            smoothing_rounds=200,
+            interaction_smoothing_rounds=100,
+            max_rounds=4000,
+            early_stopping_rounds=100,
+            min_samples_leaf=20,
+            max_leaves=3,
+            objective="rmse",
+            n_jobs=-2,
+            random_state=473,
+        )
+        learner.fit(x, y, sample_weight=weights)
+        learned = np.zeros((12, 180, 360), dtype=np.float32)
+        learned[months, rows, cols] = np.clip(learner.predict(x), 0.0, 1.0)
+        for blend in (0.25, 0.50, 0.75, 1.0):
+            candidate_cycle = (1.0 - blend) * incumbent_cycle + blend * learned
+            candidate = np.tile(candidate_cycle, (16, 1, 1)).astype(np.float32)
+            report(evaluator, f"running-memory EBM blend={blend:.2f}", candidate)
+        print("ranked running-memory EBM terms", flush=True)
+        importances = learner.term_importances()
+        for index in np.argsort(importances)[::-1]:
+            print(
+                f"{learner.term_names_[index]}\t{importances[index]:.10f}",
+                flush=True,
+            )
+        return 0
     if "--oof" in sys.argv:
         rng = np.random.default_rng(471)
         folds = np.repeat(rng.integers(0, 3, size=cells.size), 12)
