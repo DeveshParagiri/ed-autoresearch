@@ -33,7 +33,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
     'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
     'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
     'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
-    'memory_gam_w': {'type': 'float', 'low': 0.10, 'high': 0.40},
+    'memory_gam_w': {'type': 'float', 'low': 0.50, 'high': 1.00},
 }
 
 PARAMS = {'annual_scale': 1.60,
@@ -50,7 +50,7 @@ PARAMS = {'annual_scale': 1.60,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
  'allocation_glm_w': 1.0,
- 'memory_gam_w': 0.75,
+ 'memory_gam_w': 1.00,
  'memory_norm_months': 12.0,
  'cool_crop_brake': 0.5,
  'wet_forest_brake': 1.0,
