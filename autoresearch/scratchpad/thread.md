@@ -4855,6 +4855,16 @@ central Asia, limited to .00308. Because the existing arid-low-fuel audit alread
 1.311 times observed, pruning an unconditional positive arid multiplier is also the safer
 physical direction. A clean canonical removal is justified before full ecological audit.
 
+The canonical removal at `2d8d5c2` reproduces **.718363408** exactly and passes a
+future-half prefix perturbation bit-for-bit. Nine regions improve. The largest gains are
+Central America +.01332, Middle East +.00889, Europe +.00662, southern South America
++.00629, and northern South America +.00626; central Asia is the largest loss at -.00308.
+All audited overburn ratios fall, including temperate closed 1.060 to .965, tropical open
+1.075 to 1.017, and arid low fuel 1.311 to 1.255. The cost is deeper existing underburn in
+intact tropical closed (.909 to .895), cropland (.925 to .912), and productive rangeland
+(1.050 to .943). None is a severe new pathology, so the simpler candidate is eligible for
+official evaluation despite the ecological trade.
+
 
 ### Entry 148: broad humid-primary shielding fails held spatial blocks
 
