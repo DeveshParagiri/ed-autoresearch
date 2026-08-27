@@ -174,6 +174,7 @@ def main() -> int:
     physical_tree = "--physical-tree" in sys.argv
     physical_ebm = "--physical-ebm" in sys.argv
     causal_ebm = "--causal-ebm" in sys.argv
+    causal_ebm_small = "--causal-ebm-small" in sys.argv
     annual_target_tree = "--annual-target-tree" in sys.argv
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     causal_climate_tree = "--causal-climate-tree" in sys.argv
@@ -404,6 +405,7 @@ def main() -> int:
         or physical_tree
         or physical_ebm
         or causal_ebm
+        or causal_ebm_small
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
@@ -435,7 +437,7 @@ def main() -> int:
                 fields_list.extend(
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
                 )
-        if causal_climate_tree or causal_gam or causal_tensor_gam:
+        if causal_climate_tree or causal_gam or causal_tensor_gam or causal_ebm_small:
             month = np.arange(baseline.shape[1], dtype=np.float64) % 12
             angle = 2.0 * np.pi * month / 12.0
             for harmonic in (1, 2, 3):
@@ -802,6 +804,108 @@ def main() -> int:
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
             report(evaluator, f"tensor GAM OOF strength={strength}", candidate)
         return 0
+    if causal_ebm_small:
+        from interpret.glassbox import ExplainableBoostingRegressor
+
+        selected_names = (
+            "incumbent",
+            "trailing_annual",
+            "fire_share",
+            "luh2_cropland_fraction:current",
+            "air_temperature:expanding_std",
+            "monthly_precipitation:expanding_std",
+            "monthly_precipitation:calendar_mean",
+            "monthly_precipitation:expanding_mean",
+            "aboveground_biomass:current",
+            "lightning_flash_rate:expanding_std",
+            "natural_vegetation_fraction:current",
+            "air_temperature:departure_3m",
+            "annual_precipitation:current",
+            "luh2_primary_fraction:current",
+            "luh2_rangeland_fraction:current",
+            "natural_canopy_height:current",
+        )
+        name_to_index = {name: index for index, name in enumerate(names)}
+        selected = np.asarray([name_to_index[name] for name in selected_names])
+
+        def make_ebm(seed: int) -> ExplainableBoostingRegressor:
+            return ExplainableBoostingRegressor(
+                feature_names=list(selected_names),
+                max_bins=96,
+                max_interaction_bins=24,
+                interactions=64,
+                validation_size=0.15,
+                outer_bags=2,
+                inner_bags=0,
+                learning_rate=0.04,
+                smoothing_rounds=80,
+                interaction_smoothing_rounds=40,
+                max_rounds=1400,
+                early_stopping_rounds=60,
+                min_samples_leaf=150,
+                max_leaves=4,
+                objective="poisson_deviance",
+                n_jobs=-2,
+                random_state=seed,
+            )
+
+        if full_fit:
+            train = np.arange(x.shape[0])
+            train_limit = 1_500_000 if full_train else 500_000
+            if train.size > train_limit:
+                train = rng.choice(train, size=train_limit, replace=False)
+            learner = make_ebm(881)
+            learner.fit(x[train][:, selected], y[train], sample_weight=weights[train])
+            fitted = np.empty_like(y)
+            for start in range(0, x.shape[0], 200_000):
+                fitted[start : start + 200_000] = np.clip(
+                    learner.predict(x[start : start + 200_000][:, selected]),
+                    1e-6,
+                    1e6,
+                )
+            evaluator = GFED5Evaluator(GFED5_PATH)
+            report(evaluator, "incumbent", incumbent)
+            for strength in (0.25, 0.50, 0.75, 1.0):
+                corrected = baseline * np.power(
+                    fitted.reshape(baseline.shape), strength
+                )
+                candidate = incumbent.copy()
+                candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+                report(evaluator, f"causal compact EBM strength={strength}", candidate)
+            importances = learner.term_importances()
+            print("causal compact EBM ranked terms", flush=True)
+            for index in np.argsort(importances)[::-1][:40]:
+                print(
+                    f"{learner.term_names_[index]}\t{importances[index]:.10f}",
+                    flush=True,
+                )
+            return 0
+
+        out_of_fold = np.zeros_like(y)
+        for fold in range(3):
+            train = np.flatnonzero(folds != fold)
+            held = np.flatnonzero(folds == fold)
+            if train.size > 500_000:
+                train = rng.choice(train, size=500_000, replace=False)
+            learner = make_ebm(881 + fold)
+            learner.fit(x[train][:, selected], y[train], sample_weight=weights[train])
+            for start in range(0, held.size, 200_000):
+                batch = held[start : start + 200_000]
+                out_of_fold[batch] = np.clip(
+                    learner.predict(x[batch][:, selected]), 1e-6, 1e6
+                )
+            print(f"completed compact EBM fold={fold}", flush=True)
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                out_of_fold.reshape(baseline.shape), strength
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"causal compact EBM OOF strength={strength}", candidate)
+        return 0
+
     if physical_ebm or causal_ebm:
         from interpret.glassbox import ExplainableBoostingRegressor
 
