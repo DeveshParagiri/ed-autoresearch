@@ -29,11 +29,13 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'softmin', 'cropland', 'phenology', 'regime_capacity',
               'rare_ignition')
 
-# Tune only the new globally shared ignition physics after its structural gain.
+# Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'rare_ignition_scale': {'type': 'float', 'low': 0.005, 'high': 0.04},
-    'rare_canopy_shield': {'type': 'float', 'low': 2.0, 'high': 8.0},
-    'rare_opportunity_half': {'type': 'float', 'low': 0.05, 'high': 0.30},
+    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
+    'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
+    'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
+    'memory_gam_w': {'type': 'float', 'low': 0.50, 'high': 1.00},
+    'causal_glm_w': {'type': 'float', 'low': 0.25, 'high': 0.75},
 }
 
 PARAMS = {'annual_scale': 1.85,
@@ -59,13 +61,7 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
- 'rare_ignition_scale': 0.03514376683207075,
- 'rare_canopy_shield': 3.014209424351835,
- 'rare_opportunity_half': 0.2588335633047849,
- 'managed_ignition_scale': 0.004,
- 'managed_opportunity_half': 0.01,
- 'fire_return_depletion': 0.05,
- 'fire_return_half': 0.04,
+ 'rare_ignition_scale': 0.02,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2014,16 +2010,14 @@ def _rare_lightning_ignition(
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
-    """Supply rare natural and managed ignitions missed by continuous hazard.
+    """Supply rare natural ignitions missed by the continuous fire hazard.
 
     A lightning flash does not imply burned area: it must coincide with warm,
     rain-free fuel, and that fuel must be continuous enough to carry a front.
     The term combines lightning with antecedent productivity and woody biomass,
     then fades smoothly where the existing trailing fire opportunity is already
-    large. Managed patch burning uses the same dry fine-fuel constraint but is
-    gated by cultivated and grazed land rather than lightning. This represents
-    intentional field and pasture burns without a population forcing, and only
-    fills low-fire opportunity instead of amplifying active fire regimes.
+    large. This lets rare crown or open-land events occur without amplifying
+    active savannas or creating fire in fuel-free deserts.
     """
     if "rare_ignition" not in enabled:
         return prediction
@@ -2066,6 +2060,9 @@ def _rare_lightning_ignition(
     annual_rain = np.clip(
         np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
     )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
     temperature_memory = _antecedent(
         temperature, 1.0 - np.exp(-1.0 / 24.0)
     )
@@ -2082,11 +2079,9 @@ def _rare_lightning_ignition(
         * _rising(leaf_area, 2.0, 2.5)
         * natural
     )
-    canopy_access = np.exp(
-        -float(p.get("rare_canopy_shield", 4.0)) * humid_closed_canopy
-    )
+    canopy_access = np.exp(-4.0 * humid_closed_canopy)
     burnable_land = np.clip(
-        (open_natural + cold_forest) * canopy_access,
+        (open_natural + cold_forest + 0.5 * rangeland) * canopy_access,
         0.0,
         1.0,
     )
@@ -2099,9 +2094,8 @@ def _rare_lightning_ignition(
         )
         annual *= 12.0 / (time - start + 1)
         trailing[time] = annual
-    opportunity_half = max(float(p.get("rare_opportunity_half", 0.2)), 1e-3)
-    opportunity_gap = 1.0 / (1.0 + trailing / opportunity_half)
-    natural_ignition = (
+    opportunity_gap = 1.0 / (1.0 + trailing / 0.2)
+    ignition = (
         scale
         * lightning_chance
         * rain_window
@@ -2110,56 +2104,10 @@ def _rare_lightning_ignition(
         * burnable_land
         * opportunity_gap
     )
-    cropland = np.clip(
-        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    pasture = np.clip(
-        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    rangeland = np.clip(
-        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    managed_land = np.clip(cropland + pasture + rangeland, 0.0, 1.0)
-    managed_half = max(float(p.get("managed_opportunity_half", 0.01)), 1e-4)
-    managed_gap = 1.0 / (
-        1.0 + np.power(np.maximum(trailing, 0.0) / managed_half, 0.75)
-    )
-    managed_ignition = (
-        max(float(p.get("managed_ignition_scale", 0.0)), 0.0)
-        * managed_land
-        * rain_window
-        * thermal_window
-        * fine_fuel
-        * managed_gap
-    )
-    ignition = natural_ignition + managed_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
         dtype=np.float32,
     )
-
-
-def _fire_return_depletion(
-    prediction: np.ndarray,
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Limit reburning while fine fuel and unburned patches recover locally."""
-    strength = float(max(p.get("fire_return_depletion", 0.0), 0.0))
-    if "lag" not in enabled or strength <= 0.0:
-        return prediction
-    half = max(float(p.get("fire_return_half", 0.04)), 1e-4)
-    alpha = 1.0 - np.exp(-1.0 / 12.0)
-    fire_memory = np.zeros(prediction.shape[1:], dtype=np.float64)
-    depleted = np.empty_like(prediction, dtype=np.float64)
-    for time in range(prediction.shape[0]):
-        annual_fire = 12.0 * fire_memory
-        depletion = np.exp(
-            -strength * annual_fire / (annual_fire + half)
-        )
-        depleted[time] = prediction[time] * depletion
-        fire_memory += alpha * (depleted[time] - fire_memory)
-    return np.asarray(np.clip(depleted, 0.0, 1.0), dtype=np.float32)
 
 
 
@@ -2250,6 +2198,5 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
-    prediction = _fire_return_depletion(prediction, fallback, enabled)
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
