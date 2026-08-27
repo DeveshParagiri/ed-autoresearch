@@ -56,7 +56,7 @@ PARAMS = {'annual_scale': 1.85,
  'memory_norm_months': 12.0,
  'causal_glm_w': 0.35,
  'absolute_glm_w': 0.50,
- 'vpd_memory_w': 0.25,
+ 'vpd_memory_w': 0.50,
  'cool_crop_brake': 4.0,
  'wet_forest_brake': 1.0,
  'vpd_half': 0.29948860381280695,
@@ -2124,6 +2124,9 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
+    # Fine-fuel moisture changes the monthly fire-weather opportunity before
+    # the annual closure decides how much local fuel can burn.
+    prediction = _vpd_memory_response(prediction, data, fallback, enabled)
     # Set fire potential from a trailing annual window. Seasonal timing then
     # remains a causal function of current and accumulated local state.
     prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
@@ -2134,5 +2137,4 @@ def predict(
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
-    prediction = _vpd_memory_response(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
