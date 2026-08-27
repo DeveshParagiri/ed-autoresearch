@@ -24,7 +24,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
+              'rare_ignition', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure')
 
@@ -79,7 +79,6 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
- 'drought_maturation_w': 2.0,
  'dead_fuel_pool_w': 3.0,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
@@ -843,100 +842,6 @@ def _rain_conditioned_crop_management(
             )
         adjusted = allocated
     return np.asarray(np.clip(adjusted, 0.0, 1.0), dtype=np.float32)
-
-
-def _drought_maturation_response(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Distinguish mature drought from a short-lived dry anomaly.
-
-    Woody fuel in cold or humid landscapes does not become available after one
-    dry month. Fire opportunity rises only when the 12-month rainfall reservoir
-    remains above the shorter reservoir, indicating that drying has persisted
-    long enough to cure deep fuels. Conversely, a six-month flash anomaly is
-    damped before deep curing. Open rangeland carries a weaker two-year fuel
-    memory. These are continuous local-state responses with one global scale.
-    """
-    if "drought_maturation" not in enabled:
-        return prediction
-    strength = float(max(p.get("drought_maturation_w", 0.0), 0.0))
-    if strength <= 0.0:
-        return prediction
-
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    rain_memory = {
-        months: _antecedent(rain, 1.0 - np.exp(-1.0 / months))
-        for months in (6.0, 12.0, 24.0)
-    }
-    deficit = {
-        months: np.maximum(
-            (state - rain) / (state + rain + 10.0), 0.0
-        )
-        for months, state in rain_memory.items()
-    }
-    mature = deficit[12.0] * np.maximum(
-        deficit[12.0] - deficit[6.0], 0.0
-    )
-    flash = deficit[6.0] * np.maximum(
-        deficit[6.0] - deficit[12.0], 0.0
-    )
-    legacy = deficit[24.0] * np.maximum(
-        deficit[24.0] - deficit[12.0], 0.0
-    )
-
-    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
-    temperature_memory = _antecedent(
-        temperature, 1.0 - np.exp(-1.0 / 24.0)
-    )
-    cold = _falling(temperature_memory, 1.0 / 3.0, 8.0)
-    annual_rain = np.clip(
-        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
-    )
-    humid = _rising(annual_rain, 1.0 / 250.0, 1300.0)
-    natural = np.clip(
-        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    canopy = np.clip(
-        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
-    )
-    biomass = np.clip(
-        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
-    )
-    woody_fuel = (
-        natural
-        * canopy / (canopy + 8.0)
-        * biomass / (biomass + 1.0)
-    )
-    lightning = np.clip(
-        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
-    )
-    lightning_memory = _antecedent(
-        lightning, 1.0 - np.exp(-1.0 / 12.0)
-    )
-    ignition = lightning_memory / (lightning_memory + 0.01)
-    woody_regime = woody_fuel * np.clip(cold + humid, 0.0, 1.0) * ignition
-
-    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
-    fine_fuel = _antecedent(gpp, 1.0 - np.exp(-1.0 / 24.0))
-    fine_fuel = fine_fuel / (fine_fuel + 0.35)
-    rangeland = np.clip(
-        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    response = woody_regime * (mature - 0.5 * flash)
-    response += 0.5 * rangeland * fine_fuel * legacy
-    factor = np.exp(np.clip(strength * response, -4.0, 4.0))
-    return np.asarray(
-        np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32
-    )
 
 
 def _dead_fuel_pool_response(
@@ -2300,9 +2205,6 @@ def predict(
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     prediction = _rain_conditioned_crop_management(
-        prediction, data, fallback, enabled
-    )
-    prediction = _drought_maturation_response(
         prediction, data, fallback, enabled
     )
     prediction = _dead_fuel_pool_response(

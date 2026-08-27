@@ -4301,3 +4301,22 @@ This is an overall-score tradeoff rather than a regional Pareto gain: NHAF, SHAF
 CEAS, and Australia improve, while TENA, CEAM, tropical South America, Europe, and
 MIDE decline. No new equation or parameter family was introduced, and the bracket
 closed cleanly beyond .6.
+
+
+### Entry 121: pruning after the pathway stack
+
+A fresh operating-point leave-one-component-out audit at the .717 candidate found
+that thirteen components remain positive. Drought maturation is the lone stale
+term: removing it raises exact proxy from .716869258 to .716888506. The later
+pathway fuel banks now represent persistent drying more effectively, so the older
+six-, twelve-, and twenty-four-month multiplicative drought response has become
+redundant. It is removed rather than retained as inert complexity. The same audit
+shows that the two timing components worth protecting are the surface opportunity
+bank (+.00749) and rare ignition (+.00310); the dead-fuel pool remains weak but
+positive (+.00030).
+
+A causal warm seasonal open-fuel dry-clock family was independently rejected. It
+moved bounded incumbent hazard into smooth one-to-four-month dry-age windows but
+peaked at .716760, sharpening the wrong phase. Six related pathway timing states
+were also flat. These failures, plus the African waveform audit, show that a more
+aggressive seasonal concentrator is not the missing structural step by itself.
