@@ -824,6 +824,23 @@ def main() -> int:
             "luh2_primary_fraction:current",
             "luh2_rangeland_fraction:current",
             "natural_canopy_height:current",
+            "dryness:current",
+            "dryness:expanding_mean",
+            "dryness:expanding_std",
+            "dryness:calendar_mean",
+            "dryness:calendar_departure",
+            "gpp:current",
+            "gpp:expanding_mean",
+            "gpp:expanding_std",
+            "gpp:calendar_mean",
+            "gpp:calendar_departure",
+            "leaf_area_index:current",
+            "leaf_area_index:expanding_std",
+            "leaf_area_index:calendar_mean",
+            "lightning_flash_rate:current",
+            "lightning_flash_rate:calendar_mean",
+            "luh2_pasture_fraction:current",
+            "secondary_vegetation_fraction:current",
         )
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
@@ -833,7 +850,7 @@ def main() -> int:
                 feature_names=list(selected_names),
                 max_bins=96,
                 max_interaction_bins=24,
-                interactions=64,
+                interactions=96,
                 validation_size=0.15,
                 outer_bags=2,
                 inner_bags=0,
@@ -865,7 +882,7 @@ def main() -> int:
                 )
             evaluator = GFED5Evaluator(GFED5_PATH)
             report(evaluator, "incumbent", incumbent)
-            for strength in (0.25, 0.50, 0.75, 1.0):
+            for strength in (0.25, 0.50, 0.75, 1.0, 1.25, 1.50):
                 corrected = baseline * np.power(
                     fitted.reshape(baseline.shape), strength
                 )
@@ -897,7 +914,7 @@ def main() -> int:
             print(f"completed compact EBM fold={fold}", flush=True)
         evaluator = GFED5Evaluator(GFED5_PATH)
         report(evaluator, "incumbent", incumbent)
-        for strength in (0.25, 0.50, 0.75, 1.0):
+        for strength in (0.25, 0.50, 0.75, 1.0, 1.25, 1.50):
             corrected = baseline * np.power(
                 out_of_fold.reshape(baseline.shape), strength
             )
