@@ -28,29 +28,25 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'pathway_hazards', 'surface_opportunity_bank',
               'conditional_allocation')
 
-# Calibrate the globally shared event and causal allocation architecture only
-# after the surface-opportunity bank produced a material official gain.
+# Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'annual_scale': {'type': 'float', 'low': 1.5, 'high': 1.9},
-    'pathway_mix_w': {'type': 'float', 'low': 0.2, 'high': 0.5},
-    'surface_bank_w': {'type': 'float', 'low': 0.7, 'high': 1.0},
-    'conditional_allocation_w': {'type': 'float', 'low': 0.6, 'high': 1.4},
-    'fire_season_w': {'type': 'float', 'low': 0.15, 'high': 0.4},
-    'rare_ignition_scale': {'type': 'float', 'low': 0.035, 'high': 0.08},
+    'dead_fuel_pool_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
+    'dead_fuel_decay': {'type': 'float', 'low': 0.02, 'high': 0.20},
+    'dead_fuel_consumption': {'type': 'float', 'low': 0.0, 'high': 8.0},
 }
 
-PARAMS = {'annual_scale': 1.8468087675464078,
+PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
- 'pathway_mix_w': 0.34572824357029475,
- 'surface_bank_w': 0.9184504015875615,
- 'conditional_allocation_w': 0.8542565120246384,
+ 'pathway_mix_w': 0.35,
+ 'surface_bank_w': 1.0,
+ 'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 6.5,
  'seasonal_rain_capacity': 0.4,
- 'fire_season_w': 0.31632517288979334,
+ 'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'drought_maturation_w': 2.0,
@@ -58,7 +54,7 @@ PARAMS = {'annual_scale': 1.8468087675464078,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
  'greenup_brake': 2.0,
- 'rare_ignition_scale': 0.04264138553255798,
+ 'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
  'D_high': 2940.51756322311,
