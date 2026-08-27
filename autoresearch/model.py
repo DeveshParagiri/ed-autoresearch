@@ -21,8 +21,8 @@ _CELL_AREA = np.cos(np.deg2rad(-89.5 + np.arange(180, dtype=np.float32)))[None, 
 INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
-          'maximum_consecutive_dry_days', 'aboveground_biomass',
-          'luh2_primary_fraction')
+          'maximum_consecutive_dry_days', 'wet_day_fraction', 'aboveground_biomass',
+          'luh2_primary_fraction', 'lightning_flash_rate')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
@@ -49,6 +49,7 @@ PARAMS = {'annual_scale': 0.95,
  'alloc_vpd_rise_w': 0.3,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
+ 'allocation_glm_w': 1.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -622,7 +623,120 @@ def _annual_seasonal_closure(
         produced = (1.0 - survival).sum(axis=1, keepdims=True)
         slope = (allocation * survival).sum(axis=1, keepdims=True)
         lam = np.clip(lam - (produced - annual_burn) / (slope + 1e-12), 0.0, 1e4)
-    return (1.0 - np.exp(-lam * allocation)).reshape(prediction.shape)
+    baseline = 1.0 - np.exp(-lam * allocation)
+    if "vpd" not in enabled or p.get("allocation_glm_w", 0.0) <= 0.0:
+        return baseline.reshape(prediction.shape)
+
+    # Transparent conditional allocation model distilled from a diagnostic
+    # learner.  It is a named generalized additive equation, not a black box:
+    # incumbent opportunity is saturated, fire-weather thresholds respond to
+    # local anomalies, vegetation controls the sign and strength of moisture
+    # responses, and global calendar harmonics are gated by observable climate
+    # and land use.  No coordinates, regions, cell IDs, or spatial masks enter.
+    baseline_cycle = baseline.mean(axis=0)
+    current = baseline_cycle / (baseline_cycle.sum(axis=0, keepdims=True) + 1e-12)
+
+    def anomaly(name: str) -> np.ndarray:
+        cycle = np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=0)
+        center = cycle.mean(axis=0, keepdims=True)
+        scale = cycle.std(axis=0, keepdims=True)
+        return np.clip((cycle - center) / (scale + 1e-6), -4.0, 4.0)
+
+    def gate(name: str, median: float, iqr: float) -> np.ndarray:
+        mean = np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=(0, 1))
+        return np.clip((mean - median) / (iqr + 1e-12), -4.0, 4.0)[None, ...]
+
+    vpd_z = anomaly("vapor_pressure_deficit_mean")
+    wet_z = anomaly("wet_day_fraction")
+    gpp_z = anomaly("gpp")
+    dry_spell_z = anomaly("maximum_consecutive_dry_days")
+    dryness_z = anomaly("dryness")
+    temp_z = anomaly("air_temperature")
+    precip_z = anomaly("monthly_precipitation")
+    wind_z = anomaly("wind_speed_mean")
+
+    rain_gate = gate("annual_precipitation", 473.96435546875, 624.8443603515625)
+    temp_gate = gate("air_temperature", 4.880924701690674, 22.833003997802734)
+    gpp_gate = gate("gpp", 0.011397920548915863, 0.6766268014907837)
+    biomass_gate = gate(
+        "aboveground_biomass", 0.12909138202667236, 1.567750334739685
+    )
+    primary_gate = gate(
+        "luh2_primary_fraction", 0.2077873945236206, 0.5980774760246277
+    )
+    crop_gate = gate(
+        "luh2_cropland_fraction", 0.0019709591288119555, 0.08153530955314636
+    )
+    lightning_gate = gate(
+        "lightning_flash_rate", 0.006493361666798592, 0.021110812202095985
+    )
+
+    month = np.arange(12, dtype=np.float64)[:, None, None]
+    angle = 2.0 * np.pi * month / 12.0
+    sin1, cos1 = np.sin(angle), np.cos(angle)
+    sin2, cos2 = np.sin(2.0 * angle), np.cos(2.0 * angle)
+    sin3, cos3 = np.sin(3.0 * angle), np.cos(3.0 * angle)
+
+    eta = (
+        1.514372524 * np.sqrt(np.clip(current, 0.0, None))
+        + 1.890892545 * np.maximum(current - 0.03, 0.0)
+        - 1.511394115 * np.maximum(current - 0.16, 0.0)
+        - 1.257506699 * np.maximum(current - 0.24, 0.0)
+        + 0.670843664 * np.minimum(vpd_z, 0.0)
+        + 0.819857817 * np.maximum(current - 0.06, 0.0)
+        - 0.539551580 * np.maximum(current - 0.10, 0.0)
+        - 0.409390574 * sin1 * temp_gate
+        + 0.130487815 * cos2 * temp_gate
+        - 0.214002777 * cos1
+        + 0.299785871 * cos1 * temp_gate
+        + 0.180477047 * vpd_z
+        - 0.311825333 * np.maximum(wet_z, 0.0)
+        + 0.230784119 * vpd_z * primary_gate
+        + 0.148928971 * np.minimum(gpp_z, 0.0)
+        + 0.181518521 * np.roll(gpp_z, 1, axis=0)
+        + 0.147554811 * np.minimum(dry_spell_z, 0.0)
+        + 0.055370529 * np.maximum(vpd_z, 0.0)
+        - 0.038359089 * cos3
+        - 0.154532276 * gpp_z * rain_gate
+        + 0.225201526 * gpp_z * primary_gate
+        - 0.073467971 * cos1 * primary_gate
+        - 0.146492412 * sin3
+        - 0.131903883 * np.minimum(dryness_z, 0.0)
+        + 0.117503520 * sin3 * temp_gate
+        - 0.068014264 * cos2 * crop_gate
+        - 0.073682272 * sin2 * lightning_gate
+        - 0.021932340 * sin2 * temp_gate
+        + 0.049705609 * wet_z * primary_gate
+        + 0.032366974 * np.minimum(wet_z, 0.0)
+        - 0.108287567 * np.roll(wet_z, 1, axis=0)
+        + 0.139583931 * np.minimum(wind_z, 0.0)
+        - 0.111376196 * gpp_z * biomass_gate
+        - 0.006632236 * sin1
+        - 0.102646149 * np.roll(temp_z, 1, axis=0)
+        - 0.133516555 * precip_z * rain_gate
+        - 0.087674510 * np.roll(wind_z, 1, axis=0)
+        - 0.059106716 * cos2 * gpp_gate
+        + 0.053602245 * sin2 * primary_gate
+        - 0.071138022 * np.maximum(precip_z, 0.0)
+        - 0.107037508 * np.maximum(gpp_z, 0.0)
+        + 0.090488331 * sin1 * rain_gate
+        - 0.088564951 * np.roll(precip_z, 1, axis=0)
+        - 0.061909216 * vpd_z * biomass_gate
+        + 0.063787100 * np.maximum(dryness_z, 0.0)
+        + 0.050359891 * sin1 * gpp_gate
+    )
+    strength = float(np.clip(p["allocation_glm_w"], 0.0, 2.0))
+    learned = np.exp(np.clip(strength * eta, -20.0, 20.0))
+    learned /= learned.sum(axis=0, keepdims=True) + 1e-12
+    learned = np.broadcast_to(learned[None, ...], allocation.shape)
+    calibrated = annual_burn * learned
+    return np.asarray(np.clip(calibrated, 0.0, 1.0), dtype=np.float32).reshape(
+        prediction.shape
+    )
 
 
 def predict(
