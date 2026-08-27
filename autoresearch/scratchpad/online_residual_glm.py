@@ -121,6 +121,7 @@ def main() -> int:
     broad_gam = "--broad-gam" in sys.argv
     interaction_gam = "--interaction-gam" in sys.argv
     shallow_tree = "--shallow-tree" in sys.argv
+    tensor_gam = "--tensor-gam" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -326,7 +327,7 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
-    if broad_tree or broad_gam or interaction_gam or shallow_tree:
+    if broad_tree or broad_gam or interaction_gam or shallow_tree or tensor_gam:
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
         raw_fields = {name: extract(name) for name in model.INPUTS}
@@ -372,6 +373,116 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
+    if tensor_gam:
+        selected_names = (
+            "incumbent",
+            "trailing_annual",
+            "fire_share",
+            "annual_precipitation:current",
+            "luh2_cropland_fraction:current",
+            "natural_vegetation_fraction:current",
+            "dryness:current",
+            "dryness:departure_3m",
+            "gpp:departure_3m",
+            "air_temperature:departure_3m",
+            "aboveground_biomass:current",
+            "lightning_flash_rate:memory_24m",
+            "lightning_flash_rate:memory_12m",
+            "monthly_precipitation:departure_24m",
+            "monthly_precipitation:memory_12m",
+            "monthly_precipitation:current",
+            "luh2_rangeland_fraction:current",
+        )
+        tensor_names = (
+            ("trailing_annual", "dryness:current"),
+            ("trailing_annual", "lightning_flash_rate:memory_24m"),
+            ("trailing_annual", "lightning_flash_rate:memory_12m"),
+            (
+                "monthly_precipitation:departure_24m",
+                "lightning_flash_rate:memory_12m",
+            ),
+            ("trailing_annual", "luh2_rangeland_fraction:current"),
+            ("trailing_annual", "monthly_precipitation:departure_24m"),
+            ("incumbent", "monthly_precipitation:current"),
+            ("incumbent", "luh2_cropland_fraction:current"),
+            ("incumbent", "dryness:departure_3m"),
+            ("incumbent", "annual_precipitation:current"),
+            (
+                "luh2_cropland_fraction:current",
+                "air_temperature:departure_3m",
+            ),
+            ("trailing_annual", "natural_vegetation_fraction:current"),
+        )
+        name_to_index = {name: index for index, name in enumerate(names)}
+        selected = np.asarray([name_to_index[name] for name in selected_names])
+        selected_index = {name: index for index, name in enumerate(selected_names)}
+        tensor_indices = tuple(
+            (selected_index[left], selected_index[right])
+            for left, right in tensor_names
+        )
+
+        def tensor_design(basis: np.ndarray, width: int) -> np.ndarray:
+            columns = [basis]
+            for left, right in tensor_indices:
+                left_basis = basis[:, left * width : (left + 1) * width]
+                right_basis = basis[:, right * width : (right + 1) * width]
+                columns.append(
+                    (left_basis[:, :, None] * right_basis[:, None, :]).reshape(
+                        basis.shape[0], -1
+                    )
+                )
+            return np.column_stack(columns)
+
+        out_of_fold = np.zeros_like(y)
+        fold_coefficients: list[np.ndarray] = []
+        for fold in range(3):
+            train = np.flatnonzero(folds != fold)
+            held = np.flatnonzero(folds == fold)
+            if train.size > 200_000:
+                train = rng.choice(train, size=200_000, replace=False)
+            spline = SplineTransformer(
+                n_knots=4,
+                degree=2,
+                knots="quantile",
+                include_bias=False,
+                extrapolation="linear",
+            )
+            train_basis = spline.fit_transform(x[train][:, selected])
+            width = spline.n_features_out_ // len(selected_names)
+            train_design = tensor_design(train_basis, width)
+            scaler = StandardScaler()
+            train_design = scaler.fit_transform(train_design)
+            regressor = PoissonRegressor(alpha=0.01, max_iter=800, tol=1e-8)
+            regressor.fit(train_design, y[train], sample_weight=weights[train])
+            del train_basis, train_design
+            for start in range(0, held.size, 100_000):
+                batch = held[start : start + 100_000]
+                basis = spline.transform(x[batch][:, selected])
+                design = scaler.transform(tensor_design(basis, width))
+                out_of_fold[batch] = regressor.predict(design)
+            fold_coefficients.append(regressor.coef_)
+            print(
+                f"completed tensor GAM fold={fold} train={train.size} "
+                f"held={held.size} features={regressor.coef_.size}",
+                flush=True,
+            )
+        correlations = np.corrcoef(np.asarray(fold_coefficients))
+        print(
+            "tensor GAM coefficient correlation min="
+            f"{correlations[np.triu_indices(3, 1)].min():.4f}",
+            flush=True,
+        )
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                strength,
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"tensor GAM OOF strength={strength}", candidate)
+        return 0
     if broad_gam or interaction_gam:
         selected_names = (
             "incumbent",
