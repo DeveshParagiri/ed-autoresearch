@@ -205,7 +205,7 @@ def main() -> int:
     for strength in (0.25, 0.50, 0.75, 1.0):
         corrected = baseline * np.power(np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6), strength)
         candidate = incumbent.copy()
-        candidate[:, rows, cols] = corrected.T
+        candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
         report(evaluator, f"online OOF strength={strength}", candidate)
 
     regressor = PoissonRegressor(alpha=0.001, max_iter=1500, tol=1e-8)
