@@ -15,6 +15,8 @@ from pathlib import Path
 import numpy as np
 from netCDF4 import Dataset
 from sklearn.linear_model import PoissonRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.inspection import permutation_importance
 from sklearn.tree import DecisionTreeRegressor, export_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -106,6 +108,7 @@ def main() -> int:
     vpd_only = "--vpd-only" in sys.argv
     duration_only = "--duration-only" in sys.argv
     event_only = "--event-only" in sys.argv
+    broad_tree = "--broad-tree" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -311,6 +314,32 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
+    if broad_tree:
+        names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
+        fields_list: list[np.ndarray] = [baseline, trailing, share]
+        raw_fields = {name: extract(name) for name in model.INPUTS}
+        for name in model.INPUTS:
+            names_list.append(f"{name}:current")
+            fields_list.append(raw_fields[name])
+        for name in (
+            "monthly_precipitation",
+            "dryness",
+            "air_temperature",
+            "gpp",
+            "leaf_area_index",
+            "lightning_flash_rate",
+        ):
+            raw = raw_fields[name]
+            for months in (3.0, 12.0, 24.0):
+                memory = running(raw, months)
+                names_list.extend(
+                    (f"{name}:memory_{months:g}m", f"{name}:departure_{months:g}m")
+                )
+                fields_list.extend(
+                    (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
+                )
+        names = tuple(names_list)
+        feature_fields = tuple(fields_list)
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
     )
@@ -331,6 +360,70 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
+    if broad_tree:
+        out_of_fold = np.zeros_like(y)
+        trained: HistGradientBoostingRegressor | None = None
+        held_for_importance: np.ndarray | None = None
+        for fold in range(3):
+            train = np.flatnonzero(folds != fold)
+            held = np.flatnonzero(folds == fold)
+            if train.size > 500_000:
+                train = rng.choice(train, size=500_000, replace=False)
+            regressor = HistGradientBoostingRegressor(
+                loss="poisson",
+                learning_rate=0.08,
+                max_iter=100,
+                max_leaf_nodes=31,
+                min_samples_leaf=500,
+                l2_regularization=2.5,
+                early_stopping=True,
+                validation_fraction=0.1,
+                random_state=701 + fold,
+            )
+            regressor.fit(x[train], y[train], sample_weight=weights[train])
+            for start in range(0, held.size, 250_000):
+                batch = held[start : start + 250_000]
+                out_of_fold[batch] = regressor.predict(x[batch])
+            trained = regressor
+            held_for_importance = held
+            print(
+                f"completed broad HGB fold={fold} train={train.size} held={held.size} "
+                f"iterations={regressor.n_iter_}",
+                flush=True,
+            )
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                strength,
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"broad HGB OOF strength={strength}", candidate)
+        assert trained is not None and held_for_importance is not None
+        importance_rows = rng.choice(
+            held_for_importance,
+            size=min(100_000, held_for_importance.size),
+            replace=False,
+        )
+        importance = permutation_importance(
+            trained,
+            x[importance_rows],
+            y[importance_rows],
+            scoring="neg_mean_poisson_deviance",
+            n_repeats=2,
+            random_state=719,
+            sample_weight=weights[importance_rows],
+        )
+        order = np.argsort(importance.importances_mean)[::-1]
+        print("broad HGB permutation importance", flush=True)
+        for index in order[:30]:
+            print(
+                f"{names[index]}\t{importance.importances_mean[index]:+.9f}",
+                flush=True,
+            )
+        return 0
     if "--tree" in sys.argv:
         out_of_fold = np.zeros_like(y)
         for fold in range(3):
