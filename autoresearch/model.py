@@ -2507,7 +2507,10 @@ def _dead_fuel_pool_response(
             * warm_anomaly[time]
             * woody_ignition[time]
         )
-        available[time] = fine_available + 0.5 * woody_available
+        available[time] = (
+            fine_available * (0.5 + open_cover[time])
+            + 0.5 * woody_available
+        )
         fine_stock *= np.exp(
             -consumption * burn_pressure * fine_available
         )
