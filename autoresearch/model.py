@@ -46,6 +46,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_footprint_lightning_half': 0.06098759667228644,
  'fire_footprint_managed_half': 0.18933595753561624,
  'surface_bank_w': 1.0,
+ 'surface_bank_release': 12.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1215,6 +1216,7 @@ def _surface_fire_opportunity_bank(
     bank = np.zeros_like(hazard[0])
     hazard_state = hazard[0].copy()
     allocated = np.empty_like(hazard)
+    release_rate = float(max(p.get("surface_bank_release", 8.0), 0.0))
     for time in range(hazard.shape[0]):
         relative_opportunity = hazard[time] / (
             hazard[time] + hazard_state + 1e-8
@@ -1233,7 +1235,7 @@ def _surface_fire_opportunity_bank(
         )
         release_opportunity = relative_opportunity * physical_window
         release_fraction = 1.0 - np.exp(
-            -(1.0 / 24.0 + 8.0 * release_opportunity)
+            -(1.0 / 24.0 + release_rate * release_opportunity)
         )
         stored = strength * surface_share[time] * hazard[time]
         bank += stored
