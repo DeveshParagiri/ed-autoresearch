@@ -62,8 +62,10 @@ PARAMS = {'annual_scale': 1.85,
  'rare_ignition_scale': 0.03514376683207075,
  'rare_canopy_shield': 3.014209424351835,
  'rare_opportunity_half': 0.2588335633047849,
- 'managed_ignition_scale': 0.04,
+ 'managed_ignition_scale': 0.004,
  'managed_opportunity_half': 0.01,
+ 'fire_return_depletion': 0.5,
+ 'fire_return_half': 0.04,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2137,6 +2139,29 @@ def _rare_lightning_ignition(
     )
 
 
+def _fire_return_depletion(
+    prediction: np.ndarray,
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Limit reburning while fine fuel and unburned patches recover locally."""
+    strength = float(max(p.get("fire_return_depletion", 0.0), 0.0))
+    if "lag" not in enabled or strength <= 0.0:
+        return prediction
+    half = max(float(p.get("fire_return_half", 0.04)), 1e-4)
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    fire_memory = np.zeros(prediction.shape[1:], dtype=np.float64)
+    depleted = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        annual_fire = 12.0 * fire_memory
+        depletion = np.exp(
+            -strength * annual_fire / (annual_fire + half)
+        )
+        depleted[time] = prediction[time] * depletion
+        fire_memory += alpha * (depleted[time] - fire_memory)
+    return np.asarray(np.clip(depleted, 0.0, 1.0), dtype=np.float32)
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2225,5 +2250,6 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
+    prediction = _fire_return_depletion(prediction, fallback, enabled)
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
