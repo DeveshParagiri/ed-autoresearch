@@ -1500,27 +1500,10 @@ def predict(
     if unknown:
         raise ValueError(f"unknown model components: {sorted(unknown)}")
 
-    # Build the instantaneous fire rate, splicing the fitted regional parameter
-    # sets over the global fallback. The memory terms below are deliberately
-    # shared by every region so a single mechanism has to earn its place
-    # everywhere rather than being refitted per region.
+    # Build one globally shared pointwise fire-rate equation. Geographic boxes
+    # and region-specific parameter sets are deliberately excluded: an ED site
+    # must receive the same response for the same local ecological state.
     rate = _fire_rate(data, fallback, enabled)
-    lat = -89.5 + np.arange(180, dtype=np.float32)
-    lon = -179.5 + np.arange(360, dtype=np.float32)
-    longitude, latitude = np.meshgrid(lon, lat)
-    assigned = np.zeros((180, 360), dtype=bool)
-    for region, region_params in REGION_PARAMS.items():
-        west, east, south, north = REGION_BOXES[region]
-        mask = (
-            (longitude >= west)
-            & (longitude <= east)
-            & (latitude >= south)
-            & (latitude <= north)
-            & ~assigned
-        )
-        regional = _fire_rate(data, region_params, enabled)
-        rate[:, mask] = regional[:, mask]
-        assigned |= mask
 
     if "cropland" in enabled and fallback.get("crop_k", 0.0) > 0.0:
         # Cropland cells burn less than the surrounding landscape yet the
