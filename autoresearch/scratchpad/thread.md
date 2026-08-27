@@ -4977,3 +4977,22 @@ changes. More importantly, annual log underprediction decreases rather than incr
 with primary-loss by managed-gain intensity. A global clearing-fire source would therefore
 target cells where the incumbent is already less deficient. Net LUH2 changes do not justify
 a mechanistic candidate, exact sweep, Optuna, or official evaluation.
+
+
+### Entry 155: finite land-conversion residue is real but negligible
+
+A separate 1,216-cell sample, deliberately enriched with high-change cells and retaining
+60.40% of observed-fire weight, treated each annual LUH2 change as a finite causal stock.
+This avoids both January-only impulses and spending one annual transition twelve times.
+Primary-loss residue improves held annual-log RMSE by .000318 in all four folds, but has
+the wrong annual-propensity sign throughout. Managed-conversion residue is more coherent:
+all four folds improve and annual propensity is positive in all four, but the gain is only
+.000860 from a .996153 baseline and allocation RMSE worsens slightly. Fragmentation change
+worsens every fold. All three stocks close numerically and pass future-prefix perturbation.
+
+The installed files contain annual land-use states rather than gross transitions. They
+cannot identify shifting cultivation, wood harvest, abandonment, or gross clearing, and
+the secondary aggregate is unsuitable as a transition proxy because 94.7% of land values
+exceed .9 while rare jumps approach .94. The managed-conversion signal is physical but far
+below a model-level step and its attribution remains ambiguous. It is not promoted to an
+exact candidate, tuned, or officially evaluated.
