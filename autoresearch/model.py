@@ -891,7 +891,7 @@ _ANNUAL_RESIDUAL_DRIVERS = (
     "luh2_urban_fraction", "population_density",
 )
 _ANNUAL_STATIC_DRIVERS = {
-    "luh2_cropland_fraction", "luh2_pasture_fraction",
+    "annual_precipitation", "luh2_cropland_fraction", "luh2_pasture_fraction",
     "luh2_rangeland_fraction", "luh2_primary_fraction",
     "luh2_secondary_fraction", "luh2_urban_fraction", "population_density",
 }
