@@ -4585,3 +4585,23 @@ long temperature state crossed with managed-open cover and trailing lightning. T
 identifies mechanisms worth translating, but it does not provide held-out evidence for
 an honest route to .8 with the present observable set. No learned surface enters the
 runtime or official ledger.
+
+
+### Entry 133: climate-derived structure is a real but unsafe clean step
+
+A different clean-input family reconstructs vegetation structure before fire rather
+than adding another downstream correction. Causal trailing rain and a root-water bucket
+drive potential productivity; a smooth rainfall, seasonality, and deficit equilibrium
+drives woody cover; woody shading and a production threshold determine connected grass
+fuel. Only precipitation, temperature, dryness, LUH2, and lightning enter the model.
+
+The best raw form reaches **.699208**, a substantial .029829 gain over the .669379 clean
+baseline. It is not promotable: wet tropical primary burns at 1.94 times observed,
+temperate primary 2.73, boreal 1.28, crop 1.62, and arid low-rain 7.99. Squared grass
+establishment, humid woody closure, snow-state inhibition, fuel-selective arid failure,
+and crop fragmentation yield a better ecological compromise at .696439. Its ratios are
+.902 wet tropical primary, .864 tropical open, 2.120 temperate primary, .933 boreal,
+.894 rangeland, 1.235 crop, 1.171 secondary, and 2.841 arid. Broad moderate and strong
+guards fall to .682154 and .673149. Future-input perturbation leaves the first 73 months
+bit-identical. The clean structural gain is genuine, but temperate and arid errors remain
+too large for canonical promotion or official evaluation.
