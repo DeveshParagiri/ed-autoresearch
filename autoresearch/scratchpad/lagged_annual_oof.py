@@ -18,6 +18,7 @@ import numpy as np
 from netCDF4 import Dataset
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.linear_model import PoissonRegressor
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -93,6 +94,117 @@ def main() -> int:
     years = np.tile(np.arange(16), cells.size)
     usable = years > 0
     rng = np.random.default_rng(937)
+    if "--compact-gam" in sys.argv:
+        name_to_index = {name: index for index, name in enumerate(names)}
+        prior_fire = x[:, name_to_index["prior_model_annual"]].astype(np.float64)
+        log_fire = np.log10(prior_fire + 1e-6)
+        gam_names: list[str] = ["log10_prior_fire", "sqrt_prior_fire"]
+        gam_fields: list[np.ndarray] = [log_fire, np.sqrt(prior_fire)]
+        for threshold in (-4.5, -3.5, -2.5, -1.5, -1.0):
+            gam_names.append(f"log_fire_above_{threshold:+.1f}")
+            gam_fields.append(np.maximum(log_fire - threshold, 0.0))
+        opportunity = {
+            "rare": 1.0 / (1.0 + np.exp((log_fire + 3.5) / 0.3)),
+            "low": 1.0 / (1.0 + np.exp(-(log_fire + 3.5) / 0.3))
+            * 1.0 / (1.0 + np.exp((log_fire + 2.2) / 0.3)),
+            "medium": 1.0 / (1.0 + np.exp(-(log_fire + 2.4) / 0.3))
+            * 1.0 / (1.0 + np.exp((log_fire + 1.2) / 0.3)),
+            "high": 1.0 / (1.0 + np.exp(-(log_fire + 1.4) / 0.3)),
+        }
+        for regime_name, values in opportunity.items():
+            gam_names.append(f"opportunity_{regime_name}")
+            gam_fields.append(values)
+        state_sources = {
+            "cropland": "luh2_cropland_fraction:prior_mean",
+            "natural": "natural_vegetation_fraction:prior_p10",
+            "lightning_variability": "lightning_flash_rate:prior_std",
+            "lightning_background": "lightning_flash_rate:prior_mean",
+            "temperature_variability": "air_temperature:prior_std",
+            "mean_temperature": "air_temperature:prior_mean",
+            "annual_rain": "annual_precipitation:prior_mean",
+            "rain_variability": "monthly_precipitation:prior_std",
+            "biomass": "aboveground_biomass:prior_p10",
+            "peak_lai": "leaf_area_index:prior_p90",
+            "rangeland": "luh2_rangeland_fraction:prior_mean",
+            "pasture": "luh2_pasture_fraction:prior_mean",
+            "primary": "luh2_primary_fraction:prior_mean",
+            "secondary_canopy": "secondary_canopy_height:prior_p10",
+        }
+        for state_name, source_name in state_sources.items():
+            values = x[:, name_to_index[source_name]].astype(np.float64)
+            if state_name in {"lightning_variability", "lightning_background"}:
+                values = np.log1p(values / 0.001)
+            elif state_name in {"annual_rain", "rain_variability", "biomass"}:
+                values = np.log1p(np.maximum(values, 0.0))
+            gam_names.append(state_name)
+            gam_fields.append(values)
+            for regime_name, regime in opportunity.items():
+                gam_names.append(f"{state_name}_x_{regime_name}")
+                gam_fields.append(values * regime)
+        gam_x = np.column_stack(gam_fields)
+        gam_mean = np.average(gam_x[usable], axis=0, weights=weights[usable])
+        gam_scale = np.sqrt(
+            np.average(
+                np.square(gam_x[usable] - gam_mean),
+                axis=0,
+                weights=weights[usable],
+            )
+        ) + 1e-8
+        gam_x = (gam_x - gam_mean) / gam_scale
+        cell_folds = rng.integers(0, 3, size=cells.size)
+        folds = np.repeat(cell_folds, 16)
+        best: tuple[float, float, np.ndarray, list[np.ndarray]] | None = None
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for alpha in (0.03, 0.01, 0.003, 0.001):
+            oof = np.ones_like(target)
+            coefficients: list[np.ndarray] = []
+            for fold in range(3):
+                train = (folds != fold) & usable
+                held = (folds == fold) & usable
+                learner = PoissonRegressor(alpha=alpha, max_iter=1500, tol=1e-8)
+                learner.fit(
+                    gam_x[train], target[train], sample_weight=weights[train]
+                )
+                oof[held] = learner.predict(gam_x[held])
+                coefficients.append(learner.coef_)
+            correlations = np.corrcoef(np.asarray(coefficients))
+            print(
+                f"compact GAM alpha={alpha} coefficient correlation min="
+                f"{correlations[np.triu_indices(3, 1)].min():.4f}",
+                flush=True,
+            )
+            factors = np.clip(oof.reshape(cells.size, 16), 0.1, 10.0)
+            for strength in (0.25, 0.50, 0.75, 1.0):
+                corrected = baseline.reshape(cells.size, 16, 12) * np.power(
+                    factors[:, :, None], strength
+                )
+                candidate = incumbent.copy()
+                candidate[:, rows, cols] = np.clip(
+                    corrected.reshape(cells.size, 192).T, 0.0, 1.0
+                )
+                score = evaluator.score(candidate)["global"]
+                report(
+                    evaluator,
+                    f"compact GAM OOF alpha={alpha} strength={strength}",
+                    candidate,
+                )
+                overall = float(score["overall_score"])
+                if best is None or overall > best[0]:
+                    best = (overall, alpha, oof.copy(), coefficients)
+        assert best is not None
+        final = PoissonRegressor(alpha=best[1], max_iter=2000, tol=1e-8)
+        final.fit(gam_x[usable], target[usable], sample_weight=weights[usable])
+        print(f"selected alpha={best[1]} overall={best[0]:.6f}", flush=True)
+        print(f"intercept={final.intercept_:.12g}", flush=True)
+        print("center=" + repr(gam_mean.tolist()), flush=True)
+        print("scale=" + repr(gam_scale.tolist()), flush=True)
+        print("coefficients=" + repr(final.coef_.tolist()), flush=True)
+        print("ranked compact GAM terms", flush=True)
+        for index in np.argsort(np.abs(final.coef_))[::-1]:
+            print(f"{gam_names[index]}\t{final.coef_[index]:+.9f}", flush=True)
+        return 0
+
     if "--bin-top" in sys.argv:
         name_to_index = {name: index for index, name in enumerate(names)}
         sample_pool = np.flatnonzero(usable)
