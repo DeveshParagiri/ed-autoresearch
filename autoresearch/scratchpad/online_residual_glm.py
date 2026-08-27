@@ -9,7 +9,10 @@ feature is constructed from current or prior local state only.
 
 from __future__ import annotations
 
+import base64
+import pickle
 import sys
+import zlib
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
@@ -951,6 +954,16 @@ def main() -> int:
                 random_state=2701,
             )
             learner.fit(x[train], y[train], sample_weight=weights[train])
+            if "--export-model" in sys.argv:
+                payload = base64.b85encode(
+                    zlib.compress(pickle.dumps(learner, protocol=5), level=9)
+                )
+                export_path = Path(__file__).with_name("causal_closure.b85")
+                export_path.write_bytes(payload)
+                print(
+                    f"exported={export_path} bytes={len(payload)}",
+                    flush=True,
+                )
             fitted = np.empty_like(y)
             for start in range(0, x.shape[0], 250_000):
                 fitted[start : start + 250_000] = learner.predict(
