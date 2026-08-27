@@ -5334,3 +5334,16 @@ scale change with 4 of 14 regions; stronger responses damage the tropical Americ
 TENA. A low-return stable-fuel gap is negative from its weakest setting, reaching .718988.
 Both equations are prefix-exact. Same-calendar memory therefore adds no model-level signal
 beyond the incumbent causal reservoirs and is closed without canonical or official use.
+
+
+### Entry 177: post-event brakes become the exact mechanistic incumbent
+
+The prediction path now applies the existing globally shared cool-cultivation and humid-
+canopy suppression immediately after pathway event scaling. No equation, coefficient,
+input, or component changes. The committed model reproduces exact Overall **.719021686**,
+with bias .756875, RMSE .547470, seasonal .861688, and spatial .881606.
+
+Official evaluation remains **.719** after rounding, with bias .757, RMSE .547, seasonal
+.862, and spatial .882. The exact gain is small but physically cleaner and improves the
+major ecological ratios documented in Entry 175 without a new pathology. The faithful
+seventh ledger row and progress figure are retained; no Optuna follows.
