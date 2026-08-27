@@ -4388,3 +4388,43 @@ incremental additions. The next reverse-ML pass must target the high-weight recu
 fire waveform and joint annual-map/cycle residual directly, then motivate a genuinely
 different base equation. Optuna remains deferred until such an equation produces a
 model-level step.
+
+
+### Entry 124: high-weight holdout puts the present-input ceiling near .72
+
+The score-dominant residual is not the same as the regional mean-ratio diagnostic. The
+1,753 cells carrying 80% of observed global burned area have an annual geometric-mean
+model/observation ratio of only **.554**. Of total reference fire, 24.19% lies in cells
+that are both annual-underpredicted and cycle-bad, another 15.06% is underpredicted with
+an adequate cycle, and only 9.25% is annual-overpredicted. The severe regional overburn
+ratios are real, but they are concentrated in numerous reference-light cells; globally
+constraining fuel corrects those cells by starving the high-fire cells that dominate the
+evaluator.
+
+A four-fold held-block learner was restricted to 2,234 cells carrying 85% of reference
+fire weight and used 45 current or causal-memory features. Coordinates defined 15-degree
+validation blocks but were never features; region, calendar, future and full-record state
+were excluded. Depth-four normalized-cycle correction applied only to unseen blocks raises
+exact Overall from .716889 to **.721438**. Its magnitude correction is negative even at a
+.25 blend because spatial skill falls. The best held-out diagnostic moves RMSE .5456 to
+.5538 and seasonal .8623 to .8686 while holding bias and spatial skill, far below .75 or
+.78. Stable interactions involve warming memory, rainfall deficit, lightning, recurrence,
+GPP decline and wet anomalies, but they explain only 12.7% of normalized-cycle residual
+out of sample.
+
+Mechanistic falsification agrees. In high recurrent-fire cells the assembled base rate
+already orders observed peak above false shoulder by 15%; its individual factors are
+mostly saturated rather than reversed. Replacing the slightly inverted temperature term
+with causal thermal memory falls to .716534 and makes boreal fire too low. Preserving the
+background and adding a bounded convex event channel peaks at .716880. A finite annual
+budget falls to .711845 because it removes high-fire capacity. The stable held-out surfaces
+were translated into recurrence-conditioned curing and drying-onset lightning equations;
+the best causal bank reaches only .716926 (+.000037), while ignition and crossed forms are
+negative. All prefix tests pass and no candidate was promoted or evaluated officially.
+
+This is a scientific ceiling, not a proof of impossibility: a substantially different
+observable or temporal resolution could change it. But under the current nineteen monthly,
+site-independent inputs, neither the full causal held-out learner (~.723 in the earlier
+audit) nor this high-weight focused learner (~.721) supports an honest path to .8. The
+in-sample .8 surfaces are benchmark-fitting diagnostics and must not be promoted. Optuna
+remains unjustified because the structural families are flat or negative.
