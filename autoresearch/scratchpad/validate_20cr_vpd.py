@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -33,14 +34,17 @@ def target_grid(
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", type=int, default=2001)
+    args = parser.parse_args()
     sample = Path("/tmp/ed-fire-20cr-validation")
-    with netCDF4.Dataset(sample / "air.2m.2001.nc") as air_dataset:
+    with netCDF4.Dataset(sample / f"air.2m.{args.year}.nc") as air_dataset:
         air = np.asarray(air_dataset.variables["air"][:], dtype=np.float64)
         latitudes = np.asarray(air_dataset.variables["lat"][:])
         longitudes = np.asarray(air_dataset.variables["lon"][:])
         time = air_dataset.variables["time"]
         dates = netCDF4.num2date(time[:], units=time.units)
-    with netCDF4.Dataset(sample / "rhum.2m.2001.nc") as humidity_dataset:
+    with netCDF4.Dataset(sample / f"rhum.2m.{args.year}.nc") as humidity_dataset:
         humidity = np.asarray(
             humidity_dataset.variables["rhum"][:], dtype=np.float64
         )
@@ -56,6 +60,22 @@ def main() -> int:
         ]
     )
     twenty_cr = target_grid(monthly, latitudes, longitudes)
+    print(
+        f"year={args.year} days={len(dates)} first={dates[0]} last={dates[-1]} "
+        f"finite={np.isfinite(twenty_cr).mean():.6f} "
+        f"min={np.nanmin(twenty_cr):.6f} mean={np.nanmean(twenty_cr):.6f} "
+        f"max={np.nanmax(twenty_cr):.6f}",
+        flush=True,
+    )
+    for month in range(12):
+        print(
+            f"month={month + 1:02d} global_mean={np.nanmean(twenty_cr[month]):.6f} "
+            f"p01={np.nanpercentile(twenty_cr[month], 1):.6f} "
+            f"p99={np.nanpercentile(twenty_cr[month], 99):.6f}",
+            flush=True,
+        )
+    if args.year != 2001:
+        return 0
 
     with netCDF4.Dataset(ROOT / "autoresearch/inputs/climate.nc") as dataset:
         modern = np.asarray(
