@@ -5063,3 +5063,19 @@ while tropical open crosses from .981 to 1.032 and temperate closed from 1.017 t
 The gain comes from broad managed-open capacity already covered by the failed recurrence
 and partitioned-closure families, not from land-use turnover. Neither form advances to an
 exact candidate, tuning, or official evaluation.
+
+
+### Entry 160: stable shallow rules expose a thermal-range surface interaction
+
+A depth-two diagnostic using every coupled-valid local state, but no coordinates, labels,
+neighbours, future values, or invalid forcings, was fit on whole held cells against the
+pinned .718363408 incumbent. A 25% OOF annual correction reaches **.719386932**; stronger
+blends reverse sharply. Weighted annual-log error improves in all four blocks. The dominant
+interaction in every fold is prior-year temperature variability crossed with connected
+surface combustion, appearing in 29 depth-two splits.
+
+The direct learned correction is not ecologically eligible: boreal fire rises from 1.054
+to 1.380 times observed and arid-low-fuel fire from 1.255 to 1.592. Its small +.00102 ceiling
+does not justify installing the tree or tuning. Only a smooth warm, rain-supported surface-
+seasonality mechanism that excludes cold and fuel-poor systems merits one bounded sampled
+falsification.
