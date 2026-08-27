@@ -2212,7 +2212,16 @@ def _live_fuel_greenup_brake(
     temperature = np.asarray(data["air_temperature"], dtype=np.float64)
     warm_growth = _rising(temperature, 1.0 / 3.0, 15.0)
     brake = np.exp(-strength * greenup * warm_growth)
-    return np.asarray(prediction * brake, dtype=np.float32)
+    # Green-up changes when the available annual fuel burns; it does not erase
+    # that fuel stock. Divide by a causal local running reference so suppressed
+    # live-fuel months are reallocated toward the subsequent cured phase.
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    state = np.asarray(brake[0], dtype=np.float64).copy()
+    relative = np.empty_like(brake)
+    for time in range(brake.shape[0]):
+        state += alpha * (brake[time] - state)
+        relative[time] = brake[time] / (state + 1e-12)
+    return np.asarray(prediction * relative, dtype=np.float32)
 
 
 
