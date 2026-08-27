@@ -5237,3 +5237,20 @@ folds and 5 of 14 regions, while MIDE loses .00184. Both equations are rejected 
 canonical installation, tuning, or official evaluation. The diagnosis remains useful:
 the present frozen aggregate states do not identify a stable managed/open boreal regime
 well enough to repair BOAS without damaging closed forest or other regions.
+
+
+### Entry 171: monthly vegetation states cannot recover the TENA burn calendar
+
+TENA's failure is a temperate managed-land timing error: the incumbent burns 3.794 times
+observed, peaks in August instead of April, misses the October secondary peak, and scores
+.5180 seasonally. Held-cell diagnostics find stable residual information in temperature
+level and range, incumbent hazard, managed share, and rain deficit, but crop-residue
+interactions rank consistently in only two of four blocks and post-growth residue does not.
+
+A smooth finite residue allocator improves seasonal L1 in all four mechanism folds, from
+.38249 to .37702 in TENA, but leaves the official-like phase score at .51805, the August
+peak unchanged, and annual fire at 3.793 times observed. Harvest-removal forms reduce the
+annual excess to 3.63 times observed but lose fold stability. Prefix invariance is exact
+and major ecological guardrails are unchanged. The mechanism is rejected without a full-
+grid or official run: current monthly GPP and LAI do not identify the April/October
+management clock strongly enough to improve the fire model honestly.
