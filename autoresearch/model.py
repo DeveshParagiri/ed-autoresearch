@@ -62,8 +62,6 @@ PARAMS = {'annual_scale': 1.73,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
  'seasonal_rain_capacity': 0.4,
- 'fire_return_compression': 0.25,
- 'fire_return_pivot': 0.04,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -2263,30 +2261,6 @@ def _live_fuel_greenup_brake(
     return np.asarray(allocated, dtype=np.float32)
 
 
-def _fire_return_saturation(
-    prediction: np.ndarray,
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Map local fire opportunity to area with a sublinear return curve."""
-    strength = float(np.clip(p.get("fire_return_compression", 0.0), 0.0, 1.0))
-    if "regime_capacity" not in enabled or strength <= 0.0:
-        return prediction
-    pivot = max(float(p.get("fire_return_pivot", 0.04)), 1e-5)
-    corrected = np.empty_like(prediction, dtype=np.float64)
-    for time in range(prediction.shape[0]):
-        start = max(0, time - 11)
-        annual_fire = np.asarray(
-            prediction[start : time + 1], dtype=np.float64
-        ).sum(axis=0)
-        annual_fire *= 12.0 / (time - start + 1)
-        factor = np.power(
-            pivot / (annual_fire + 1e-4), 0.5 * strength
-        )
-        corrected[time] = prediction[time] * np.clip(factor, 0.2, 5.0)
-    return np.asarray(np.clip(corrected, 0.0, 1.0), dtype=np.float32)
-
-
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2385,5 +2359,4 @@ def predict(
     prediction = _live_fuel_greenup_brake(
         prediction, data, fallback, enabled
     )
-    prediction = _fire_return_saturation(prediction, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
