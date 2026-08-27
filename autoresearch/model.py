@@ -1227,7 +1227,7 @@ def _surface_fire_opportunity_bank(
         )
         release_opportunity = relative_opportunity * physical_window
         release_fraction = 1.0 - np.exp(
-            -(1.0 / 12.0 + 3.0 * release_opportunity)
+            -(1.0 / 12.0 + 8.0 * release_opportunity)
         )
         stored = strength * surface_share[time] * hazard[time]
         bank += stored
