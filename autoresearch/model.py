@@ -28,11 +28,15 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'pathway_hazards', 'surface_opportunity_bank',
               'conditional_allocation')
 
-# Focus tuning only on the newly validated causal dead-fuel state equation.
+# Calibrate the globally shared event and causal allocation architecture only
+# after the surface-opportunity bank produced a material official gain.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'dead_fuel_pool_w': {'type': 'float', 'low': 1.0, 'high': 8.0},
-    'dead_fuel_decay': {'type': 'float', 'low': 0.02, 'high': 0.20},
-    'dead_fuel_consumption': {'type': 'float', 'low': 0.0, 'high': 8.0},
+    'annual_scale': {'type': 'float', 'low': 1.5, 'high': 1.9},
+    'pathway_mix_w': {'type': 'float', 'low': 0.2, 'high': 0.5},
+    'surface_bank_w': {'type': 'float', 'low': 0.7, 'high': 1.0},
+    'conditional_allocation_w': {'type': 'float', 'low': 0.6, 'high': 1.4},
+    'fire_season_w': {'type': 'float', 'low': 0.15, 'high': 0.4},
+    'rare_ignition_scale': {'type': 'float', 'low': 0.035, 'high': 0.08},
 }
 
 PARAMS = {'annual_scale': 1.73,
