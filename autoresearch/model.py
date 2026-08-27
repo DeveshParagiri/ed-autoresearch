@@ -27,7 +27,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'softmin', 'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'drought_maturation', 'dead_fuel_pool')
+              'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
+              'marginal_occupancy')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -67,6 +68,9 @@ PARAMS = {'annual_scale': 1.73,
  'dead_fuel_pool_w': 3.0,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
+ 'marginal_occupancy_w': 0.5,
+ 'marginal_fire_half': 0.012,
+ 'marginal_fuel_half': 0.20,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
@@ -2466,6 +2470,100 @@ def _dead_fuel_pool_response(
     return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
 
 
+def _marginal_fire_occupancy(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Require a persistent local fuel-and-ignition niche for marginal fire.
+
+    Fire recurrence is self-reinforcing only where recent burning demonstrates
+    that ignitions can connect through the local fuel bed. In previously quiet
+    cells, occupancy instead emerges continuously from productive fine fuel,
+    woody litter, seasonal rainfall pulses, lightning, and managed open land.
+    The equation is causal and site-local: it uses exponentially trailing state
+    and one set of global parameters, with no geographic labels or neighbours.
+    """
+    if "marginal_occupancy" not in enabled:
+        return prediction
+    strength = float(np.clip(p.get("marginal_occupancy_w", 0.0), 0.0, 1.0))
+    if strength <= 0.0:
+        return prediction
+
+    fire_half = float(max(p.get("marginal_fire_half", 0.012), 1e-6))
+    fuel_half = float(max(p.get("marginal_fuel_half", 0.20), 1e-6))
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    fine_fuel = _antecedent(gpp, alpha)
+    fine_fuel = fine_fuel / (fine_fuel + 0.35)
+
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    woody_fuel = (
+        natural * biomass / (biomass + 1.0) * canopy / (canopy + 8.0)
+    )
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_mean = _antecedent(rain, alpha)
+    rain_second = _antecedent(np.square(rain), alpha)
+    rain_variability = np.sqrt(
+        np.maximum(rain_second - np.square(rain_mean), 0.0)
+    )
+    rain_pump = rain_variability / (rain_variability + 45.0)
+
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    managed_open = np.clip(crop + pasture + rangeland, 0.0, 1.0)
+    open_fuel = fine_fuel * np.clip(
+        managed_open + natural * (1.0 - canopy / (canopy + 5.0)), 0.0, 1.0
+    )
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    ignition = np.maximum(
+        lightning / (lightning + 0.01), managed_open / (managed_open + 0.15)
+    )
+    viable_fuel = np.clip(
+        open_fuel * (0.4 + 0.6 * rain_pump) + 0.5 * woody_fuel,
+        0.0,
+        1.0,
+    )
+    colonization = viable_fuel / (viable_fuel + fuel_half) * ignition
+
+    baseline = np.asarray(prediction, dtype=np.float64)
+    fire_state = baseline[0].copy()
+    adjusted = np.empty_like(baseline)
+    for time in range(baseline.shape[0]):
+        recurrence = fire_state / (fire_state + fire_half)
+        occupancy = recurrence + (1.0 - recurrence) * colonization[time]
+        adjusted[time] = baseline[time] * (
+            1.0 - strength + strength * occupancy
+        )
+        fire_state += alpha * (baseline[time] - fire_state)
+    return np.asarray(np.clip(adjusted, 0.0, 1.0), dtype=np.float32)
+
+
 def _seasonal_rainfall_capacity(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2638,6 +2736,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _dead_fuel_pool_response(
+        prediction, data, fallback, enabled
+    )
+    prediction = _marginal_fire_occupancy(
         prediction, data, fallback, enabled
     )
     prediction = _live_fuel_greenup_brake(
