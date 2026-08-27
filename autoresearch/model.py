@@ -62,7 +62,6 @@ PARAMS = {'annual_scale': 1.73,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
  'seasonal_rain_capacity': 0.4,
- 'climatological_release_w': 0.001,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -2262,87 +2261,6 @@ def _live_fuel_greenup_brake(
     return np.asarray(allocated, dtype=np.float32)
 
 
-def _climatological_fuel_release(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Release seasonally accumulated fine fuel in the recurring dry phase.
-
-    Rain seasonality first builds herbaceous and litter fuel, then the locally
-    recurring dry part of the calendar exposes it to ignition.  Each site
-    learns its own climate phase from past months; no prescribed geography or
-    completed-record climatology is used.  The correction fades where the
-    process model already represents an active fire month and where dense
-    closed natural canopy restricts surface-fire access.
-    """
-    strength = float(max(p.get("climatological_release_w", 0.0), 0.0))
-    if "phenology" not in enabled or strength <= 0.0:
-        return prediction
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    annual_rain = np.clip(
-        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
-    )
-    natural = np.clip(
-        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    canopy = np.clip(
-        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
-    )
-    managed = np.clip(
-        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64)
-        + np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    mean = np.zeros_like(rain[0], dtype=np.float64)
-    second_moment = np.zeros_like(mean)
-    calendar_mean = np.zeros((12,) + mean.shape, dtype=np.float64)
-    calendar_count = np.zeros(12, dtype=np.int64)
-    release_hazard = np.zeros_like(prediction, dtype=np.float64)
-    for time in range(prediction.shape[0]):
-        count = time + 1
-        delta = rain[time] - mean
-        mean += delta / count
-        second_moment += delta * (rain[time] - mean)
-        spread = np.sqrt(second_moment / count)
-        month = time % 12
-        calendar_count[month] += 1
-        calendar_mean[month] += (
-            rain[time] - calendar_mean[month]
-        ) / calendar_count[month]
-        dry_phase = _rising(
-            (mean - calendar_mean[month]) / (spread + 10.0), 3.0, 0.15
-        )
-        seasonal_fuel = _rising(spread, 1.0 / 10.0, 25.0)
-        fuel_climate = (
-            _rising(annual_rain[time], 1.0 / 80.0, 180.0)
-            * _falling(annual_rain[time], 1.0 / 300.0, 1800.0)
-        )
-        open_natural = natural[time] * 10.0 / (canopy[time] + 10.0)
-        burn_access = np.clip(open_natural + managed[time], 0.0, 1.0)
-        missing_window = _falling(prediction[time], 1.0 / 0.0004, 0.001)
-        release = (
-            seasonal_fuel
-            * dry_phase
-            * fuel_climate
-            * burn_access
-            * missing_window
-        )
-        release_hazard[time] = strength * release
-    return np.asarray(
-        np.clip(
-            1.0 - (1.0 - prediction) * np.exp(-release_hazard), 0.0, 1.0
-        ),
-        dtype=np.float32,
-    )
-
-
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2439,9 +2357,6 @@ def predict(
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     prediction = _live_fuel_greenup_brake(
-        prediction, data, fallback, enabled
-    )
-    prediction = _climatological_fuel_release(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
