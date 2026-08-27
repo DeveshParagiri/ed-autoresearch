@@ -26,7 +26,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology', 'regime_capacity')
+              'softmin', 'cropland', 'phenology', 'regime_capacity',
+              'rare_ignition')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -60,6 +61,7 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
+ 'rare_ignition_scale': 0.02,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2002,6 +2004,82 @@ def _ecological_fire_capacity(
     )
 
 
+def _rare_lightning_ignition(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Supply rare natural ignitions missed by the continuous fire hazard.
+
+    A lightning flash does not imply burned area: it must coincide with warm,
+    rain-free fuel, and that fuel must be continuous enough to carry a front.
+    The term combines lightning with antecedent productivity and woody biomass,
+    then fades smoothly where the existing trailing fire opportunity is already
+    large. This lets rare crown or open-land events occur without amplifying
+    active savannas or creating fire in fuel-free deserts.
+    """
+    if "rare_ignition" not in enabled:
+        return prediction
+    scale = float(max(p.get("rare_ignition_scale", 0.0), 0.0))
+    if scale <= 0.0:
+        return prediction
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_chance = lightning / (lightning + 0.02)
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_window = 1.0 / (1.0 + rain / 25.0)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    thermal_window = _rising(temperature, 1.0 / 3.0, 5.0)
+
+    gpp = _antecedent(
+        np.asarray(data["gpp"], dtype=np.float64),
+        1.0 - np.exp(-1.0 / 12.0),
+    )
+    fine_fuel = gpp / (gpp + 0.35)
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    woody_fuel = biomass / (biomass + 1.0)
+    fuel_continuity = 1.0 - (1.0 - fine_fuel) * (1.0 - woody_fuel)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    burnable_land = np.clip(natural + 0.5 * rangeland, 0.0, 1.0)
+
+    trailing = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        start = max(0, time - 11)
+        annual = np.asarray(prediction[start : time + 1], dtype=np.float64).sum(
+            axis=0
+        )
+        annual *= 12.0 / (time - start + 1)
+        trailing[time] = annual
+    opportunity_gap = 1.0 / (1.0 + trailing / 0.2)
+    ignition = (
+        scale
+        * lightning_chance
+        * rain_window
+        * thermal_window
+        * fuel_continuity
+        * burnable_land
+        * opportunity_gap
+    )
+    return np.asarray(
+        np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
+        dtype=np.float32,
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2090,4 +2168,5 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
+    prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
