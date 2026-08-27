@@ -14,11 +14,16 @@ sys.path.insert(0, str(ROOT))
 from scripts.runtime import load_land_mask  # noqa: E402
 
 
-def target_grid(values: np.ndarray, longitudes: np.ndarray) -> np.ndarray:
+def target_grid(
+    values: np.ndarray,
+    latitudes: np.ndarray,
+    longitudes: np.ndarray,
+) -> np.ndarray:
     """Bilinearly center a 1-degree corner grid on the model's cell centers."""
     normalized = (longitudes + 180.0) % 360.0 - 180.0
     order = np.argsort(normalized)
-    south_to_north = values[:, ::-1, :][:, :, order]
+    south_to_north = values if latitudes[0] < latitudes[-1] else values[:, ::-1, :]
+    south_to_north = south_to_north[:, :, order]
     latitude_centered = 0.5 * (
         south_to_north[:, :-1, :] + south_to_north[:, 1:, :]
     )
@@ -31,6 +36,7 @@ def main() -> int:
     sample = Path("/tmp/ed-fire-20cr-validation")
     with netCDF4.Dataset(sample / "air.2m.2001.nc") as air_dataset:
         air = np.asarray(air_dataset.variables["air"][:], dtype=np.float64)
+        latitudes = np.asarray(air_dataset.variables["lat"][:])
         longitudes = np.asarray(air_dataset.variables["lon"][:])
         time = air_dataset.variables["time"]
         dates = netCDF4.num2date(time[:], units=time.units)
@@ -49,7 +55,7 @@ def main() -> int:
             for month in range(1, 13)
         ]
     )
-    twenty_cr = target_grid(monthly, longitudes)
+    twenty_cr = target_grid(monthly, latitudes, longitudes)
 
     with netCDF4.Dataset(ROOT / "autoresearch/inputs/climate.nc") as dataset:
         modern = np.asarray(
