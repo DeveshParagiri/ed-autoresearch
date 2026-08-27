@@ -87,7 +87,12 @@ def main() -> int:
     test = np.empty((2000, len(payload["feature_names"])), dtype=np.float64)
     for index, feature_bins in enumerate(payload["bins"]):
         cuts = feature_bins[0]
-        test[:, index] = rng.uniform(cuts[0] - 1.0, cuts[-1] + 1.0, test.shape[0])
+        if cuts.size:
+            test[:, index] = rng.uniform(
+                cuts[0] - 1.0, cuts[-1] + 1.0, test.shape[0]
+            )
+        else:
+            test[:, index] = rng.uniform(-1.0, 1.0, test.shape[0])
     reduced = pickle.loads(pickle.dumps(learner, protocol=5))
     for index, scores in enumerate(reduced.term_scores_):
         if index not in retained:
