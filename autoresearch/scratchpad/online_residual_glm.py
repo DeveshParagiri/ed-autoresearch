@@ -971,6 +971,61 @@ def main() -> int:
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
 
+        if "--load-ebm" in sys.argv:
+            payload = Path(__file__).with_name("causal_gam.b85").read_bytes()
+            learner = pickle.loads(zlib.decompress(base64.b85decode(payload)))
+            importances = learner.term_importances()
+            main_terms = [
+                index
+                for index, features in enumerate(learner.term_features_)
+                if len(features) == 1
+            ]
+            interaction_terms = [
+                index
+                for index, features in enumerate(learner.term_features_)
+                if len(features) == 2
+            ]
+            ranked_main = sorted(
+                main_terms, key=lambda index: importances[index], reverse=True
+            )
+            ranked_interactions = sorted(
+                interaction_terms,
+                key=lambda index: importances[index],
+                reverse=True,
+            )
+            evaluator = GFED5Evaluator(GFED5_PATH)
+            report(evaluator, "incumbent", incumbent)
+            candidates = [
+                (f"top-{count} main", set(ranked_main[:count]))
+                for count in (20, 30, 40, 60, 90, len(ranked_main))
+            ]
+            candidates.extend(
+                (
+                    f"all main plus top-{count} interactions",
+                    set(main_terms + ranked_interactions[:count]),
+                )
+                for count in (8, 16, 32, 64, 96, len(interaction_terms))
+            )
+            for label, retained in candidates:
+                reduced = pickle.loads(pickle.dumps(learner, protocol=5))
+                for index, scores in enumerate(reduced.term_scores_):
+                    if index not in retained:
+                        scores.fill(0.0)
+                fitted = np.empty_like(y)
+                for start in range(0, x.shape[0], 200_000):
+                    fitted[start : start + 200_000] = np.clip(
+                        reduced.predict(
+                            x[start : start + 200_000][:, selected]
+                        ),
+                        1e-6,
+                        1e6,
+                    )
+                corrected = baseline * fitted.reshape(baseline.shape)
+                candidate = incumbent.copy()
+                candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+                report(evaluator, label, candidate)
+            return 0
+
         def make_ebm(seed: int) -> ExplainableBoostingRegressor:
             return ExplainableBoostingRegressor(
                 feature_names=list(selected_names),
