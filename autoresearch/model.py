@@ -91,6 +91,10 @@ PARAMS = {'annual_scale': 1.73,
  'gpp_d': 660.9129108295722,
  'ign_c': 20.0,
  'ign_k': 1.0,
+ 'open_temp_c': 15.0,
+ 'open_temp_k': 0.5,
+ 'open_temp_rain_center': 400.0,
+ 'open_temp_strength': 2.0,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
  'pre_dampen_half': 107.40052367919465,
@@ -124,6 +128,64 @@ def _hump(array: np.ndarray, rise: float, decay: float) -> np.ndarray:
     )
 
 
+def _managed_open_temperature_gate(
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+) -> np.ndarray:
+    """Broaden combustion temperatures only for supported managed fine fuel.
+
+    Open pasture and rangeland can carry surface fire below the temperature at
+    which woody fuels become broadly combustible. The relaxed response is
+    therefore weighted by trailing fine-fuel capacity, a managed-open pathway
+    share, and sufficient annual moisture. Natural and secondary woody capacity
+    stays in the denominator and retains the incumbent temperature response.
+    """
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    incumbent = _rising(temperature, p["ign_k"], p["ign_c"])
+    open_response = _rising(
+        temperature,
+        p.get("open_temp_k", p["ign_k"]),
+        p.get("open_temp_c", p["ign_c"]),
+    )
+
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    crop = np.clip(data["luh2_cropland_fraction"], 0.0, 1.0)
+    natural = np.clip(data["natural_vegetation_fraction"], 0.0, 1.0)
+    secondary = np.clip(data["secondary_vegetation_fraction"], 0.0, 1.0)
+    rangeland = np.clip(data["luh2_rangeland_fraction"], 0.0, 1.0)
+    pasture = np.clip(data["luh2_pasture_fraction"], 0.0, 1.0)
+    canopy = np.clip(data["natural_canopy_height"], 0.0, None)
+    secondary_canopy = np.clip(data["secondary_canopy_height"], 0.0, None)
+    biomass = np.clip(data["aboveground_biomass"], 0.0, None)
+
+    managed_open = np.clip(rangeland + pasture, 0.0, 1.0)
+    surface_capacity = (1.0 - crop) * fine_fuel * managed_open
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0)
+        + secondary * secondary_canopy / (secondary_canopy + 8.0)
+    ) * biomass / (biomass + 1.0)
+    crop_capacity = crop * fine_fuel
+    surface_share = surface_capacity / (
+        0.05 + surface_capacity + woody_capacity + crop_capacity
+    )
+
+    annual_rain = np.clip(data["annual_precipitation"], 0.0, None)
+    moisture_support = _rising(
+        annual_rain,
+        0.01,
+        p.get("open_temp_rain_center", 400.0),
+    )
+    eligibility = np.clip(
+        p.get("open_temp_strength", 0.0) * surface_share * moisture_support,
+        0.0,
+        1.0,
+    )
+    return incumbent + eligibility * (open_response - incumbent)
+
+
 def _fire_rate(
     data: Mapping[str, np.ndarray],
     p: Mapping[str, float],
@@ -150,7 +212,7 @@ def _fire_rate(
         factors.append(term)
         rate = rate * term
     if "temperature" in enabled:
-        term = _rising(data["air_temperature"], p["ign_k"], p["ign_c"])
+        term = _managed_open_temperature_gate(data, p)
         factors.append(term)
         rate = rate * term
     if "vegetation" in enabled and "trop_agb_crit" in p:
