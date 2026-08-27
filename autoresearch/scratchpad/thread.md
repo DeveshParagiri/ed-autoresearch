@@ -4670,3 +4670,19 @@ annual-water factor already exceeds .9 across 98.28% of observed-fire weight, wh
 the later GPP, rain-pulse, rainfall-seasonality, humid-canopy, and productive-range
 terms already supply the wet and fuel limbs. A new hump therefore acts mainly as a
 duplicate wet brake. No exact sweep, canonical promotion, or tuning is justified.
+
+
+### Entry 138: rare heating-onset ignition gives a small exact step
+
+The exact full-grid bracket inserts a bounded ignition source inside the existing rare-
+ignition component. It fires only when short-term warming, drying onset, lightning
+arrival, causal rain-built fuel, nominal natural cover, and low trailing incumbent fire
+coincide. The linear fuel form peaks at .717589 at strength .0015; squaring the dry-limb
+fuel-establishment factor peaks at .717601 at strength .003 and reduces arid leakage.
+
+Both forms are prefix-exact and improve seasonal skill, but this first bracket used
+`luh2_primary_fraction + luh2_secondary_fraction` as a compositional natural cover.
+The prepared LUH2 secondary field is near one across almost all evaluator land and the
+six aggregate LUH fields do not sum to one, so these higher results are ineligible.
+They are retained as falsification evidence only; the same equation must be rerun with
+a valid natural-cover share before canonical promotion.
