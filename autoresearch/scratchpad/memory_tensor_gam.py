@@ -50,6 +50,17 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> Non
 
 
 def main() -> int:
+    pair_option = next(
+        (token for token in sys.argv if token.startswith("--pair=")), None
+    )
+    dense_main = any(
+        option in sys.argv
+        for option in ("--dense-main", "--dense-tensor", "--diagnose-tensors")
+    ) or pair_option is not None
+    dense_tensor = (
+        "--dense-tensor" in sys.argv or "--diagnose-tensors" in sys.argv
+        or pair_option is not None
+    )
     model = load_model()
     data = load_inputs(model.INPUTS)
     incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
@@ -143,7 +154,7 @@ def main() -> int:
             support = nonzero
         quantiles = (
             (0.02, 0.20, 0.50, 0.80, 0.98)
-            if "--dense-main" in sys.argv
+            if dense_main
             else (0.10, 0.50, 0.90)
         )
         state_knots = np.quantile(support, quantiles)
@@ -153,7 +164,7 @@ def main() -> int:
                 high = low + 1.0
             state_knots = np.linspace(low, high, len(quantiles))
         transformer = SplineTransformer(
-            degree=3 if "--dense-main" in sys.argv else 2,
+            degree=3 if dense_main else 2,
             knots=state_knots[:, None],
             extrapolation="constant",
             include_bias=False,
@@ -173,8 +184,13 @@ def main() -> int:
 
     for name, state in splines.items():
         add_group(f"main:{name}", state)
-    if "--dense-main" not in sys.argv:
-        for left, right in pairs:
+    if not dense_main or dense_tensor:
+        if pair_option is not None:
+            pair_index = int(pair_option.split("=", 1)[1])
+            interaction_pairs = pairs[pair_index:pair_index + 1]
+        else:
+            interaction_pairs = pairs[:6] if dense_tensor else pairs
+        for left, right in interaction_pairs:
             tensor = (
                 splines[left][:, :, None] * splines[right][:, None, :]
             ).reshape(len(months), -1)
@@ -208,10 +224,23 @@ def main() -> int:
 
     rng = np.random.default_rng(487)
     folds = np.repeat(rng.integers(0, 3, size=cells.size), 12)
-    alpha_values = (0.003, 0.001) if "--dense-main" in sys.argv else (0.01, 0.003, 0.001)
+    alpha_values = (
+        (0.001,)
+        if "--diagnose-tensors" in sys.argv or pair_option is not None
+        else ((0.003, 0.001) if dense_main else (0.01, 0.003, 0.001))
+    )
     for alpha in alpha_values:
         out_of_fold = np.zeros_like(y)
         coefficients: list[np.ndarray] = []
+        tensor_groups = [
+            (name, section)
+            for name, section in groups
+            if name.startswith("tensor:")
+        ]
+        tensor_diagnostics = {
+            "main-effects-only": np.zeros_like(y),
+            **{f"only:{name}": np.zeros_like(y) for name, _ in tensor_groups},
+        }
         for fold in range(3):
             train = folds != fold
             held = ~train
@@ -221,6 +250,19 @@ def main() -> int:
             )
             out_of_fold[held] = regressor.predict(standardized[held])
             coefficients.append(regressor.coef_)
+            if "--diagnose-tensors" in sys.argv:
+                held_x = standardized[held]
+                full_eta = regressor.intercept_ + held_x @ regressor.coef_
+                contributions = {
+                    name: held_x[:, section] @ regressor.coef_[section]
+                    for name, section in tensor_groups
+                }
+                main_eta = full_eta - sum(contributions.values())
+                tensor_diagnostics["main-effects-only"][held] = np.exp(main_eta)
+                for name, contribution in contributions.items():
+                    tensor_diagnostics[f"only:{name}"][held] = np.exp(
+                        main_eta + contribution
+                    )
         correlations = np.corrcoef(np.asarray(coefficients))
         print(
             f"alpha={alpha} coefficient correlation "
@@ -233,8 +275,18 @@ def main() -> int:
                 f"three-fold OOF alpha={alpha} blend={blend}",
                 candidate_from(out_of_fold, blend),
             )
+        if "--diagnose-tensors" in sys.argv:
+            for name, diagnostic in tensor_diagnostics.items():
+                report(
+                    evaluator,
+                    f"three-fold OOF alpha={alpha} blend=0.25 {name}",
+                    candidate_from(diagnostic, 0.25),
+                )
 
-    final_alpha = 0.001 if "--dense-main" in sys.argv else 0.003
+    if "--diagnose-tensors" in sys.argv or pair_option is not None:
+        return 0
+
+    final_alpha = 0.001 if dense_main else 0.003
     regressor = PoissonRegressor(alpha=final_alpha, max_iter=2000, tol=1e-8)
     regressor.fit(standardized, y, sample_weight=weights)
     learned = regressor.predict(standardized)

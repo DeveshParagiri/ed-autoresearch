@@ -3738,3 +3738,25 @@ state-defined failures include productive rangeland at 1.704, cropland at 1.442,
 .383, and a four-month global peak error. The next reverse-ML distillation must model conditional
 moisture-storage, curing, thermal, fuel, and ignition interactions with globally shared smooth
 equations; scalar tuning is exhausted and Optuna remains deferred.
+
+
+### Entry 98: strict online causality resets the official baseline
+
+A prefix-invariance audit exposed a deeper deployment failure in the .746 candidate. Multiplying
+every input after month 96 by .50 changed predictions in months 1-96 by normalized L1 **2.515**
+with maximum absolute change .986. The annual GAM summarized the completed 16-year climatology,
+the seasonal allocator averaged all future years, and curing, spread, and legacy terms normalized
+against the full record. These operations were site-local but unavailable at an online ED step.
+
+Commit `7358363` replaces them with a trailing 12-month annual state, causal running normalizers,
+current-state ecological gates, and no completed-climatology seasonal allocator. The same future
+perturbation now produces exactly zero change in prior months. Official Overall resets to **.666**
+(bias .737, RMSE .529, seasonal .790, spatial .743); global burned area is .736 of observed. This
+is the first prefix-invariant baseline and supersedes the .746 candidate for coupled claims.
+
+Reverse ML on current, previous, and 3/6/12/24-month local states recovers to **.7514** in
+whole-cell OOF at a .75 blend. The +.0855 gap is meaningful causal structure, but the held-out
+ceiling remains below .8, so fitting the grid harder would not justify a target claim. Earlier
+dense main effects reach about .750 OOF and individual smooth tensors add at most .0006; a causal
+burn-scar reservoir also fails, dropping to .726 at its weakest setting. The next work must improve
+the causal state representation or add a defensible missing mechanism, not tune leaked heads.
