@@ -510,6 +510,116 @@ def main() -> int:
                         previous_year,
                     )
                 )
+            if causal_ebm_small:
+                by_name = dict(zip(names_list, fields_list, strict=True))
+                gpp_background = by_name["gpp:expanding_mean"]
+                fine_fuel = gpp_background / (gpp_background + 0.20)
+                biomass = by_name["aboveground_biomass:current"]
+                woody_fuel = biomass / (biomass + 1.0)
+                fuel_continuity = 1.0 - (1.0 - fine_fuel) * (1.0 - woody_fuel)
+                natural = by_name["natural_vegetation_fraction:current"]
+                canopy = by_name["natural_canopy_height:current"]
+                rangeland = by_name["luh2_rangeland_fraction:current"]
+                cropland = by_name["luh2_cropland_fraction:current"]
+                open_cover = np.clip(
+                    natural * 10.0 / (canopy + 10.0) + rangeland,
+                    0.0,
+                    1.0,
+                )
+                open_fuel = fuel_continuity * open_cover
+                rain_mean = by_name["monthly_precipitation:expanding_mean"]
+                rain_std = by_name["monthly_precipitation:expanding_std"]
+                seasonal_fuel_pump = (
+                    open_fuel * rain_std / (rain_mean + rain_std + 25.0)
+                )
+                current_gpp = by_name["gpp:current"]
+                calendar_gpp = by_name["gpp:calendar_mean"]
+                curing_state = np.maximum(
+                    (calendar_gpp - current_gpp)
+                    / (np.abs(calendar_gpp) + np.abs(current_gpp) + 0.20),
+                    0.0,
+                )
+                current_rain = by_name["monthly_precipitation:current"]
+                calendar_rain = by_name["monthly_precipitation:calendar_mean"]
+                rain_deficit = np.maximum(
+                    (calendar_rain - current_rain)
+                    / (calendar_rain + current_rain + 10.0),
+                    0.0,
+                )
+                dryness_state = by_name["dryness:current"]
+                temperature_state = by_name["air_temperature:current"]
+                combustion_window = (
+                    dryness_state / (dryness_state + 500.0)
+                    * rain_deficit
+                    * sigmoid((temperature_state - 5.0) / 3.0)
+                )
+                lightning_background = by_name[
+                    "lightning_flash_rate:calendar_mean"
+                ]
+                lightning_chance = lightning_background / (
+                    lightning_background + 0.01
+                )
+                natural_ignition = (
+                    open_fuel * combustion_window * lightning_chance
+                )
+                managed_ignition = (
+                    np.clip(cropland + rangeland, 0.0, 1.0)
+                    * fine_fuel
+                    * combustion_window
+                )
+                temperature_background = by_name[
+                    "air_temperature:expanding_mean"
+                ]
+                cold_forest_ignition = (
+                    natural
+                    * canopy / (canopy + 8.0)
+                    * woody_fuel
+                    * sigmoid((8.0 - temperature_background) / 3.0)
+                    * lightning_chance
+                )
+                closed_canopy_moisture = (
+                    natural
+                    * canopy / (canopy + 12.0)
+                    * by_name["leaf_area_index:current"]
+                    / (by_name["leaf_area_index:current"] + 2.5)
+                    * by_name["annual_precipitation:current"]
+                    / (by_name["annual_precipitation:current"] + 1200.0)
+                )
+                recent_fire = by_name["trailing_annual"]
+                fire_return_gap = 1.0 / (1.0 + recent_fire / 0.04)
+                recurrent_combustion = (
+                    recent_fire / (recent_fire + 0.04) * combustion_window
+                )
+                composite_names = (
+                    "mechanism:fuel_continuity",
+                    "mechanism:open_fuel_continuity",
+                    "mechanism:seasonal_fuel_pump",
+                    "mechanism:curing_state",
+                    "mechanism:rain_deficit",
+                    "mechanism:combustion_window",
+                    "mechanism:natural_ignition",
+                    "mechanism:managed_ignition",
+                    "mechanism:cold_forest_ignition",
+                    "mechanism:closed_canopy_moisture",
+                    "mechanism:fire_return_gap",
+                    "mechanism:recurrent_combustion",
+                )
+                composite_fields = (
+                    fuel_continuity,
+                    open_fuel,
+                    seasonal_fuel_pump,
+                    curing_state,
+                    rain_deficit,
+                    combustion_window,
+                    natural_ignition,
+                    managed_ignition,
+                    cold_forest_ignition,
+                    closed_canopy_moisture,
+                    fire_return_gap,
+                    recurrent_combustion,
+                )
+                names_list.extend(composite_names)
+                fields_list.extend(composite_fields)
         names = tuple(names_list)
         feature_fields = tuple(fields_list)
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
@@ -841,6 +951,18 @@ def main() -> int:
             "lightning_flash_rate:calendar_mean",
             "luh2_pasture_fraction:current",
             "secondary_vegetation_fraction:current",
+            "mechanism:fuel_continuity",
+            "mechanism:open_fuel_continuity",
+            "mechanism:seasonal_fuel_pump",
+            "mechanism:curing_state",
+            "mechanism:rain_deficit",
+            "mechanism:combustion_window",
+            "mechanism:natural_ignition",
+            "mechanism:managed_ignition",
+            "mechanism:cold_forest_ignition",
+            "mechanism:closed_canopy_moisture",
+            "mechanism:fire_return_gap",
+            "mechanism:recurrent_combustion",
         )
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
