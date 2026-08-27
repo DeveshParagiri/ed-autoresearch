@@ -61,6 +61,7 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
+ 'seasonal_rain_capacity': 0.4,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -2190,6 +2191,37 @@ def _state_dependent_fire_season(
     )
 
 
+def _seasonal_rainfall_capacity(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Expand burnable capacity where alternating rain builds and cures fuel."""
+    strength = float(max(p.get("seasonal_rain_capacity", 0.0), 0.0))
+    if "regime_capacity" not in enabled or strength <= 0.0:
+        return prediction
+    rain = np.asarray(data["monthly_precipitation"], dtype=np.float64)
+    factor = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        start = max(0, time - 11)
+        window = rain[start : time + 1]
+        rain_variability = window.std(axis=0)
+        seasonal_pump = _rising(rain_variability, 1.0 / 15.0, 55.0)
+        annual_fire = np.asarray(
+            prediction[start : time + 1], dtype=np.float64
+        ).sum(axis=0)
+        annual_fire *= 12.0 / (time - start + 1)
+        moderate_opportunity = (
+            _rising(annual_fire, 1.0 / 0.04, 0.12)
+            * _falling(annual_fire, 1.0 / 0.08, 0.35)
+        )
+        factor[time] = np.exp(
+            np.clip(strength * seasonal_pump * moderate_opportunity, 0.0, 5.0)
+        )
+    return np.asarray(np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32)
+
+
 def _live_fuel_greenup_brake(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2317,6 +2349,9 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
+    prediction = _seasonal_rainfall_capacity(
+        prediction, data, fallback, enabled
+    )
     prediction = _state_dependent_fire_season(
         prediction, data, fallback, enabled
     )
