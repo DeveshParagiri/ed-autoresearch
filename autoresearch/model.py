@@ -67,7 +67,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_dry_half': 500.0,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
- 'crown_fire_event_scale': 0.08,
+ 'crown_fire_event_scale': 0.25,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
  'vpd_half': 0.29948860381280695,
@@ -2171,7 +2171,12 @@ def _rare_lightning_ignition(
             lightning, 1.0 - np.exp(-1.0 / 12.0)
         )
         persistent_lightning = lightning_memory / (lightning_memory + 0.01)
-        crown_fuel = cold_forest * woody_fuel
+        deep_cold_forest = (
+            natural
+            * canopy / (canopy + 8.0)
+            * _falling(temperature_memory, 1.0 / 3.0, 2.0)
+        )
+        crown_fuel = deep_cold_forest * woody_fuel
         crown_event = (
             crown_scale
             * crown_fuel
