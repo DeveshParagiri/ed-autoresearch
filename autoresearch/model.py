@@ -334,6 +334,7 @@ def _pathway_event_scaling(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     combustion = dryness / (dryness + 500.0)
+
     natural = np.clip(
         np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
         0.0,
@@ -1170,22 +1171,6 @@ def _surface_fire_opportunity_bank(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     combustion = dryness / (dryness + 500.0)
-    lightning = np.clip(
-        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
-    )
-    lightning_6 = _antecedent(lightning, alpha_6)
-    lightning_departure = np.maximum(
-        (lightning - lightning_6) / (lightning + lightning_6 + 1e-3), 0.0
-    )
-    rain_12 = _antecedent(rain, alpha_12)
-    wet_departure = np.maximum(
-        (rain - rain_12) / (rain + rain_12 + 10.0), 0.0
-    )
-    dry_ignition = (
-        lightning_6 / (lightning_6 + 0.01)
-        * np.exp(-2.0 * wet_departure * lightning_departure)
-    )
-    ignition_readiness = 0.5 + 0.5 * dry_ignition
 
     natural = np.clip(
         np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
@@ -1239,7 +1224,6 @@ def _surface_fire_opportunity_bank(
         physical_window *= 0.25 + 0.75 * curing[time] / (
             curing[time] + 0.05
         )
-        physical_window *= np.sqrt(ignition_readiness[time])
         release_opportunity = relative_opportunity * physical_window
         release_fraction = 1.0 - np.exp(
             -(1.0 / 24.0 + 8.0 * release_opportunity)
