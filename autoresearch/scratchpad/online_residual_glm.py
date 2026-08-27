@@ -169,6 +169,7 @@ def main() -> int:
     interaction_gam = "--interaction-gam" in sys.argv
     shallow_tree = "--shallow-tree" in sys.argv
     tensor_gam = "--tensor-gam" in sys.argv
+    causal_tensor_gam = "--causal-tensor-gam" in sys.argv
     bin_top = "--bin-top" in sys.argv
     physical_tree = "--physical-tree" in sys.argv
     physical_ebm = "--physical-ebm" in sys.argv
@@ -398,6 +399,7 @@ def main() -> int:
         or interaction_gam
         or shallow_tree
         or tensor_gam
+        or causal_tensor_gam
         or bin_top
         or physical_tree
         or physical_ebm
@@ -433,7 +435,7 @@ def main() -> int:
                 fields_list.extend(
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
                 )
-        if causal_climate_tree or causal_gam:
+        if causal_climate_tree or causal_gam or causal_tensor_gam:
             month = np.arange(baseline.shape[1], dtype=np.float64) % 12
             angle = 2.0 * np.pi * month / 12.0
             for harmonic in (1, 2, 3):
@@ -651,8 +653,28 @@ def main() -> int:
         for left_name, right_name in pairs:
             ratio_matrix(left_name, right_name)
         return 0
-    if tensor_gam:
+    if tensor_gam or causal_tensor_gam:
         selected_names = (
+            (
+                "incumbent",
+                "trailing_annual",
+                "fire_share",
+                "luh2_cropland_fraction:current",
+                "air_temperature:expanding_std",
+                "monthly_precipitation:expanding_std",
+                "monthly_precipitation:calendar_mean",
+                "monthly_precipitation:expanding_mean",
+                "aboveground_biomass:current",
+                "lightning_flash_rate:expanding_std",
+                "natural_vegetation_fraction:current",
+                "air_temperature:departure_3m",
+                "annual_precipitation:current",
+                "luh2_primary_fraction:current",
+                "luh2_rangeland_fraction:current",
+                "natural_canopy_height:current",
+            )
+            if causal_tensor_gam
+            else (
             "incumbent",
             "trailing_annual",
             "fire_share",
@@ -670,8 +692,26 @@ def main() -> int:
             "monthly_precipitation:memory_12m",
             "monthly_precipitation:current",
             "luh2_rangeland_fraction:current",
+            )
         )
         tensor_names = (
+            (
+                ("incumbent", "air_temperature:expanding_std"),
+                ("luh2_cropland_fraction:current", "air_temperature:expanding_std"),
+                ("monthly_precipitation:expanding_std", "air_temperature:expanding_std"),
+                ("incumbent", "luh2_cropland_fraction:current"),
+                ("incumbent", "monthly_precipitation:expanding_std"),
+                ("luh2_cropland_fraction:current", "monthly_precipitation:expanding_std"),
+                ("annual_precipitation:current", "air_temperature:expanding_std"),
+                ("monthly_precipitation:calendar_mean", "air_temperature:expanding_std"),
+                ("incumbent", "annual_precipitation:current"),
+                ("aboveground_biomass:current", "air_temperature:expanding_std"),
+                ("incumbent", "air_temperature:departure_3m"),
+                ("incumbent", "monthly_precipitation:calendar_mean"),
+                ("natural_vegetation_fraction:current", "monthly_precipitation:expanding_std"),
+            )
+            if causal_tensor_gam
+            else (
             ("trailing_annual", "dryness:current"),
             ("trailing_annual", "lightning_flash_rate:memory_24m"),
             ("trailing_annual", "lightning_flash_rate:memory_12m"),
@@ -690,6 +730,7 @@ def main() -> int:
                 "air_temperature:departure_3m",
             ),
             ("trailing_annual", "natural_vegetation_fraction:current"),
+            )
         )
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
