@@ -4881,3 +4881,14 @@ not less. Root water carries a possible cycle signal, but it also reverses in on
 fold. The aggregate humid-primary overburn is therefore another between-cell mixture that
 a broad physical canopy or root-moisture brake cannot separate. Prefix causality passes,
 but no full-grid or official candidate follows.
+
+
+### Entry 149: simpler arid-capacity line confirms official .718
+
+Official evaluation of the pruned candidate at `1f4522c` records **.718** with bias
+.757, RMSE .547, seasonality .862, and spatial distribution .879. The official scalar
+rounds to the previous three-decimal best, while the exact proxy improves by .000800 to
+.718363408. The candidate removes nineteen lines and one obsolete coefficient rather than
+adding a correction. Its regional and ecological trade is documented in Entry 147; no
+learned surface, invalid forcing, geography, neighbour state, or future information enters
+the prediction path.
