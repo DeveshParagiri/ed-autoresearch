@@ -25,8 +25,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards', 'surface_opportunity_bank',
-              'conditional_allocation')
+              'pathway_hazards', 'surface_opportunity_bank')
 
 # Calibrate only the newly validated globally shared event-footprint equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
