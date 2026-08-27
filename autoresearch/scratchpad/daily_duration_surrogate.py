@@ -32,6 +32,7 @@ NAMES = (
     "dryness_departure_3m",
     "temperature_departure_3m",
 )
+REDUCED_INDEX = (0, 3, 4, 5, 6)
 
 
 def weighted_metrics(
@@ -98,6 +99,7 @@ def main() -> int:
     print(f"rows={x.shape[0]} features={x.shape[1]}", flush=True)
 
     ridge_oof = np.zeros_like(target)
+    reduced_oof = np.zeros_like(target)
     tree_oof = np.zeros_like(target)
     importances: list[np.ndarray] = []
     transformed_target = np.log(
@@ -113,6 +115,16 @@ def main() -> int:
         ridge.fit(x[train], transformed_target[train], sample_weight=weights[train])
         linear = ridge.predict(x[held])
         ridge_oof[held] = 1.0 / (1.0 + np.exp(np.clip(-linear, -40.0, 40.0)))
+        reduced = Ridge(alpha=10.0)
+        reduced.fit(
+            x[train][:, REDUCED_INDEX],
+            transformed_target[train],
+            sample_weight=weights[train],
+        )
+        reduced_linear = reduced.predict(x[held][:, REDUCED_INDEX])
+        reduced_oof[held] = 1.0 / (
+            1.0 + np.exp(np.clip(-reduced_linear, -40.0, 40.0))
+        )
         tree = HistGradientBoostingRegressor(
             loss="squared_error",
             learning_rate=0.08,
@@ -140,12 +152,23 @@ def main() -> int:
         importances.append(fold_importance)
         print(f"completed fold={fold}", flush=True)
 
-    for label, prediction in (("ridge_logit", ridge_oof), ("histogram_tree", tree_oof)):
+    for label, prediction in (
+        ("ridge_logit", ridge_oof),
+        ("reduced_ridge_logit", reduced_oof),
+        ("histogram_tree", tree_oof),
+    ):
         correlation, rmse, r2 = weighted_metrics(target, prediction, weights)
         print(f"{label} weighted_r={correlation:.6f} rmse={rmse:.6f} r2={r2:.6f}")
     mean_importance = np.asarray(importances).mean(axis=0)
     for index in np.argsort(mean_importance)[::-1]:
         print(f"importance {NAMES[index]}={mean_importance[index]:.8f}")
+    reduced = Ridge(alpha=10.0)
+    reduced.fit(
+        x[:, REDUCED_INDEX], transformed_target, sample_weight=weights
+    )
+    print(f"REDUCED_NAMES={tuple(NAMES[index] for index in REDUCED_INDEX)!r}")
+    print(f"REDUCED_INTERCEPT={reduced.intercept_!r}")
+    print(f"REDUCED_COEFFICIENTS={tuple(reduced.coef_)!r}")
     return 0
 
 
