@@ -124,6 +124,7 @@ def main() -> int:
     tensor_gam = "--tensor-gam" in sys.argv
     bin_top = "--bin-top" in sys.argv
     physical_tree = "--physical-tree" in sys.argv
+    physical_ebm = "--physical-ebm" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -338,6 +339,7 @@ def main() -> int:
         or tensor_gam
         or bin_top
         or physical_tree
+        or physical_ebm
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -368,7 +370,7 @@ def main() -> int:
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
     )
-    if physical_tree:
+    if physical_tree or physical_ebm:
         x = x[:, 3:]
         names = names[3:]
     with Dataset(GFED5_PATH) as dataset:
@@ -563,6 +565,67 @@ def main() -> int:
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
             report(evaluator, f"tensor GAM OOF strength={strength}", candidate)
+        return 0
+    if physical_ebm:
+        from interpret.glassbox import ExplainableBoostingRegressor
+
+        out_of_fold = np.zeros_like(y)
+        trained = None
+        log_ratio = np.log(np.clip(y, 1e-4, 1e4))
+        for fold in range(3):
+            train = np.flatnonzero(folds != fold)
+            held = np.flatnonzero(folds == fold)
+            if train.size > 200_000:
+                train = rng.choice(train, size=200_000, replace=False)
+            learner = ExplainableBoostingRegressor(
+                feature_names=list(names),
+                max_bins=64,
+                max_interaction_bins=24,
+                interactions=24,
+                validation_size=0.15,
+                outer_bags=2,
+                inner_bags=0,
+                learning_rate=0.04,
+                smoothing_rounds=100,
+                interaction_smoothing_rounds=50,
+                max_rounds=1200,
+                early_stopping_rounds=60,
+                min_samples_leaf=100,
+                max_leaves=3,
+                objective="rmse",
+                n_jobs=-2,
+                random_state=811 + fold,
+            )
+            learner.fit(x[train], log_ratio[train], sample_weight=weights[train])
+            for start in range(0, held.size, 200_000):
+                batch = held[start : start + 200_000]
+                out_of_fold[batch] = np.exp(
+                    np.clip(learner.predict(x[batch]), -8.0, 8.0)
+                )
+            trained = learner
+            print(
+                f"completed physical EBM fold={fold} train={train.size} "
+                f"held={held.size} terms={len(learner.term_names_)}",
+                flush=True,
+            )
+        evaluator = GFED5Evaluator(GFED5_PATH)
+        report(evaluator, "incumbent", incumbent)
+        for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
+            corrected = baseline * np.power(
+                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                strength,
+            )
+            candidate = incumbent.copy()
+            candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+            report(evaluator, f"physical EBM OOF strength={strength}", candidate)
+        assert trained is not None
+        importances = trained.term_importances()
+        print("physical EBM ranked terms", flush=True)
+        for index in np.argsort(importances)[::-1][:40]:
+            print(
+                f"{trained.term_names_[index]}\t{importances[index]:.10f}",
+                flush=True,
+            )
         return 0
     if broad_gam or interaction_gam:
         selected_names = (
