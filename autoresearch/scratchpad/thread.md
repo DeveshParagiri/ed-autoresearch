@@ -4836,3 +4836,21 @@ full stack, a destructive interaction of -.002336. Removing the footprint or fra
 does not rescue the global score. The equation is causal and the future-half prefix test
 is bit-exact, but it duplicates the annual closure in consequential cells and redraws the
 spatial map. The family stops without an official evaluation or parameter bracket.
+
+
+### Entry 147: inner pruning exposes a stale arid capacity boost
+
+The positive grouped capacity and annual-closure components were decomposed into six
+physical subterms at the exact operating point. The productive-rangeland brake is strongly
+load-bearing (-.02086 if removed), as are the persistent warm-open brake (-.00644) and
+cold-thaw source (-.00046). Its cold-thaw multiplier also remains weakly positive. The
+cold-forest source is slightly stale: removing it gains .000110 globally but costs boreal
+North America .02020, so it remains a scientifically useful regional trade.
+
+The old arid fine-fuel capacity is unambiguously stale under the later fuel and pathway
+stack. Removing it raises exact Overall from .717563738 to **.718363408**, improving bias
+by .001669, RMSE by .001231, and seasonality by .000372; spatial skill loses only .000506.
+Nine of fourteen regions improve, with Central America gaining .01332 and the largest loss,
+central Asia, limited to .00308. Because the existing arid-low-fuel audit already burns
+1.311 times observed, pruning an unconditional positive arid multiplier is also the safer
+physical direction. A clean canonical removal is justified before full ecological audit.
