@@ -615,6 +615,26 @@ def main() -> int:
             )
             if bin_physical
             else (
+                ("incumbent", "air_temperature:expanding_std"),
+                ("incumbent", "monthly_precipitation:expanding_std"),
+                (
+                    "luh2_cropland_fraction:current",
+                    "air_temperature:expanding_std",
+                ),
+                ("annual_precipitation:current", "air_temperature:expanding_std"),
+                (
+                    "monthly_precipitation:expanding_mean",
+                    "monthly_precipitation:expanding_std",
+                ),
+                ("aboveground_biomass:current", "air_temperature:expanding_std"),
+                (
+                    "natural_vegetation_fraction:current",
+                    "monthly_precipitation:expanding_std",
+                ),
+                ("incumbent", "monthly_precipitation:calendar_mean"),
+            )
+            if causal_climate_tree
+            else (
                 ("trailing_annual", "dryness:current"),
                 ("trailing_annual", "lightning_flash_rate:memory_24m"),
                 ("incumbent", "luh2_cropland_fraction:current"),
