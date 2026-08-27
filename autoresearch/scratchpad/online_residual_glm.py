@@ -124,6 +124,7 @@ def main() -> int:
     tensor_gam = "--tensor-gam" in sys.argv
     bin_top = "--bin-top" in sys.argv
     physical_tree = "--physical-tree" in sys.argv
+    bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -337,6 +338,7 @@ def main() -> int:
         or tensor_gam
         or bin_top
         or physical_tree
+        or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
@@ -386,7 +388,7 @@ def main() -> int:
     rng = np.random.default_rng(487)
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, baseline.shape[1])
-    if bin_top:
+    if bin_top or bin_physical:
         name_to_index = {name: index for index, name in enumerate(names)}
         sample = rng.choice(x.shape[0], size=min(600_000, x.shape[0]), replace=False)
 
@@ -425,13 +427,31 @@ def main() -> int:
             print("right_edges=" + np.array2string(right_edges, precision=6), flush=True)
             print(np.array2string(matrix, precision=3), flush=True)
 
-        for left_name, right_name in (
-            ("trailing_annual", "dryness:current"),
-            ("trailing_annual", "lightning_flash_rate:memory_24m"),
-            ("incumbent", "luh2_cropland_fraction:current"),
-            ("incumbent", "annual_precipitation:current"),
-            ("trailing_annual", "natural_vegetation_fraction:current"),
-        ):
+        pairs = (
+            (
+                ("gpp:memory_24m", "dryness:memory_12m"),
+                ("gpp:memory_24m", "monthly_precipitation:memory_12m"),
+                ("gpp:memory_24m", "aboveground_biomass:current"),
+                (
+                    "luh2_cropland_fraction:current",
+                    "natural_vegetation_fraction:current",
+                ),
+                ("annual_precipitation:current", "aboveground_biomass:current"),
+                (
+                    "aboveground_biomass:current",
+                    "lightning_flash_rate:memory_12m",
+                ),
+            )
+            if bin_physical
+            else (
+                ("trailing_annual", "dryness:current"),
+                ("trailing_annual", "lightning_flash_rate:memory_24m"),
+                ("incumbent", "luh2_cropland_fraction:current"),
+                ("incumbent", "annual_precipitation:current"),
+                ("trailing_annual", "natural_vegetation_fraction:current"),
+            )
+        )
+        for left_name, right_name in pairs:
             ratio_matrix(left_name, right_name)
         return 0
     if tensor_gam:
