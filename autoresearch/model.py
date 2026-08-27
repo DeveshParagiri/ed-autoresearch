@@ -25,8 +25,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'leaf_area_index', 'natural_canopy_height', 'secondary_canopy_height',
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
-COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
-              'cropland', 'legacy', 'stubble', 'pasture', 'phenology')
+COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
+              'softmin', 'cropland', 'phenology')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
