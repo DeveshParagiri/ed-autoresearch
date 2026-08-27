@@ -2003,17 +2003,8 @@ def _vpd_memory_response(
     ):
         eta += coefficient * (values - center) / (scale + 1e-12)
     factor = np.exp(np.clip(strength * eta, -8.0, 8.0))
-    # The pulse reallocates a site's existing burn opportunity through time;
-    # it is not a second source of annual fuel. Divide by a causal trailing
-    # factor state so the response stays relative to the recent local regime.
-    alpha = 1.0 - np.exp(-1.0 / 12.0)
-    state = np.asarray(factor[0], dtype=np.float64).copy()
-    relative = np.empty_like(factor)
-    for time in range(factor.shape[0]):
-        state += alpha * (factor[time] - state)
-        relative[time] = factor[time] / (state + 1e-12)
     return np.asarray(
-        np.clip(np.asarray(prediction, dtype=np.float64) * relative, 0.0, 1.0),
+        np.clip(np.asarray(prediction, dtype=np.float64) * factor, 0.0, 1.0),
         dtype=np.float32,
     )
 
