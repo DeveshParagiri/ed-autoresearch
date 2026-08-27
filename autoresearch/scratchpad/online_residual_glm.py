@@ -175,6 +175,7 @@ def main() -> int:
     physical_ebm = "--physical-ebm" in sys.argv
     causal_ebm = "--causal-ebm" in sys.argv
     causal_ebm_small = "--causal-ebm-small" in sys.argv
+    causal_ebm_wide = "--causal-ebm-wide" in sys.argv
     annual_target_tree = "--annual-target-tree" in sys.argv
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     causal_climate_tree = "--causal-climate-tree" in sys.argv
@@ -406,6 +407,7 @@ def main() -> int:
         or physical_ebm
         or causal_ebm
         or causal_ebm_small
+        or causal_ebm_wide
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
@@ -437,7 +439,7 @@ def main() -> int:
                 fields_list.extend(
                     (memory, (raw - memory) / (np.abs(raw) + np.abs(memory) + 1e-3))
                 )
-        if causal_climate_tree or causal_gam or causal_tensor_gam or causal_ebm_small:
+        if causal_climate_tree or causal_gam or causal_tensor_gam or causal_ebm_small or causal_ebm_wide:
             month = np.arange(baseline.shape[1], dtype=np.float64) % 12
             angle = 2.0 * np.pi * month / 12.0
             for harmonic in (1, 2, 3):
@@ -510,7 +512,7 @@ def main() -> int:
                         previous_year,
                     )
                 )
-            if causal_ebm_small:
+            if causal_ebm_small or causal_ebm_wide:
                 by_name = dict(zip(names_list, fields_list, strict=True))
                 gpp_background = by_name["gpp:expanding_mean"]
                 fine_fuel = gpp_background / (gpp_background + 0.20)
@@ -914,7 +916,7 @@ def main() -> int:
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
             report(evaluator, f"tensor GAM OOF strength={strength}", candidate)
         return 0
-    if causal_ebm_small:
+    if causal_ebm_small or causal_ebm_wide:
         from interpret.glassbox import ExplainableBoostingRegressor
 
         selected_names = (
@@ -964,6 +966,8 @@ def main() -> int:
             "mechanism:fire_return_gap",
             "mechanism:recurrent_combustion",
         )
+        if causal_ebm_wide:
+            selected_names = tuple(names)
         name_to_index = {name: index for index, name in enumerate(names)}
         selected = np.asarray([name_to_index[name] for name in selected_names])
 
@@ -972,7 +976,7 @@ def main() -> int:
                 feature_names=list(selected_names),
                 max_bins=96,
                 max_interaction_bins=24,
-                interactions=96,
+                interactions=192 if causal_ebm_wide else 96,
                 validation_size=0.15,
                 outer_bags=2,
                 inner_bags=0,
