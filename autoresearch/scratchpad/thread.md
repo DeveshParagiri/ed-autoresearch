@@ -4656,3 +4656,17 @@ antecedent fuel, and low prior fire opportunity. At sampled strength .0015, allo
 error improves in three of four blocks and annual-log error in all four. This warrants
 one exact bracket inside the existing rare-ignition component, not a new bank or an
 Optuna run.
+
+
+### Entry 137: a base causal rain hump is redundant
+
+A structurally distinct replacement for the base annual-water factor was tested as a
+unit-peak dry-rise by wet-decay capacity using only causal rain memory. Three physical
+shapes and product-to-hump blends of .25, .5, and 1.0 were evaluated on 768 dominant
+cells holding 59.5% of observed-fire weight in four geographic blocks.
+
+Every shape and strength worsens annual-log error in all four blocks. The incumbent
+annual-water factor already exceeds .9 across 98.28% of observed-fire weight, while
+the later GPP, rain-pulse, rainfall-seasonality, humid-canopy, and productive-range
+terms already supply the wet and fuel limbs. A new hump therefore acts mainly as a
+duplicate wet brake. No exact sweep, canonical promotion, or tuning is justified.
