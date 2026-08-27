@@ -998,8 +998,9 @@ def main() -> int:
             candidates = [
                 (f"top-{count} main", set(ranked_main[:count]))
                 for count in (20, 30, 40, 60, 90, len(ranked_main))
-            ]
-            candidates.extend(
+            ] if "--physical-prune" not in sys.argv else []
+            if "--physical-prune" not in sys.argv:
+                candidates.extend(
                 (
                     f"all main plus top-{count} interactions",
                     set(main_terms + ranked_interactions[:count]),
@@ -1008,7 +1009,19 @@ def main() -> int:
                     8, 16, 32, 64, 96, 112, 128, 144, 160, 176,
                     len(interaction_terms),
                 )
-            )
+                )
+            physically_allowed = [
+                index
+                for index in ranked_interactions
+                if "luh2_urban_fraction" not in learner.term_names_[index]
+            ]
+            for count in (128, 144, 160):
+                candidates.append(
+                    (
+                        f"physical no-urban main plus top-{count} interactions",
+                        set(main_terms + physically_allowed[:count]),
+                    )
+                )
             for label, retained in candidates:
                 reduced = pickle.loads(pickle.dumps(learner, protocol=5))
                 for index, scores in enumerate(reduced.term_scores_):
