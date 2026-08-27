@@ -93,6 +93,60 @@ def main() -> int:
     years = np.tile(np.arange(16), cells.size)
     usable = years > 0
     rng = np.random.default_rng(937)
+    if "--bin-top" in sys.argv:
+        name_to_index = {name: index for index, name in enumerate(names)}
+        sample_pool = np.flatnonzero(usable)
+        sample = rng.choice(
+            sample_pool, size=min(250_000, sample_pool.size), replace=False
+        )
+
+        def ratio_matrix(left_name: str, right_name: str) -> None:
+            left = x[sample, name_to_index[left_name]]
+            right = x[sample, name_to_index[right_name]]
+            quantiles = np.linspace(0.0, 1.0, 7)
+            left_edges = np.unique(np.quantile(left, quantiles))
+            right_edges = np.unique(np.quantile(right, quantiles))
+            left_bins = np.clip(
+                np.searchsorted(left_edges, left, side="right") - 1,
+                0,
+                left_edges.size - 2,
+            )
+            right_bins = np.clip(
+                np.searchsorted(right_edges, right, side="right") - 1,
+                0,
+                right_edges.size - 2,
+            )
+            matrix = np.full(
+                (left_edges.size - 1, right_edges.size - 1), np.nan
+            )
+            for left_bin in range(matrix.shape[0]):
+                for right_bin in range(matrix.shape[1]):
+                    selected = (
+                        (left_bins == left_bin) & (right_bins == right_bin)
+                    )
+                    if selected.sum() < 100:
+                        continue
+                    selected_rows = sample[selected]
+                    matrix[left_bin, right_bin] = np.average(
+                        target[selected_rows], weights=weights[selected_rows]
+                    )
+            print(f"ratio matrix {left_name} x {right_name}", flush=True)
+            print("left_edges=" + np.array2string(left_edges, precision=6), flush=True)
+            print("right_edges=" + np.array2string(right_edges, precision=6), flush=True)
+            print(np.array2string(matrix, precision=3), flush=True)
+
+        for pair in (
+            ("prior_model_annual", "luh2_cropland_fraction:prior_mean"),
+            ("prior_model_annual", "lightning_flash_rate:prior_std"),
+            ("prior_model_annual", "annual_precipitation:prior_mean"),
+            ("prior_model_annual", "natural_vegetation_fraction:prior_p10"),
+            ("annual_precipitation:prior_mean", "lightning_flash_rate:prior_std"),
+            ("air_temperature:prior_mean", "air_temperature:prior_std"),
+            ("aboveground_biomass:prior_mean", "leaf_area_index:prior_p90"),
+        ):
+            ratio_matrix(*pair)
+        return 0
+
     cell_folds = rng.integers(0, 3, size=cells.size)
     folds = np.repeat(cell_folds, 16)
     out_of_fold = np.ones_like(target)
