@@ -5128,3 +5128,18 @@ rather than broad, but no state-defined ecological pathology appears: boreal and
 are nearly unchanged, intact tropical, temperate closed, productive rangeland, and crop
 underburn move toward one, and tropical open remains bounded at 1.053. The scalar step is
 accepted under the overall-first objective without claiming universal regional improvement.
+
+
+### Entry 164: exact subterm pruning finds no defensible removal
+
+The .718706140 incumbent was reconstructed from the pinned predecessor plus the new final
+capacity and independently reproduced bit-for-bit. Removing cold-forest capacity is the
+largest scalar-positive prune at +.000102716 and improves eight regions, but collapses the
+boreal ratio from 1.054 to .766 and costs BONA .02000, so it is ecologically rejected.
+
+All meaningful grouped subterms remain positive. Within the weakest banks, removing woody
+fuel recovery gains only .000033374 with four regions and slightly worsens tropical-open
+and boreal overburn; removing background storage gains .000012965 while raising arid fire.
+Every other managed, crop, surface, litter, footprint, closure, pathway, and recurrence
+subterm is load-bearing. No prune clears the threshold for canonical release, tuning, or
+official evaluation.
