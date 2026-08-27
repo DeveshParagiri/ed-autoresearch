@@ -29,13 +29,11 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'softmin', 'cropland', 'phenology', 'regime_capacity',
               'rare_ignition')
 
-# Focus tuning on the independently validated global annual and seasonal heads.
+# Tune only the new globally shared ignition physics after its structural gain.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'annual_scale': {'type': 'float', 'low': 0.75, 'high': 1.15},
-    'annual_residual_w': {'type': 'float', 'low': 0.35, 'high': 1.20},
-    'allocation_glm_w': {'type': 'float', 'low': 0.60, 'high': 1.40},
-    'memory_gam_w': {'type': 'float', 'low': 0.50, 'high': 1.00},
-    'causal_glm_w': {'type': 'float', 'low': 0.25, 'high': 0.75},
+    'rare_ignition_scale': {'type': 'float', 'low': 0.005, 'high': 0.04},
+    'rare_canopy_shield': {'type': 'float', 'low': 2.0, 'high': 8.0},
+    'rare_opportunity_half': {'type': 'float', 'low': 0.05, 'high': 0.30},
 }
 
 PARAMS = {'annual_scale': 1.85,
@@ -62,6 +60,8 @@ PARAMS = {'annual_scale': 1.85,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
  'rare_ignition_scale': 0.02,
+ 'rare_canopy_shield': 4.0,
+ 'rare_opportunity_half': 0.2,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2076,7 +2076,9 @@ def _rare_lightning_ignition(
         * _rising(leaf_area, 2.0, 2.5)
         * natural
     )
-    canopy_access = np.exp(-4.0 * humid_closed_canopy)
+    canopy_access = np.exp(
+        -float(p.get("rare_canopy_shield", 4.0)) * humid_closed_canopy
+    )
     burnable_land = np.clip(
         (open_natural + cold_forest) * canopy_access,
         0.0,
@@ -2091,7 +2093,8 @@ def _rare_lightning_ignition(
         )
         annual *= 12.0 / (time - start + 1)
         trailing[time] = annual
-    opportunity_gap = 1.0 / (1.0 + trailing / 0.2)
+    opportunity_half = max(float(p.get("rare_opportunity_half", 0.2)), 1e-3)
+    opportunity_gap = 1.0 / (1.0 + trailing / opportunity_half)
     ignition = (
         scale
         * lightning_chance
