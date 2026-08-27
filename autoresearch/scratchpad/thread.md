@@ -4253,3 +4253,31 @@ is recovered. The next structural family must distinguish connected seasonal
 managed burning from fragmented or persistently low-fire human landscapes using
 smooth local land-state, fuel, and recurrence physics rather than regional
 coefficients.
+
+
+### Entry 119: secondary litter and recurrence fragmentation reach official .716
+
+The managed-temperature step justified a focused four-parameter Optuna pass. It
+stopped after 25 trials and raised the exact proxy only from .714603 to .715032,
+again showing that calibration finishes a physical step but does not supply the
+missing structure. The prediction-neutral search-space commit is `374ee06` and the
+tuned globally shared response is `cec613c`.
+
+Two independent finite-state mechanisms then crossed positively. Secondary open
+vegetation now produces rain-supported live fine fuel, transfers senesced material
+into a 12-month litter stock, and releases only its bounded pathway hazard when that
+litter is combustible. Secondary woody vegetation similarly transfers declining
+leaf area into a nine-month canopy-litter stock. This intermediate is committed at
+`d73e899` and raises the exact proxy to .715333. A subsequent smooth brake suppresses
+recurrent fire where crop/urban fragmentation interrupts a managed fuel matrix and
+secondary-open cover is absent. It multiplies incumbent hazard only, increases with
+trailing realized fire, and therefore cannot create fire or deepen a zero-fire lock.
+
+The combined commit `6e00bfa` reaches exact proxy .715545 and evaluates officially
+at **.716** (bias .753, RMSE .546, seasonal .863, spatial .871). Ten of fourteen
+regions improve relative to the tuned temperature base, including TENA, CEAM, MIDE,
+Europe, both South American regions, SEAS, and EQAS. Global area falls from 1.086 to
+1.066 times observed. Temperate closed canopy is 1.017, boreal forest 1.041,
+tropical open woodland .983, productive rangeland .992, cropland .858, and arid low
+fuel 1.317. Morocco improves from 56.0 to 53.7 times observed but remains an explicit
+failure, not a solved guardrail. Prefix causality remains exactly zero.
