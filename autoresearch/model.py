@@ -24,7 +24,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'drought_maturation', 'dead_fuel_pool')
+              'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
+              'pathway_hazards')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -35,6 +36,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
+ 'pathway_mix_w': 0.35,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
@@ -283,6 +285,129 @@ def _ecological_regime_brakes(
         )
         log_brake += p.get("wet_forest_brake", 0.0) * humid_closed_canopy
     return prediction * np.exp(-log_brake)
+
+
+def _pathway_event_scaling(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Mix surface, woody, and residue fire in local hazard space.
+
+    The pathways share one global equation but respond to different physical
+    controls. Surface fire needs connected open fine fuel and drying. Woody
+    events require mature drought, anomalous warmth, and lightning. Crop fire
+    is limited by a cured residue stock. A background share retains unresolved
+    ignition without assigning a region or coordinate to any pathway.
+    """
+    annual_scale = float(max(p.get("annual_scale", 1.0), 0.0))
+    event_half = float(max(p.get("event_scale_half", 0.003), 1e-8))
+    connected = prediction / (prediction + event_half)
+    old_scale = 1.0 + (annual_scale - 1.0) * connected
+    old_burn = np.clip(prediction * old_scale, 0.0, 1.0 - 1e-7)
+    if "pathway_hazards" not in enabled:
+        return old_burn
+    mix = float(np.clip(p.get("pathway_mix_w", 0.0), 0.0, 1.0))
+    if mix <= 0.0:
+        return old_burn
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_3 = _antecedent(gpp, alpha_3)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6 = _antecedent(rain, alpha_6)
+    rain_12 = _antecedent(rain, alpha_12)
+    dry_6 = np.maximum((rain_6 - rain) / (rain_6 + rain + 10.0), 0.0)
+    dry_12 = np.maximum((rain_12 - rain) / (rain_12 + rain + 10.0), 0.0)
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 500.0)
+
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    open_cover = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
+    )
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    crop_capacity = crop * fine_fuel
+
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    warm_anomaly = _rising(temperature - temperature_12, 0.5, 3.0)
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_12 = _antecedent(lightning, alpha_12)
+    ignition = lightning_12 / (lightning_12 + 0.01)
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    humid_closed = (
+        _rising(annual_rain, 1.0 / 250.0, 1200.0)
+        * _rising(canopy, 1.0 / 3.0, 15.0)
+        * natural
+    )
+
+    surface_available = dry_6 * combustion
+    woody_available = (
+        dry_12 * warm_anomaly * ignition * np.exp(-3.0 * humid_closed)
+    )
+    residue_curing = np.maximum(
+        (gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0
+    )
+    crop_available = residue_curing * combustion
+
+    background = np.full_like(surface_capacity, 0.05)
+    total_capacity = (
+        background + surface_capacity + woody_capacity + crop_capacity + 1e-12
+    )
+    q0 = background / total_capacity
+    qs = surface_capacity / total_capacity
+    qw = woody_capacity / total_capacity
+    qc = crop_capacity / total_capacity
+
+    surface_scale = 1.0 + 1.1 * connected * (
+        0.35 + 0.65 * surface_available
+    )
+    woody_scale = 0.65 + 1.85 * woody_available / (woody_available + 0.015)
+    crop_scale = 0.60 + 1.20 * crop_available / (crop_available + 0.06)
+    new_scale = q0 * old_scale + qs * surface_scale + qw * woody_scale + qc * crop_scale
+
+    base_hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    old_hazard = -np.log1p(-old_burn)
+    new_hazard = base_hazard * new_scale
+    hazard = (1.0 - mix) * old_hazard + mix * new_hazard
+    return np.asarray(1.0 - np.exp(-np.clip(hazard, 0.0, 50.0)), dtype=np.float32)
 
 
 def _ecological_fire_capacity(
@@ -974,11 +1099,7 @@ def predict(
         rate = _lag(rate, fallback)
     prediction = _transform(rate, fallback)
     prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
-    annual_scale = float(max(fallback.get("annual_scale", 1.0), 0.0))
-    event_half = float(max(fallback.get("event_scale_half", 0.01), 1e-8))
-    connected_event = prediction / (prediction + event_half)
-    event_scale = 1.0 + (annual_scale - 1.0) * connected_event
-    prediction = np.clip(prediction * event_scale, 0.0, 1.0)
+    prediction = _pathway_event_scaling(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
     prediction = _seasonal_rainfall_capacity(
         prediction, data, fallback, enabled
