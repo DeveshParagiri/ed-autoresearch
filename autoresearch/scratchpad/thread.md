@@ -5271,3 +5271,18 @@ incumbent and improves 9 of 14 regions. Official evaluation remains **.719** aft
 with bias .757, RMSE .548, seasonal .862, and spatial .882. The faithful sixth ledger row
 and progress figure are retained. This is a valid incremental improvement, but not a
 mechanism-level jump and therefore does not trigger Optuna.
+
+
+### Entry 173: surface capacity belongs after the conserved state stack
+
+The identical coherent surface-capacity equation was inserted at five physical stages
+without changing any input, coefficient, or response shape. Applying it immediately after
+regime capacity scores .718744; after green-up allocation .718942; after the local footprint
+.718987; and after annual closure .718989. The installed final placement reproduces
+**.718995365** exactly and is the best of the family.
+
+Earlier insertion lets downstream banks and closures redistribute or suppress the added
+capacity. It can improve several overburned temperate and American regions, but costs NHAF
+up to .00207 and lowers the global scalar. The monotonic recovery toward the final stage
+shows that this term is correctly acting as residual finite event capacity, not as fuel
+production or storage. No canonical change, tuning, or official evaluation follows.
