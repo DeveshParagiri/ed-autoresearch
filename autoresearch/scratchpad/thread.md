@@ -3805,3 +3805,19 @@ The physical audit also improves: global burn is 1.087 times observed, intact tr
 explain those state-defined contrasts and the four-month global peak error without geography or
 region-specific coefficients. Optuna remains deferred because this is a real step but not a new
 held-out ceiling near .8.
+
+
+### Entry 101: true online fitting closes further residual-GLM expansion
+
+The refreshed causal-memory HGB reaches .8006 on the fitted grid but only **.7525** under whole-
+cell holdout from the official .729 incumbent. The training score is therefore not a deployable
+result. A new 3.52-million-row diagnostic then fits the compact 20-term equation to every actual
+site-month rather than a completed-period monthly climatology. Its fold coefficients are extremely
+stable at .9955 minimum correlation, but held-out Overall rises only .0003 at strength .25 and
+falls at stronger settings. This closes further coefficient stacking from the present residual
+family and leaves Optuna unjustified; the next large step requires new causal state or validated
+forcing rather than a harder fit to GFED5.
+
+The active prediction remains official **.729** at `6a4587b`. Dead `REGION_PARAMS` and
+`REGION_BOXES` constants were removed in `7c9e0a7`, so `model.py` no longer even carries an
+inactive regional coefficient table. This cleanup is prediction-neutral.
