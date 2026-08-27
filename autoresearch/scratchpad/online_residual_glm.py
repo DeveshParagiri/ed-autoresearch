@@ -159,6 +159,7 @@ def main() -> int:
     causal_climate_tree = "--causal-climate-tree" in sys.argv
     deep_tree = "--deep-tree" in sys.argv
     ultra_tree = "--ultra-tree" in sys.argv
+    factorized_tree = "--factorized-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -377,6 +378,7 @@ def main() -> int:
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
+        or factorized_tree
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -447,9 +449,13 @@ def main() -> int:
     with Dataset(GFED5_PATH) as dataset:
         reference = np.asarray(dataset.variables["burntArea"][:192])
     observed = reference.reshape(192, 180, 2, 360, 2).mean(axis=(2, 4)) / 100.0
+    observed_annual_cycle = (
+        observed.reshape(16, 12, 180, 360).mean(axis=0).sum(axis=0)
+    )
     if annual_target_tree:
-        observed_annual = observed.reshape(16, 12, 180, 360).mean(axis=0).sum(axis=0)
-        target = np.repeat(observed_annual[rows, cols], baseline.shape[1])
+        target = np.repeat(
+            observed_annual_cycle[rows, cols], baseline.shape[1]
+        )
         offset = trailing.reshape(-1) + 1e-4
     elif seasonal_target_tree:
         observed_cells = np.asarray(
@@ -827,8 +833,10 @@ def main() -> int:
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
+        or factorized_tree
     ):
         out_of_fold = np.zeros_like(y)
+        annual_out_of_fold = np.zeros_like(y) if factorized_tree else None
         trained: HistGradientBoostingRegressor | None = None
         held_for_importance: np.ndarray | None = None
         for fold in range(3):
@@ -863,6 +871,29 @@ def main() -> int:
             for start in range(0, held.size, 250_000):
                 batch = held[start : start + 250_000]
                 out_of_fold[batch] = regressor.predict(x[batch])
+            if factorized_tree:
+                annual_target = np.repeat(
+                    observed_annual_cycle[rows, cols], baseline.shape[1]
+                ) / (trailing.reshape(-1) + 1e-4)
+                annual_y = np.log(np.clip(annual_target, 1e-4, 1e4))
+                annual_learner = HistGradientBoostingRegressor(
+                    loss="squared_error",
+                    learning_rate=0.06 if deep_tree else 0.08,
+                    max_iter=300 if deep_tree else 100,
+                    max_leaf_nodes=64 if deep_tree else 31,
+                    min_samples_leaf=250 if deep_tree else 500,
+                    l2_regularization=2.5,
+                    early_stopping=True,
+                    validation_fraction=0.1,
+                    random_state=1701 + fold,
+                )
+                annual_learner.fit(
+                    x[train], annual_y[train], sample_weight=weights[train]
+                )
+                assert annual_out_of_fold is not None
+                for start in range(0, held.size, 250_000):
+                    batch = held[start : start + 250_000]
+                    annual_out_of_fold[batch] = annual_learner.predict(x[batch])
             trained = regressor
             held_for_importance = held
             print(
@@ -873,6 +904,40 @@ def main() -> int:
             )
         evaluator = GFED5Evaluator(GFED5_PATH)
         report(evaluator, "incumbent", incumbent)
+        if factorized_tree:
+            assert annual_out_of_fold is not None
+            monthly_factor = np.clip(
+                out_of_fold.reshape(baseline.shape), 1e-6, 1e6
+            )
+            alpha = 1.0 - np.exp(-1.0 / 12.0)
+            state = monthly_factor[:, 0].copy()
+            seasonal_factor = np.empty_like(monthly_factor)
+            for time in range(monthly_factor.shape[1]):
+                state += alpha * (monthly_factor[:, time] - state)
+                seasonal_factor[:, time] = monthly_factor[:, time] / (
+                    state + 1e-12
+                )
+            annual_factor = np.exp(
+                np.clip(
+                    annual_out_of_fold.reshape(baseline.shape), -8.0, 8.0
+                )
+            )
+            for annual_strength in (0.25, 0.50, 0.75, 1.0):
+                for seasonal_strength in (0.50, 0.75, 1.0):
+                    corrected = baseline * np.power(
+                        annual_factor, annual_strength
+                    ) * np.power(seasonal_factor, seasonal_strength)
+                    candidate = incumbent.copy()
+                    candidate[:, rows, cols] = np.clip(
+                        corrected.T, 0.0, 1.0
+                    )
+                    report(
+                        evaluator,
+                        "factorized HGB OOF "
+                        f"annual={annual_strength} seasonal={seasonal_strength}",
+                        candidate,
+                    )
+            return 0
         for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
             correction = (
                 np.exp(np.clip(out_of_fold, -8.0, 8.0))
