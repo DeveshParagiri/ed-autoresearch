@@ -61,7 +61,8 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
- 'fire_weather_pulse': 0.75,
+ 'fire_weather_pulse': 1.5,
+ 'fire_weather_decay': 0.75,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2053,8 +2054,12 @@ def _fire_weather_duration(
         1.0 - np.exp(-1.0 / 12.0),
     )
     fine_fuel = gpp_12m / (gpp_12m + 0.5)
+    transition = _rising(duration_change, 40.0, 0.0)
+    directional_strength = p.get("fire_weather_decay", strength) + (
+        strength - p.get("fire_weather_decay", strength)
+    ) * transition
     correction = np.exp(
-        np.clip(strength * fine_fuel * duration_change, -2.0, 2.0)
+        np.clip(directional_strength * fine_fuel * duration_change, -2.0, 2.0)
     )
     return np.asarray(np.clip(prediction * correction, 0.0, 1.0), dtype=np.float32)
 
