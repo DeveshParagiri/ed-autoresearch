@@ -38,6 +38,8 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
+ 'fire_footprint_background': 0.5,
+ 'fire_footprint_w': 2.0,
  'surface_bank_w': 1.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
@@ -1239,6 +1241,67 @@ def _surface_fire_opportunity_bank(
     )
 
 
+def _local_fire_footprint(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Scale event footprint by continuous fuel and ignition access.
+
+    Open connected vegetation permits an ignition to spread beyond an isolated
+    patch. Ignition access is supplied either by the trailing local lightning
+    regime or smoothly by managed open land. Dense canopy removes surface-fuel
+    continuity, so this equation cannot create a geographic or closed-forest
+    correction. It operates on final hazard with one coefficient set globally.
+    """
+    if "pathway_hazards" not in enabled:
+        return prediction
+    background = float(max(p.get("fire_footprint_background", 0.5), 0.0))
+    strength = float(max(p.get("fire_footprint_w", 0.0), 0.0))
+    if strength <= 0.0:
+        return prediction
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_12 = _antecedent(
+        lightning, 1.0 - np.exp(-1.0 / 12.0)
+    )
+    natural_ignition = lightning_12 / (lightning_12 + 0.05)
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    managed = np.clip(rangeland + pasture + crop, 0.0, 1.0)
+    managed_access = managed / (managed + 0.1)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    open_cover = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
+    )
+    activity = open_cover * (
+        0.7 * natural_ignition + 0.3 * managed_access
+    )
+    footprint = np.clip(background + strength * activity, 0.1, 3.0)
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    return np.asarray(
+        1.0 - np.exp(-np.clip(hazard * footprint, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1299,6 +1362,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _surface_fire_opportunity_bank(
+        prediction, data, fallback, enabled
+    )
+    prediction = _local_fire_footprint(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
