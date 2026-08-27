@@ -28,6 +28,11 @@ from scripts.runtime import (  # noqa: E402
     load_model,
     validate_prediction,
 )
+from autoresearch.scratchpad.validate_20cr_vpd import target_grid  # noqa: E402
+from autoresearch.scratchpad.validate_ncep_vpd_bridge import (  # noqa: E402
+    bilinear_target,
+    monthly_fields,
+)
 
 
 NAMES = (
@@ -79,8 +84,27 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> Non
     )
 
 
+def load_daily_vpd_duration() -> np.ndarray:
+    """Load a continuous 2001-2016 count of days with VPD above 1 kPa."""
+    fields: list[np.ndarray] = []
+    for year in range(2001, 2016):
+        _, duration, latitudes, longitudes = monthly_fields("20cr", year)
+        fields.append(target_grid(duration, latitudes, longitudes))
+    _, duration, latitudes, longitudes = monthly_fields("ncep", 2016)
+    duration = bilinear_target(duration, latitudes, longitudes)
+    # Fixed global bridge fitted over the independent 2001-2015 overlap.
+    fields.append(np.clip(0.081331 + 0.968217 * duration, 0.0, 1.0))
+    result = np.concatenate(fields).astype(np.float32)
+    print(
+        f"daily duration shape={result.shape} finite={np.isfinite(result).mean():.6f}",
+        flush=True,
+    )
+    return result
+
+
 def main() -> int:
     vpd_only = "--vpd-only" in sys.argv
+    duration_only = "--duration-only" in sys.argv
     model = load_model()
     data = load_inputs(model.INPUTS)
     params = dict(model.PARAMS)
@@ -102,6 +126,11 @@ def main() -> int:
     rangeland = extract("luh2_rangeland_fraction")
     cropland = extract("luh2_cropland_fraction")
     vpd = extract("vapor_pressure_deficit_mean") if vpd_only else None
+    duration = (
+        np.asarray(load_daily_vpd_duration()[:, rows, cols].T, dtype=np.float64)
+        if duration_only
+        else None
+    )
     baseline = np.asarray(incumbent[:, rows, cols].T, dtype=np.float64)
 
     rain_memory = {months: running(rain, months) for months in (6.0, 12.0, 24.0)}
@@ -199,6 +228,42 @@ def main() -> int:
             pulse * cropland,
             pulse * sigmoid((share - 0.05) / 0.025),
             background * fuel_bank[12.0],
+        )
+    if duration_only:
+        assert duration is not None
+        duration_3m = running(duration, 3.0)
+        duration_12m = running(duration, 12.0)
+        departure_3m = duration - duration_3m
+        departure_12m = duration - duration_12m
+        persistence_3m = duration * duration_3m
+        opportunity = sigmoid((share - 0.05) / 0.025)
+        names = (
+            "vpd_days_gt_1kpa",
+            "vpd_days_gt_1kpa_3m",
+            "vpd_days_gt_1kpa_departure_3m",
+            "vpd_days_gt_1kpa_departure_3m_positive",
+            "vpd_days_gt_1kpa_12m",
+            "vpd_days_gt_1kpa_departure_12m",
+            "vpd_days_gt_1kpa_persistence_3m",
+            "vpd_days_gt_1kpa_x_fuel_bank",
+            "vpd_days_gt_1kpa_x_humid_climate",
+            "vpd_days_gt_1kpa_x_rangeland",
+            "vpd_days_gt_1kpa_x_cropland",
+            "vpd_days_gt_1kpa_x_opportunity",
+        )
+        feature_fields = (
+            duration,
+            duration_3m,
+            departure_3m,
+            np.maximum(departure_3m, 0.0),
+            duration_12m,
+            departure_12m,
+            persistence_3m,
+            duration * fuel_bank[12.0],
+            duration * humid_climate,
+            duration * rangeland,
+            duration * cropland,
+            duration * opportunity,
         )
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
