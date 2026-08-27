@@ -4755,3 +4755,20 @@ standing-dead release clock for the open carrier, paired only if necessary with 
 root-water or woody-canopy shielding in humid primary mosaics. The LUH2 secondary
 aggregate remains a sensitivity field, not an exclusive partition because it covers
 almost all evaluator land.
+
+
+### Entry 143: the two active phenology stages remain jointly necessary
+
+A low-memory stage screen separated the dry-phase allocator from the live-fuel green-up
+brake. Weakening or removing the allocator was clearly harmful, while retaining its .3
+strength and halving only the green-up brake from 2 to 1 was the sole candidate released
+to exact scoring. The exact proxy nevertheless falls from .717563738 to **.717396438**:
+bias improves by .000024, but RMSE, seasonality, and spatial skill all decline. Eight of
+fourteen regions improve, including Europe by .00221, but losses in central Asia, boreal
+Asia, Australia, and southern Africa dominate.
+
+The ecological trade is also coherent rather than pathological. Temperate, boreal,
+tropical-open, productive-rangeland, and arid overburn all fall slightly, but cropland
+underburn deepens from .925 to .923 times observed. Prefix causality remains bit-exact.
+The incumbent allocator and green-up strengths are therefore retained; neither weak
+phenology component is dead at the operating point, and no official evaluation follows.
