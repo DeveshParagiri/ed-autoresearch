@@ -3720,3 +3720,21 @@ prediction, so it creates annual fire mass. The next formulation must center the
 as a multiplicative anomaly or otherwise conserve the annual fire potential supplied by the
 mechanistic closure. The preferred coupled-valid physical model remains `3fb7bd1` at .743 until
 that constraint is satisfied; no Optuna tuning will legitimize the rejected absolute blend.
+
+
+### Entry 97: causal normalization yields a small physically valid gain
+
+The memory response is now divided by causal 12-month running means of learned and incumbent fire
+at each independent site, so it reallocates the annual fire potential instead of introducing a
+second source. A global strength sweep gives proxy .7441 at .10, .7456 at .50, .7439 at .75, and
+.7404 at 1.00; every setting is preserved in commits `3a1a2f9`, `469b5e3`, `28e935a`, and
+`4c941e2`. The selected .50 formulation is official **.746** (bias .783, RMSE .585, seasonal
+.851, spatial .924).
+
+The audit confirms that the gain is physically admissible. Global burned area is 1.097 times
+observed, intact tropical closed canopy is 1.245, tropical open woodland is 1.080, and the DRC
+country total is .994. These retain the closed-canopy repair while improving the score. Remaining
+state-defined failures include productive rangeland at 1.704, cropland at 1.442, Australia at
+.383, and a four-month global peak error. The next reverse-ML distillation must model conditional
+moisture-storage, curing, thermal, fuel, and ignition interactions with globally shared smooth
+equations; scalar tuning is exhausted and Optuna remains deferred.
