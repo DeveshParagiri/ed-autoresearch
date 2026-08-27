@@ -2114,16 +2114,11 @@ def _rare_lightning_ignition(
     )
     rain_built_fuel = (
         precipitation_memory / (precipitation_memory + 25.0)
+        * _rising(annual_rain, 1.0 / 60.0, 250.0)
         * _falling(annual_rain, 1.0 / 250.0, 1400.0)
     )
     low_woody_biomass = 1.0 / (1.0 + biomass / 0.7)
-    managed_open = np.clip(
-        rangeland
-        + np.asarray(data["luh2_pasture_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    open_fuel_land = np.clip(open_natural + managed_open, 0.0, 1.0)
+    open_fuel_land = np.clip(open_natural, 0.0, 1.0)
     dry_combustion = np.clip(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
@@ -2133,9 +2128,7 @@ def _rare_lightning_ignition(
         / (precipitation_memory + rain + 10.0),
         0.0,
     )
-    ignition_access = 1.0 - (1.0 - lightning_chance) * (
-        1.0 - 0.5 * managed_open
-    )
+    ignition_access = lightning_chance
     pulse_half = max(
         float(p.get("rain_pulse_opportunity_half", 0.02)), 1e-4
     )
