@@ -64,6 +64,7 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
+ 'greenup_brake': 1.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
@@ -2189,6 +2190,31 @@ def _state_dependent_fire_season(
     )
 
 
+def _live_fuel_greenup_brake(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Suppress burning while warm vegetation is rapidly producing live tissue.
+
+    A positive departure of current GPP from its recent local reservoir marks
+    active green-up. That new biomass is moist live fuel, not cured litter, so
+    it should not immediately increase spread even though productivity is high.
+    The response is continuous and site-local, with one coefficient everywhere.
+    """
+    strength = float(max(p.get("greenup_brake", 0.0), 0.0))
+    if "phenology" not in enabled or strength <= 0.0:
+        return prediction
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    recent = _antecedent(gpp, 1.0 - np.exp(-1.0 / 3.0))
+    greenup = np.maximum((gpp - recent) / (gpp + recent + 1e-3), 0.0)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    warm_growth = _rising(temperature, 1.0 / 3.0, 15.0)
+    brake = np.exp(-strength * greenup * warm_growth)
+    return np.asarray(prediction * brake, dtype=np.float32)
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2281,4 +2307,7 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
+    prediction = _live_fuel_greenup_brake(
+        prediction, data, fallback, enabled
+    )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
