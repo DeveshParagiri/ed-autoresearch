@@ -4996,3 +4996,22 @@ the secondary aggregate is unsuitable as a transition proxy because 94.7% of lan
 exceed .9 while rare jumps approach .94. The managed-conversion signal is physical but far
 below a model-level step and its attribution remains ambiguous. It is not promoted to an
 exact candidate, tuned, or officially evaluated.
+
+
+### Entry 156: managed pathway is double-stored across consecutive banks
+
+An operator audit found that the multipath bank's managed numerator overlaps its crop
+pathway because it lacks the crop exclusion used in the denominator. On 768 dominant
+cells carrying 59.51% of observed-fire weight, 18.98% of cell-month pathway sums exceed
+one; the 95th percentile is 1.124 and the maximum 1.235. Multiplying the managed share by
+`1-crop` restores an exact partition and slightly improves allocation in three of four
+held blocks.
+
+The deeper duplication is sequential: the immediately preceding surface bank already
+stores and releases managed surface hazard, then the multipath bank stores much of that
+hazard again. Removing only the duplicated managed sub-bank improves held allocation
+RMSE .073597 to .073345, annual-log RMSE .990283 to .988693, and raw-cycle RMSE .047224
+to .047173 in three of four blocks. Removing either complete bank is clearly harmful, so
+the diagnosis is specific to duplicate managed storage rather than the bank families.
+This mass-conservation repair is physically justified and stable enough for one exact
+mechanistic test; it does not justify coefficient tuning.
