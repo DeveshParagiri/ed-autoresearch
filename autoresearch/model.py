@@ -26,8 +26,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology', 'regime_capacity',
-              'fire_weather_duration')
+              'softmin', 'cropland', 'phenology', 'regime_capacity')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -61,8 +60,6 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
- 'fire_weather_pulse': 0.75,
- 'fire_weather_decay': 6.0,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2005,65 +2002,6 @@ def _ecological_fire_capacity(
     )
 
 
-def _fire_weather_duration(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Represent the changing fraction of days able to dry fine fuel.
-
-    Daily VPD diagnostics showed that the duration above a physical moisture-
-    demand threshold carries more residual fire information than monthly mean
-    VPD. A compact held-site surrogate recovers that duration from coupled-
-    valid monthly state. Its global smooth equation combines saturation demand
-    from temperature, atmospheric dryness, and current versus antecedent rain.
-    A positive departure from the preceding three-month state opens a new fire
-    window; a negative departure closes it. Antecedent GPP gates the response
-    so hot dry air without burnable fine fuel cannot create fire.
-    """
-    if "fire_weather_duration" not in enabled:
-        return prediction
-    strength = float(p.get("fire_weather_pulse", 0.0))
-    if strength == 0.0:
-        return prediction
-
-    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
-    dryness = np.clip(np.asarray(data["dryness"], dtype=np.float64), 0.0, None)
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    annual_rain = np.clip(
-        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
-    )
-    rain_3m = _antecedent(rain, 1.0 - np.exp(-1.0 / 3.0))
-    dry_month = 1.0 / (1.0 + rain / 30.0)
-    logit_duration = (
-        -3.2501745
-        + 0.04236598 * temperature
-        + 0.5152692 * np.log1p(annual_rain)
-        + 0.0215381 * temperature * np.log1p(dryness)
-        + 0.080728136 * temperature * dry_month
-        - 1.233152 * np.log1p(rain_3m)
-    )
-    duration = _rising(logit_duration, 1.0, 0.0)
-    duration_3m = _antecedent(duration, 1.0 - np.exp(-1.0 / 3.0))
-    duration_change = duration - duration_3m
-    gpp_12m = _antecedent(
-        np.asarray(data["gpp"], dtype=np.float64),
-        1.0 - np.exp(-1.0 / 12.0),
-    )
-    fine_fuel = gpp_12m / (gpp_12m + 0.5)
-    transition = _rising(duration_change, 40.0, 0.0)
-    directional_strength = p.get("fire_weather_decay", strength) + (
-        strength - p.get("fire_weather_decay", strength)
-    ) * transition
-    correction = np.exp(
-        np.clip(directional_strength * fine_fuel * duration_change, -2.0, 2.0)
-    )
-    return np.asarray(np.clip(prediction * correction, 0.0, 1.0), dtype=np.float32)
-
-
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2152,5 +2090,4 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
-    prediction = _fire_weather_duration(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
