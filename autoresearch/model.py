@@ -25,8 +25,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards', 'annual_connectivity',
-              'conditional_allocation')
+              'pathway_hazards', 'conditional_allocation')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -38,7 +37,6 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
- 'annual_connectivity_w': 0.5,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1028,105 +1026,6 @@ def _seasonal_rainfall_capacity(
     return np.asarray(np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32)
 
 
-def _annual_fuel_connectivity(
-    prediction: np.ndarray,
-    data: Mapping[str, np.ndarray],
-    p: Mapping[str, float],
-    enabled: set[str],
-) -> np.ndarray:
-    """Relax annual burning toward a local physical connectivity capacity.
-
-    Continuous fine fuel, open vegetation and an ignition source are all
-    needed for fire to propagate beyond isolated patches. Alternating rainfall
-    or temperature supplies a seasonal drying release. A trailing, causal
-    twelve-month window compares that carrying capacity with recent modeled
-    fire occupancy, suppressing disconnected marginal fire while allowing
-    under-filled seasonal open systems to expand. The same equation and
-    coefficient apply globally and no neighbouring cell is consulted.
-    """
-    if "annual_connectivity" not in enabled:
-        return prediction
-    strength = float(max(p.get("annual_connectivity_w", 0.0), 0.0))
-    if strength <= 0.0:
-        return prediction
-
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
-    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
-    lightning = np.clip(
-        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
-    )
-    natural = np.clip(
-        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
-    canopy = np.clip(
-        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
-    )
-    crop = np.clip(
-        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    pasture = np.clip(
-        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    rangeland = np.clip(
-        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
-    )
-    openness = np.clip(
-        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
-    )
-    managed_or_open = np.clip(openness * openness + crop, 0.0, 1.0)
-
-    baseline = np.asarray(prediction, dtype=np.float64)
-    adjusted = np.empty_like(baseline)
-    for time in range(baseline.shape[0]):
-        start = max(0, time - 11)
-        count = time - start + 1
-        rain_window = rain[start : time + 1]
-        temperature_window = temperature[start : time + 1]
-        rain_mean = rain_window.mean(axis=0)
-        rain_variability = rain_window.std(axis=0)
-        rain_dry_tail = np.percentile(rain_window, 10.0, axis=0)
-        temperature_variability = temperature_window.std(axis=0)
-        rainfall_release = (
-            rain_variability / (rain_variability + 50.0)
-            * 10.0 / (rain_dry_tail + 10.0)
-        )
-        temperature_release = (
-            temperature_variability / (temperature_variability + 8.0)
-            * rain_mean / (rain_mean + 25.0)
-        )
-        seasonal_release = 1.0 - (
-            1.0 - rainfall_release
-        ) * (1.0 - temperature_release)
-        mean_gpp = gpp[start : time + 1].mean(axis=0)
-        fine_fuel = mean_gpp / (mean_gpp + 0.35)
-        mean_lightning = lightning[start : time + 1].mean(axis=0)
-        ignition = 0.25 + 0.75 * mean_lightning / (mean_lightning + 0.01)
-        raw_capacity = fine_fuel * ignition * seasonal_release * (
-            (1.0 - crop[time]) * openness[time] ** 2 + 0.15 * crop[time]
-        )
-        capacity = raw_capacity / (raw_capacity + 0.15)
-        annual_fire = baseline[start : time + 1].sum(axis=0) * 12.0 / count
-        occupancy = annual_fire / (annual_fire + 0.12)
-        warmup = min(count / 12.0, 1.0)
-        factor = np.exp(
-            np.clip(
-                strength
-                * warmup
-                * managed_or_open[time]
-                * (capacity - occupancy),
-                -4.0,
-                4.0,
-            )
-        )
-        adjusted[time] = baseline[time] * factor
-    return np.asarray(np.clip(adjusted, 0.0, 1.0), dtype=np.float32)
-
-
 def _live_fuel_greenup_brake(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -1280,9 +1179,6 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _dead_fuel_pool_response(
-        prediction, data, fallback, enabled
-    )
-    prediction = _annual_fuel_connectivity(
         prediction, data, fallback, enabled
     )
     prediction = _conditional_fire_allocation(
