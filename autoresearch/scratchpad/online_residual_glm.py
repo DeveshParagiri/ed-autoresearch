@@ -10,6 +10,8 @@ feature is constructed from current or prior local state only.
 from __future__ import annotations
 
 import sys
+from collections import defaultdict
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -118,6 +120,7 @@ def main() -> int:
     broad_tree = "--broad-tree" in sys.argv
     broad_gam = "--broad-gam" in sys.argv
     interaction_gam = "--interaction-gam" in sys.argv
+    shallow_tree = "--shallow-tree" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
     if vpd_only:
@@ -323,7 +326,7 @@ def main() -> int:
             normalized_dry_spell * rangeland,
             normalized_dry_spell * opportunity,
         )
-    if broad_tree or broad_gam or interaction_gam:
+    if broad_tree or broad_gam or interaction_gam or shallow_tree:
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
         fields_list: list[np.ndarray] = [baseline, trailing, share]
         raw_fields = {name: extract(name) for name in model.INPUTS}
@@ -469,7 +472,7 @@ def main() -> int:
             label = "interaction GAM" if interaction_gam else "broad GAM"
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
-    if broad_tree:
+    if broad_tree or shallow_tree:
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
         held_for_importance: np.ndarray | None = None
@@ -481,8 +484,8 @@ def main() -> int:
             regressor = HistGradientBoostingRegressor(
                 loss="poisson",
                 learning_rate=0.08,
-                max_iter=100,
-                max_leaf_nodes=31,
+                max_iter=250 if shallow_tree else 100,
+                max_leaf_nodes=4 if shallow_tree else 31,
                 min_samples_leaf=500,
                 l2_regularization=2.5,
                 early_stopping=True,
@@ -496,7 +499,8 @@ def main() -> int:
             trained = regressor
             held_for_importance = held
             print(
-                f"completed broad HGB fold={fold} train={train.size} held={held.size} "
+                f"completed {'shallow' if shallow_tree else 'broad'} HGB "
+                f"fold={fold} train={train.size} held={held.size} "
                 f"iterations={regressor.n_iter_}",
                 flush=True,
             )
@@ -509,7 +513,8 @@ def main() -> int:
             )
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
-            report(evaluator, f"broad HGB OOF strength={strength}", candidate)
+            label = "shallow HGB" if shallow_tree else "broad HGB"
+            report(evaluator, f"{label} OOF strength={strength}", candidate)
         assert trained is not None and held_for_importance is not None
         importance_rows = rng.choice(
             held_for_importance,
@@ -532,6 +537,19 @@ def main() -> int:
                 f"{names[index]}\t{importance.importances_mean[index]:+.9f}",
                 flush=True,
             )
+        pair_gain: dict[tuple[int, int], float] = defaultdict(float)
+        for stage in trained._predictors:
+            nodes = stage[0].nodes
+            splits = nodes[nodes["is_leaf"] == 0]
+            features = sorted(set(int(index) for index in splits["feature_idx"]))
+            gain = float(np.maximum(splits["gain"], 0.0).sum())
+            for left, right in combinations(features, 2):
+                pair_gain[(left, right)] += gain
+        print("HGB recurring feature pairs", flush=True)
+        for (left, right), gain in sorted(
+            pair_gain.items(), key=lambda item: item[1], reverse=True
+        )[:30]:
+            print(f"{names[left]} x {names[right]}\t{gain:.6f}", flush=True)
         return 0
     if "--tree" in sys.argv:
         out_of_fold = np.zeros_like(y)
