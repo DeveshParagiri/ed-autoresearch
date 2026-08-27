@@ -25,7 +25,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards', 'conditional_allocation')
+              'pathway_hazards', 'surface_opportunity_bank',
+              'conditional_allocation')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -37,6 +38,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
+ 'surface_bank_w': 0.35,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1128,6 +1130,116 @@ def _conditional_fire_allocation(
     return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
 
 
+def _surface_fire_opportunity_bank(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Store surface-fire hazard until fuel is physically combustible.
+
+    A share of open-land fire opportunity enters a local bank each month.
+    Release accelerates only when antecedent fine fuel, curing, rainfall
+    deficit, atmospheric dryness and an above-background fire opportunity
+    coincide. Stored and released quantities are expressed in hazard space, so
+    this moves finite fire potential through time rather than multiplying it.
+    Woody and crop pathways are protected by a continuous surface-fuel share.
+    """
+    if "surface_opportunity_bank" not in enabled:
+        return prediction
+    strength = float(np.clip(p.get("surface_bank_w", 0.0), 0.0, 1.0))
+    if strength <= 0.0:
+        return prediction
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_3 = _antecedent(gpp, alpha_3)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
+    curing_bank = _antecedent(curing, alpha_6)
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6 = _antecedent(rain, alpha_6)
+    rain_deficit = np.maximum(
+        (rain_6 - rain) / (rain_6 + rain + 10.0), 0.0
+    )
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 500.0)
+
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    open_cover = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
+    )
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    crop_capacity = crop * fine_fuel
+    surface_share = surface_capacity / (
+        0.05 + surface_capacity + woody_capacity + crop_capacity
+    )
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    bank = np.zeros_like(hazard[0])
+    hazard_state = hazard[0].copy()
+    allocated = np.empty_like(hazard)
+    for time in range(hazard.shape[0]):
+        relative_opportunity = hazard[time] / (
+            hazard[time] + hazard_state + 1e-12
+        )
+        physical_window = np.sqrt(
+            np.clip(
+                fine_fuel[time]
+                * combustion[time]
+                * rain_deficit[time],
+                0.0,
+                1.0,
+            )
+        )
+        physical_window *= 0.25 + 0.75 * curing_bank[time] / (
+            curing_bank[time] + 0.05
+        )
+        release_opportunity = relative_opportunity * physical_window
+        release_fraction = 1.0 - np.exp(
+            -(1.0 / 12.0 + 3.0 * release_opportunity)
+        )
+        stored = strength * surface_share[time] * hazard[time]
+        bank += stored
+        released = release_fraction * bank
+        bank -= released
+        allocated[time] = hazard[time] - stored + released
+        hazard_state += alpha_12 * (hazard[time] - hazard_state)
+    return np.asarray(
+        1.0 - np.exp(-np.clip(allocated, 0.0, 50.0)), dtype=np.float32
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1179,6 +1291,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _dead_fuel_pool_response(
+        prediction, data, fallback, enabled
+    )
+    prediction = _surface_fire_opportunity_bank(
         prediction, data, fallback, enabled
     )
     prediction = _conditional_fire_allocation(
