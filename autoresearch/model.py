@@ -74,7 +74,7 @@ PARAMS = {'annual_scale': 1.73,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
  'productive_range_brake': 6.5,
- 'surface_seasonality_capacity': 2.0,
+ 'surface_seasonality_capacity': 4.0,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
@@ -565,8 +565,8 @@ def _surface_seasonality_capacity(
     warm site's year in which rain-built open fuel is combustible. The same
     range in boreal forest or fuel-poor desert must not create fire, so the
     response is gated by warm mean temperature, causal rain-supported fuel,
-    local open cover, productivity, combustion weather, and landscape
-    continuity. This changes event capacity, not ignition timing.
+    persistent desiccation, local open cover, productivity, combustion weather,
+    and landscape continuity. This changes event capacity, not ignition timing.
     """
     if "regime_capacity" not in enabled:
         return prediction
@@ -599,6 +599,8 @@ def _surface_seasonality_capacity(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     combustion = dryness / (dryness + 250.0) / (1.0 + rain / 35.0)
+    dryness_12 = _antecedent(dryness, alpha_12)
+    persistent_desiccation = dryness_12 / (dryness_12 + 500.0)
 
     gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
     gpp_12 = _antecedent(gpp, alpha_12)
@@ -648,7 +650,8 @@ def _surface_seasonality_capacity(
         * combustion
         * warm
         * rain_support
-        * seasonality,
+        * seasonality
+        * persistent_desiccation,
         0.0,
         1.0,
     )
