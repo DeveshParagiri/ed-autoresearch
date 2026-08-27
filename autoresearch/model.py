@@ -566,7 +566,10 @@ def _surface_seasonality_capacity(
     range in boreal forest or fuel-poor desert must not create fire, so the
     response is gated by warm mean temperature, causal rain-supported fuel,
     persistent desiccation, local open cover, productivity, combustion weather,
-    and landscape continuity. This changes event capacity, not ignition timing.
+    and landscape continuity. Capacity is further limited where combustion
+    conditions are erratic or occur outside warm months, especially in primary
+    vegetation where a variable dry signal need not create connected surface
+    fuel. This changes event capacity, not ignition timing.
     """
     if "regime_capacity" not in enabled:
         return prediction
@@ -601,6 +604,34 @@ def _surface_seasonality_capacity(
     combustion = dryness / (dryness + 250.0) / (1.0 + rain / 35.0)
     dryness_12 = _antecedent(dryness, alpha_12)
     persistent_desiccation = dryness_12 / (dryness_12 + 500.0)
+    dryness_second_moment = _antecedent(np.square(dryness), alpha_12)
+    dryness_variability = np.sqrt(
+        np.maximum(dryness_second_moment - np.square(dryness_12), 0.0)
+    ) / (dryness_12 + 1.0)
+
+    combustion_12 = _antecedent(combustion, alpha_12)
+    combustion_temperature_12 = _antecedent(
+        combustion * temperature, alpha_12
+    )
+    combustion_temperature_alignment = (
+        combustion_temperature_12 / (combustion_12 + 1e-6) - temperature_12
+    ) / (temperature_std + 1.0)
+    thermal_overlap = 2.0 * _rising(
+        combustion_temperature_alignment, 1.0, 0.0
+    )
+    reliable_dryness = np.clip(
+        2.0 / (1.0 + dryness_variability), 0.5, 1.5
+    )
+    primary = np.clip(
+        np.asarray(data["luh2_primary_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    coherent_surface = np.clip(
+        reliable_dryness
+        * thermal_overlap
+        / np.sqrt(1.0 + primary * np.square(dryness_variability)),
+        0.5,
+        1.5,
+    )
 
     gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
     gpp_12 = _antecedent(gpp, alpha_12)
@@ -651,7 +682,8 @@ def _surface_seasonality_capacity(
         * warm
         * rain_support
         * seasonality
-        * persistent_desiccation,
+        * persistent_desiccation
+        * coherent_surface,
         0.0,
         1.0,
     )
