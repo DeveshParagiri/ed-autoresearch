@@ -38,7 +38,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
- 'fire_footprint_suppression': 0.9,
+ 'fire_footprint_background': 0.6,
  'fire_footprint_w': 2.0,
  'surface_bank_w': 1.0,
  'conditional_allocation_w': 1.0,
@@ -1257,7 +1257,7 @@ def _local_fire_footprint(
     """
     if "pathway_hazards" not in enabled:
         return prediction
-    suppression = float(max(p.get("fire_footprint_suppression", 0.8), 0.0))
+    background = float(max(p.get("fire_footprint_background", 0.5), 0.0))
     strength = float(max(p.get("fire_footprint_w", 0.0), 0.0))
     if strength <= 0.0:
         return prediction
@@ -1291,13 +1291,25 @@ def _local_fire_footprint(
     open_cover = np.clip(
         rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
     )
-    ignition_access = 0.7 * natural_ignition + 0.3 * managed_access
-    surface_gate = open_cover / (1.0 + np.square(canopy / 8.0))
-    footprint = np.clip(
-        1.0 + surface_gate * (-suppression + strength * ignition_access),
-        0.1,
-        3.0,
+    activity = open_cover * (
+        0.7 * natural_ignition + 0.3 * managed_access
     )
+    surface_footprint = np.clip(background + strength * activity, 0.1, 3.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    residue_capacity = crop * fine_fuel
+    surface_share = surface_capacity / (
+        0.05 + surface_capacity + woody_capacity + residue_capacity
+    )
+    footprint = 1.0 + surface_share * (surface_footprint - 1.0)
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     return np.asarray(
         1.0 - np.exp(-np.clip(hazard * footprint, 0.0, 50.0)),
