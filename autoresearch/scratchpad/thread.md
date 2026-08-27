@@ -4183,3 +4183,41 @@ headroom only, but it proves another roughly .035 remains recoverable from the s
 valid site-local state before new forcings are needed. The next task is to distil
 its conditional moisture, fuel, ignition, and incumbent-opportunity interactions;
 the learner itself never enters `model.py` or the official ledger.
+
+
+### Entry 117: conserved fuel recovery and ignition timing reach official .710
+
+The validated pathway-bank step justified one focused Optuna pass over only its
+managed and crop storage kinetics. Twenty-seven trials changed the exact proxy by
+just .00025, confirming that tuning was a finishing operation rather than the
+missing structure. A full leave-one-component-out pass then found the old one-month
+lag slightly harmful; pruning it raised the proxy from .709144 to .709204. Drought
+maturation remained weak but positive and was restored after an explicit committed
+removal test.
+
+Four independent causal translations were then crossed before promotion. A finite
+managed-fuel moisture bucket blends antecedent rainfall deficit with a bounded water
+store. Woody ignition now uses the probability of at least one lightning flash in a
+three-month drying window, corrected for flash clustering. The existing cold-thaw
+source is scaled only by smooth, locally unrealized fuel-and-ignition capacity under
+a humid-woody brake. Finally, surface, crop, and woody hazards consume distinct fuel
+stocks recovering over globally shared 6-, 24-, and 120-month timescales; unavailable
+hazard remains in finite local reservoirs instead of becoming a new source. No term
+uses coordinates, regions, neighbours, target observations, future state, or a
+learned runtime.
+
+Commit `3f54329` raises the exact proxy from .709204 to .709897 and evaluates
+officially at **.710** (bias .750, RMSE .537, seasonal .860, spatial .865). Eleven
+of fourteen regions improve. Intact tropical closed canopy remains under observed
+at .835, boreal forest moves toward observed at .820, productive rangeland reaches
+.947, and cropland is 1.013; arid low fuel rises from 1.320 to 1.329 and remains the
+main guardrail. Halving every future input after month 96 again changes the first 96
+predictions by exactly zero, and all fourteen declared components remain finite,
+bounded, active, and ablatable.
+
+A new three-fold 10-degree-block annual residual diagnostic identifies the next
+orthogonal mechanism: rain-supported secondary vegetation that later becomes open
+fine fuel. Its held-out diagnostic blend reaches .7221, but direct hazard multipliers
+fail regional and humid-forest guardrails. The next physical test must therefore add
+secondary-open and secondary-woody capacity to conserved pathway shares rather than
+add burned-area mass.
