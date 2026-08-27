@@ -2418,8 +2418,8 @@ def predict(
     if "lag" in enabled:
         rate = _lag(rate, fallback)
     prediction = _transform(rate, fallback)
-    prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
     prediction = _pathway_event_scaling(prediction, data, fallback, enabled)
+    prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
     prediction = _seasonal_rainfall_capacity(
         prediction, data, fallback, enabled
