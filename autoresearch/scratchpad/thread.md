@@ -5174,3 +5174,18 @@ mean dryness near 870 and LAI 1.61, versus dryness 280-405 and LAI 2.60-2.99 in 
 American groups. This supports one bounded test in which the existing surface-seasonality
 capacity is gated by a causal persistent-dryness state. No regional identifier or fitted
 surface enters the proposed equation.
+
+
+### Entry 167: persistent-desiccation gate preserves the useful surface signal
+
+The bounded equation multiplies the installed surface-seasonality modifier by
+`EMA12(dryness)/(EMA12(dryness)+500)`, so only sustained combustion conditions support
+the full finite capacity. At strength 4, a balanced 2,676-cell audit improves annual-log
+loss from .878833 to .878541 in three of four spatial folds and slightly improves aggregate
+cycle error, although only two cycle folds improve. Prefix perturbation is bit-exact.
+
+The gate preserves nearly all sampled NHAF gain while attenuating CEAM, NHSA, and SHSA
+amplification. Tropical-open and temperate-closed ratios move toward one, boreal and arid
+are flat, while intact-tropical and crop underburn deepen only slightly. This is a credible
+globally shared physical refinement but not an overwhelming held-block result; it warrants
+exactly one full-grid proxy test and no Optuna.
