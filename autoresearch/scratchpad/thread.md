@@ -4640,3 +4640,19 @@ blend loses. The closest is .717325 at sharpness 1 and weight .03 versus the inc
 limiting-factor weight raises annual burned area but weakens RMSE and seasonality. The
 old implementation bug was real, but fixing it does not rescue the ecological family.
 The multiplicative baseline is restored explicitly without official evaluation.
+
+
+### Entry 136: held-block heating and lightning triage isolates rare onset
+
+The clean held-block residual surfaces were translated into globally shared causal
+heating, drying, and lightning-arrival states. Broad opportunity banks and natural-share
+reallocators fail, and their cycle-residual association has the wrong sign in all four
+blocks. A long-temperature by semiarid-natural carrier is stable but duplicates the
+active cold-thaw closure.
+
+Only an additive rare-natural ignition source is directionally stable: it requires a
+positive short-temperature departure, drying onset, positive lightning departure,
+antecedent fuel, and low prior fire opportunity. At sampled strength .0015, allocation
+error improves in three of four blocks and annual-log error in all four. This warrants
+one exact bracket inside the existing rare-ignition component, not a new bank or an
+Optuna run.
