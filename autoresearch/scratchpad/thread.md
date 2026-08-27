@@ -5286,3 +5286,34 @@ capacity. It can improve several overburned temperate and American regions, but 
 up to .00207 and lowers the global scalar. The monotonic recovery toward the final stage
 shows that this term is correctly acting as residual finite event capacity, not as fuel
 production or storage. No canonical change, tuning, or official evaluation follows.
+
+
+### Entry 174: the early corrective stages still distort the spatial map
+
+An exact cumulative audit of the current stack starts at .645009 after the raw rate
+transform. Pathway event scaling is the largest constructive step at +.044369 Overall
+and +.174853 spatial skill. Seasonal rain capacity adds .015004, while local footprint,
+annual closure, and the multipath bank add .005168, .005370, and .003673. The final
+coherent surface capacity adds .000632, almost entirely through +.002775 spatial skill.
+
+In contrast, the early ecological brakes cost .009500 Overall and .056035 spatial skill
+at their insertion point, and ecological regime capacity costs .006516 Overall and
+.042359 spatial skill. Operating-point ablation has already shown both to be load-bearing,
+so deletion is not justified. Their large early distortions motivate changing where the
+same physical equations act, rather than adding another compensating correction.
+
+
+### Entry 175: post-event ecological suppression is cleaner but microscopic
+
+The unchanged cool-cultivation and humid-canopy brakes were moved through seven stages.
+Applying them immediately after pathway event scaling or the commuting regime-capacity
+multiplier is best at exact **.719021687**, a +.000026322 gain. Later placements decline
+to .718203 after the footprint, .717764 after annual closure, and .717099 at the end.
+The winning placement improves 6 of 14 regions and loses about .0010 in CEAM and TENA.
+
+The ecological audit is stronger than the scalar breadth: intact tropical closed fire
+moves from .897 to .965 times observed, temperate closed .974 to .987, crop .917 to .930,
+and productive rangeland .973 to .975. Tropical open, boreal, and arid ratios worsen only
+.0037, .0024, and .0009. A future-half perturbation leaves the earlier prefix bit-exact.
+This is a physically preferable no-complexity reorder and merits one canonical test, but
+its size does not justify tuning.
