@@ -4702,3 +4702,19 @@ low-fuel 1.311 times observed. The equation uses one global .003 source scale an
 `[A/(A+250)]^2 exp(-A/3000)` fuel establishment for `A = 12 EMA12(rain)`. The step is
 small but physically distinct and safe enough for canonical installation; it does not
 justify Optuna.
+
+
+### Entry 140: rare natural onset advances the official best to .718
+
+The primary-only rare-onset equation was installed inside the existing rare-ignition
+component at `3efb3bf`. It adds hazard only when rapid warming, drying onset, lightning
+arrival, squared causal rain-built fuel, LUH2 primary share, and low trailing incumbent
+fire coincide. The exact proxy reproduces .717564, and official evaluation records
+**.718** (bias .755, RMSE .546, seasonal .861, spatial .879).
+
+Seven of fourteen exact regional scores improve, prefix causality is bit-exact, and the
+ecological ratios remain within the audited bounds. The unused LUH2 secondary aggregate
+was removed from canonical `INPUTS` in the preceding commit because this mechanism does
+not need it and it must not be treated as an exclusive natural-cover fraction. No ML or
+GAM surface, regional coefficient, neighbour, invalid climate forcing, or future state
+enters the prediction path.
