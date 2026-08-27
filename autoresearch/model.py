@@ -2215,13 +2215,18 @@ def _live_fuel_greenup_brake(
     # Green-up changes when the available annual fuel burns; it does not erase
     # that fuel stock. Divide by a causal local running reference so suppressed
     # live-fuel months are reallocated toward the subsequent cured phase.
+    adjusted = np.asarray(prediction, dtype=np.float64) * brake
     alpha = 1.0 - np.exp(-1.0 / 12.0)
-    state = np.asarray(brake[0], dtype=np.float64).copy()
-    relative = np.empty_like(brake)
+    baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
+    adjusted_state = adjusted[0].copy()
+    allocated = np.empty_like(adjusted)
     for time in range(brake.shape[0]):
-        state += alpha * (brake[time] - state)
-        relative[time] = brake[time] / (state + 1e-12)
-    return np.asarray(prediction * relative, dtype=np.float32)
+        baseline_state += alpha * (prediction[time] - baseline_state)
+        adjusted_state += alpha * (adjusted[time] - adjusted_state)
+        allocated[time] = adjusted[time] * baseline_state / (
+            adjusted_state + 1e-12
+        )
+    return np.asarray(allocated, dtype=np.float32)
 
 
 
