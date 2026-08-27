@@ -62,6 +62,7 @@ PARAMS = {'annual_scale': 1.73,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
  'seasonal_rain_capacity': 0.4,
+ 'lagged_ignition_capacity': 0.8,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -2222,6 +2223,70 @@ def _seasonal_rainfall_capacity(
     return np.asarray(np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32)
 
 
+def _lagged_ignition_capacity(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Carry rare-fire capacity forward from prior local regime state.
+
+    Low modeled fire opportunity does not imply zero fire when the preceding
+    year supplied both fuel and intermittent ignition.  Lightning variability
+    represents episodic natural ignition, while cropland represents managed
+    ignition and fragmented fine fuels.  Rainfall supplies the fuel-growth
+    window; dense natural cover damps ignition access.  Every gate is smooth,
+    site-local, and evaluated from current or preceding state only.
+    """
+    strength = float(max(p.get("lagged_ignition_capacity", 0.0), 0.0))
+    if "regime_capacity" not in enabled or strength <= 0.0:
+        return prediction
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    cropland = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    factor = np.ones_like(prediction, dtype=np.float64)
+    for time in range(1, prediction.shape[0]):
+        start = max(0, time - 12)
+        prior_fire = np.asarray(
+            prediction[start:time], dtype=np.float64
+        ).sum(axis=0)
+        prior_fire *= 12.0 / (time - start)
+        lightning_variability = lightning[start:time].std(axis=0)
+        low_opportunity = _falling(prior_fire, 1.0 / 0.003, 0.008)
+        intermittent_ignition = _rising(
+            lightning_variability, 1.0 / 0.004, 0.009
+        )
+        managed_ignition = cropland[time] / (cropland[time] + 0.05)
+        fuel_climate = (
+            _rising(annual_rain[time], 1.0 / 80.0, 180.0)
+            * _falling(annual_rain[time], 1.0 / 300.0, 1800.0)
+        )
+        ignition_access = (
+            0.6 * intermittent_ignition * (1.0 - 0.6 * natural[time])
+            + 0.4 * managed_ignition
+        )
+        factor[time] = np.exp(
+            np.clip(
+                strength * low_opportunity * fuel_climate * ignition_access,
+                0.0,
+                5.0,
+            )
+        )
+    return np.asarray(np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32)
+
+
 def _live_fuel_greenup_brake(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2350,6 +2415,9 @@ def predict(
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
     prediction = _seasonal_rainfall_capacity(
+        prediction, data, fallback, enabled
+    )
+    prediction = _lagged_ignition_capacity(
         prediction, data, fallback, enabled
     )
     prediction = _state_dependent_fire_season(
