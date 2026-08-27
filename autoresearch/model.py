@@ -98,7 +98,7 @@ PARAMS = {'annual_scale': 1.73,
  'crop_k': 1.22,
  'crop_n': 1.514,
  'crop_rain_management_w': 0.0,
- 'crop_residue_event_scale': 0.25,
+ 'crop_residue_event_scale': 1.0,
  'nb_w': 0.5431013864547594,
  'nb_diag': 0.5,
  'leg_w': 0.3,
@@ -2257,6 +2257,12 @@ def _rain_conditioned_crop_management(
         )
         combustion = dryness / (dryness + 500.0)
         temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+        temperature_background = _antecedent(
+            temperature, 1.0 - np.exp(-1.0 / 24.0)
+        )
+        cold_cultivation = _falling(
+            temperature_background, 1.0 / 3.0, 8.0
+        )
         warming = np.empty_like(temperature)
         warming[0] = 0.0
         warming[1:] = np.maximum(temperature[1:] - temperature[:-1], 0.0)
@@ -2271,6 +2277,7 @@ def _rain_conditioned_crop_management(
             * drying
             * combustion
             * thermal_shoulder
+            * (0.2 + 0.8 * cold_cultivation)
             * np.clip(warming / 5.0, 0.0, 1.0)
         )
         adjusted = 1.0 - (1.0 - adjusted) * np.exp(-residue_event)
