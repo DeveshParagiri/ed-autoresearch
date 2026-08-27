@@ -51,6 +51,7 @@ PARAMS = {'annual_scale': 0.9956870515976485,
  'alloc_vpd_rise_n': 1.0,
  'allocation_glm_w': 1.0,
  'memory_gam_w': 0.50,
+ 'memory_norm_months': 12.0,
  'cool_crop_brake': 0.5,
  'wet_forest_brake': 1.0,
  'vpd_half': 0.29948860381280695,
@@ -1661,7 +1662,8 @@ def _causal_memory_gam(
     # amount of fuel that can burn. Rescale the learned response by causal
     # 12-month running means at each independent site so memory redistributes
     # the available fire potential without creating a second annual source.
-    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    normalization_months = max(float(p.get("memory_norm_months", 12.0)), 1.0)
+    alpha = 1.0 - np.exp(-1.0 / normalization_months)
     baseline_state = np.asarray(prediction[0], dtype=np.float64).copy()
     learned_state = learned[0].copy()
     allocated = np.empty_like(learned)
