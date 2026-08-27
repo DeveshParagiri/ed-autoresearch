@@ -61,7 +61,7 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
- 'missed_window_w': 0.50,
+ 'missed_window_w': 0.25,
  'missed_window_threshold': 0.15,
  'missed_window_width': 0.04,
  'vpd_half': 0.29948860381280695,
@@ -2026,14 +2026,8 @@ def _missed_fire_window(
         return prediction
 
     rain = np.asarray(data["monthly_precipitation"], dtype=np.float64)
-    gpp = np.asarray(data["gpp"], dtype=np.float64)
     rain_memory = _antecedent(rain, 1.0 - np.exp(-1.0 / 12.0))
-    gpp_memory = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
     drying = (rain_memory - rain) / (rain_memory + rain + 10.0)
-    curing = (gpp_memory - gpp) / (gpp_memory + gpp + 0.2)
-    fuel = gpp_memory / (gpp_memory + 0.5)
-    lightning = np.asarray(data["lightning_flash_rate"], dtype=np.float64)
-    ignition = 0.2 + lightning / (lightning + 0.01)
 
     share = np.empty_like(prediction, dtype=np.float64)
     annual = np.empty_like(prediction, dtype=np.float64)
@@ -2056,11 +2050,8 @@ def _missed_fire_window(
         1.0
         + np.exp(np.clip(-(drying_signal - threshold) / width, -40.0, 40.0))
     )
-    curing_gate = 1.0 / (
-        1.0 + np.exp(np.clip(-curing / 0.03, -40.0, 40.0))
-    )
     missed = np.exp(-share / 0.02)
-    pulse = missed * drying_gate * curing_gate * fuel * ignition
+    pulse = missed * drying_gate
     proposal = np.asarray(prediction, dtype=np.float64) + (
         strength * annual / 12.0 * pulse
     )
