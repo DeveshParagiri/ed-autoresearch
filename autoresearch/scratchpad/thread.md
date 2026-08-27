@@ -4793,3 +4793,28 @@ live/dead readiness is anti-aligned with the required within-cell correction in 
 fold. Its apparent annual signal is also unstable, including a sign reversal in one fold.
 Both proxy paths are prefix-exact, but neither supports an eligible candidate. The grass
 clock family is closed without full-grid or official evaluation.
+
+
+### Entry 145: the warm-open phase error is an annual-map mixture error
+
+A four-fold held-block diagnostic on all 1,207 warm seasonal-open cells reproduces their
+46.44% share of observed global fire. The base transformed rate already peaks in August,
+and every later stage retains that peak. A strictly cell-year-mass-conserving learned
+cycle correction improves allocation RMSE only from .077414 to .076959 and still peaks
+in August. Fixed drydown and standing-dead transitions do somewhat better locally but
+remain heterogeneous across folds, while a literal four-month delay reaches December
+only by catastrophically worsening allocation. The aggregate August-versus-December
+failure is therefore mostly different annual weights among cells, not a missing universal
+within-cell clock.
+
+The stable annual interaction is managed-open cover crossed with trailing realized fire.
+It distils to one recurrence equilibrium: managed ignition access raises low-recurrence
+rangeland and pasture, while the same finite-fuel pathway suppresses already recurrent
+managed-open fire. With `M=(range+pasture)/(range+pasture+.15)`,
+`R=H12/(H12+.01)`, rain-built fuel `F`, and warm support `W`, the candidate applies
+`h' = h exp[k M (1-2R) F W]`. At sampled `k=.5`, warm-open annual-log RMSE improves
+1.16062 to 1.14520 and annual error improves in all four held blocks. The equation is
+not a duplicate: the footprint is monotone in managed access, the fragmentation brake
+only suppresses recurrent crop/urban discontinuity, and annual closure targets humid
+natural overburn or cold thaw. Prefix causality is exact. One bounded exact run is
+justified; this is an annual-propensity candidate, not a claimed December timing fix.
