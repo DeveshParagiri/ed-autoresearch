@@ -466,7 +466,12 @@ def main() -> int:
     else:
         target = np.asarray(observed[:, rows, cols].T, dtype=np.float64).reshape(-1)
         offset = baseline.reshape(-1) + 1e-4
-    y = target / offset
+    ratio_target = target / offset
+    y = (
+        np.log(np.clip(ratio_target, 1e-4, 1e4))
+        if annual_target_tree
+        else ratio_target
+    )
     weights = offset + float(offset.mean()) * 0.02
     x_mean = np.average(x, axis=0, weights=weights)
     x_scale = np.sqrt(
@@ -832,7 +837,7 @@ def main() -> int:
             if train.size > 500_000:
                 train = rng.choice(train, size=500_000, replace=False)
             regressor = HistGradientBoostingRegressor(
-                loss="poisson",
+                loss="squared_error" if annual_target_tree else "poisson",
                 learning_rate=(
                     0.05 if ultra_tree else (0.06 if deep_tree else 0.08)
                 ),
@@ -869,8 +874,13 @@ def main() -> int:
         evaluator = GFED5Evaluator(GFED5_PATH)
         report(evaluator, "incumbent", incumbent)
         for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
+            correction = (
+                np.exp(np.clip(out_of_fold, -8.0, 8.0))
+                if annual_target_tree
+                else out_of_fold
+            )
             corrected = baseline * np.power(
-                np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
+                np.clip(correction.reshape(baseline.shape), 1e-6, 1e6),
                 strength,
             )
             if seasonal_target_tree:
@@ -915,7 +925,11 @@ def main() -> int:
             trained,
             x[importance_rows],
             y[importance_rows],
-            scoring="neg_mean_poisson_deviance",
+            scoring=(
+                "neg_mean_squared_error"
+                if annual_target_tree
+                else "neg_mean_poisson_deviance"
+            ),
             n_repeats=2,
             random_state=719,
             sample_weight=weights[importance_rows],
