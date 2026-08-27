@@ -93,7 +93,7 @@ PARAMS = {'annual_scale': 1.73,
  'spread_crit': 1.7625369910383835,
  'spread_k': 6.52,
  'spread_gain': 6.340277350273691,
- 'month_scale': 0.003,
+ 'month_scale': 0.04298969468924071,
  'lag_w': 0.18862814833689176,
  'soft_w': 1.0,
  'soft_s': 2.0,
@@ -181,7 +181,7 @@ def _fire_rate(
         stack = np.stack(factors, axis=0)
         sharp = float(np.clip(p.get("soft_s", 4.0), 0.5, 50.0))
         softmin = -np.log(
-            np.exp(-sharp * np.clip(stack, 1e-6, None)).mean(axis=0) + 1e-12
+            np.exp(-sharp * np.clip(stack, 1e-6, None)).sum(axis=0) + 1e-12
         ) / sharp
         softmin = np.clip(softmin, 1e-6, None)
         rate = np.power(np.clip(rate, 1e-9, None), 1.0 - weight) * np.power(softmin, weight)
