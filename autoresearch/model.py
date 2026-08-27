@@ -64,6 +64,10 @@ PARAMS = {'annual_scale': 1.73,
  'surface_fuel_recovery_months': 6.0,
  'crop_fuel_recovery_months': 24.0,
  'woody_fuel_recovery_months': 120.0,
+ 'secondary_open_litter_store': 0.9,
+ 'secondary_open_litter_release': 36.0,
+ 'secondary_woody_litter_store': 0.6,
+ 'secondary_woody_litter_release': 24.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -2048,6 +2052,158 @@ def _pathway_fuel_recovery_reservoir(
 
 
 
+def _secondary_fuel_litter_banks(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Route secondary-vegetation hazard through produced litter stocks.
+
+    Secondary open vegetation transfers rain-supported live fine fuel into a
+    decaying litter pool during senescence. Secondary woody vegetation likewise
+    transfers falling leaf area into canopy litter. Each stock controls only
+    the release timing of its own finite incumbent-hazard share.
+    """
+    if "surface_opportunity_bank" not in enabled:
+        return prediction
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    secondary = np.clip(
+        np.asarray(data["secondary_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    secondary_canopy = np.clip(
+        np.asarray(data["secondary_canopy_height"], dtype=np.float64),
+        0.0,
+        None,
+    )
+    lai = np.clip(
+        np.asarray(data["leaf_area_index"], dtype=np.float64), 0.0, None
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+
+    gpp_3 = _antecedent(gpp, alpha_3)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    rain_12 = _antecedent(rain, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    combustion = dryness / (dryness + 500.0)
+    thermal = _rising(temperature, 0.25, 5.0)
+    drydown = np.maximum(
+        (rain_12 - rain) / (rain_12 + rain + 10.0), 0.0
+    )
+
+    secondary_open = secondary * 8.0 / (secondary_canopy + 8.0)
+    secondary_woody = (
+        secondary * secondary_canopy / (secondary_canopy + 8.0)
+    )
+    open_target = (
+        secondary_open * gpp / (gpp + 0.35) * rain / (rain + 30.0)
+    )
+    woody_target = secondary_woody * lai / (lai + 2.0)
+
+    natural_open = natural * 8.0 / (canopy + 8.0)
+    existing_surface = (
+        (1.0 - crop)
+        * fine_fuel
+        * np.clip(rangeland + pasture + natural_open, 0.0, 1.0)
+    )
+    existing_crop = crop * fine_fuel
+    existing_woody = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    secondary_open_capacity = secondary_open * fine_fuel
+    secondary_woody_capacity = (
+        secondary_woody * biomass / (biomass + 1.0)
+    )
+    total_capacity = (
+        0.05
+        + existing_surface
+        + existing_crop
+        + existing_woody
+        + secondary_open_capacity
+        + secondary_woody_capacity
+    )
+    open_share = secondary_open_capacity / total_capacity
+    woody_share = secondary_woody_capacity / total_capacity
+
+    live = np.asarray(open_target[0], dtype=np.float64).copy()
+    litter = np.zeros_like(live)
+    litter_ready = np.empty_like(gpp, dtype=np.float64)
+    leaf = np.asarray(woody_target[0], dtype=np.float64).copy()
+    canopy_litter = np.zeros_like(leaf)
+    canopy_ready = np.empty_like(lai, dtype=np.float64)
+    for time in range(gpp.shape[0]):
+        transfer = np.maximum(live - open_target[time], 0.0)
+        live += (open_target[time] - live) / 3.0
+        litter = litter * np.exp(-1.0 / 12.0) + transfer
+        litter_ready[time] = (
+            litter / (litter + 0.04)
+            * combustion[time]
+            * thermal[time]
+        )
+
+        fall = np.maximum(leaf - woody_target[time], 0.0)
+        leaf += (woody_target[time] - leaf) / 2.0
+        canopy_litter = canopy_litter * np.exp(-1.0 / 9.0) + fall
+        canopy_ready[time] = (
+            canopy_litter / (canopy_litter + 0.03)
+            * drydown[time]
+            * combustion[time]
+            * thermal[time]
+        )
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    adjusted_hazard = hazard.copy()
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        open_share,
+        litter_ready,
+        p.get("secondary_open_litter_store", 0.0),
+        p.get("secondary_open_litter_release", 0.0),
+    )
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        woody_share,
+        canopy_ready,
+        p.get("secondary_woody_litter_store", 0.0),
+        p.get("secondary_woody_litter_release", 0.0),
+    )
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -2119,6 +2275,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _pathway_fuel_recovery_reservoir(
+        prediction, data, fallback, enabled
+    )
+    prediction = _secondary_fuel_litter_banks(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
