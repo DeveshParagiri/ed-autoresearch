@@ -4733,3 +4733,25 @@ and reduces arid and boreal overburn, but loses .002695 seasonal and .002237 spa
 skill while deepening intact-tropical and crop underburn. The next justified change is
 to split its seasonal allocator from its green-up brake, not remove the component. No
 canonical pruning follows this audit.
+
+
+### Entry 142: most observed fire lies outside the seven guardrail masks
+
+The established seven ecological guardrails jointly contain only 17.45% of observed-
+fire weight under exact trailing rain, with .20% overlap; their complement therefore
+contains 82.55%. A nine-regime clean partition of that complement identifies the real
+score-bearing failure. A warm seasonal open carrier alone contains **46.46%** of all
+observed fire, produces 33.90% of absolute annual residual and 31.60% of log residual,
+and burns 1.090 times observed. Its aggregate modeled peak is August versus observed
+December, with seasonal L1 error .155.
+
+Warm humid primary mosaics contain 9.83% of observed fire and burn 1.361 times observed,
+contributing another 12.20% of absolute annual residual. Cold mixed systems contain
+6.33%, burn only .314 times observed, and contribute 23.58% of log residual. The clean
+fuel-selective climate reconstruction corrects the open carrier to a December peak and
+1.048 times observed, but over-suppresses humid primary and damages managed/dry mosaics.
+The next high-leverage family is therefore a causal wet-season grass-production and
+standing-dead release clock for the open carrier, paired only if necessary with partial
+root-water or woody-canopy shielding in humid primary mosaics. The LUH2 secondary
+aggregate remains a sensitivity field, not an exclusive partition because it covers
+almost all evaluator land.
