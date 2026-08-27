@@ -419,9 +419,15 @@ def _spread(rate: np.ndarray, p: Mapping[str, float]) -> np.ndarray:
     powered = np.power(ratio, p["spread_k"])
     connected = powered / (1.0 + powered)
     factor = 1.0 + p["spread_gain"] * connected
-    # Normalise by each cell's own time-mean so the term redistributes burned
-    # area between good and marginal months instead of inflating the total.
-    return factor / (factor.mean(axis=0, keepdims=True) + 1e-12)
+    # A causal running reference keeps the multiplier relative to each site's
+    # recent spread regime without reading future months.
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    state = np.asarray(factor[0], dtype=np.float64).copy()
+    relative = np.empty_like(factor)
+    for step in range(factor.shape[0]):
+        state += alpha * (factor[step] - state)
+        relative[step] = factor[step] / (state + 1e-12)
+    return relative
 
 
 def _gust(
@@ -472,11 +478,11 @@ def _antecedent(series: np.ndarray, alpha: float) -> np.ndarray:
     Fuel moisture and grass curing respond to rainfall integrated over the
     preceding weeks, not to the instantaneous month. ``alpha`` near one means
     almost no memory; small ``alpha`` means a long antecedent window. The
-    accumulator is initialised with each cell's own climatology so the result
-    stays a pure function of the inputs with no spin-up transient.
+    accumulator is initialised from the first available month so no future
+    state enters an earlier coupled timestep.
     """
     alpha = float(np.clip(alpha, 1e-3, 1.0))
-    state = series.mean(axis=0)
+    state = np.asarray(series[0], dtype=np.float64).copy()
     output = np.empty_like(series)
     for step in range(series.shape[0]):
         state = state + alpha * (series[step] - state)
@@ -499,8 +505,13 @@ def _curing(
     wetness = _antecedent(data["monthly_precipitation"], p["cure_alpha"])
     ratio = np.clip(wetness / (p["cure_half"] + 1e-12), 0.0, None)
     flammable = 1.0 / (1.0 + np.power(ratio, p["cure_n"]))
-    mean = flammable.mean(axis=0, keepdims=True)
-    return np.clip(flammable / (mean + 1e-12), 0.0, p["cure_cap"])
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    state = np.asarray(flammable[0], dtype=np.float64).copy()
+    relative = np.empty_like(flammable)
+    for step in range(flammable.shape[0]):
+        state += alpha * (flammable[step] - state)
+        relative[step] = flammable[step] / (state + 1e-12)
+    return np.clip(relative, 0.0, p["cure_cap"])
 
 
 # A fuel-depletion state was tested here and removed. Optuna drove its
@@ -1156,69 +1167,73 @@ def _coupled_annual_correction(
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
-    """Calibrate annual fire opportunity using only 1850-compatible local state."""
+    """Calibrate fire opportunity from a causal trailing annual window."""
     strength = float(np.clip(p.get("annual_residual_w", 0.0), 0.0, 1.5))
     if "fuel" not in enabled or strength <= 0.0:
         return prediction
 
-    cycle = np.asarray(prediction, dtype=np.float64).reshape(16, 12, 180, 360)
-    incumbent = cycle.mean(axis=0).sum(axis=0)
-    log_current = np.log10(incumbent + 1e-6)
     coefficients = _COUPLED_ANNUAL_COEFFICIENTS
-    index = 0
-    residual = np.full((180, 360), 2.509046582748338, dtype=np.float64)
+    corrected = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        start = max(0, time - 11)
+        window = slice(start, time + 1)
+        window_months = time - start + 1
+        incumbent = np.asarray(prediction[window], dtype=np.float64).sum(axis=0)
+        incumbent *= 12.0 / window_months
+        log_current = np.log10(incumbent + 1e-6)
+        index = 0
+        residual = np.full((180, 360), 2.509046582748338, dtype=np.float64)
 
-    def add(values: np.ndarray) -> None:
-        nonlocal index, residual
-        residual += coefficients[index] * values
-        index += 1
+        def add(values: np.ndarray) -> None:
+            nonlocal index, residual
+            residual += coefficients[index] * values
+            index += 1
 
-    add(log_current)
-    for threshold in (-5.0, -4.0, -3.0, -2.0, -1.0):
-        add(np.maximum(log_current - threshold, 0.0))
+        add(log_current)
+        for threshold in (-5.0, -4.0, -3.0, -2.0, -1.0):
+            add(np.maximum(log_current - threshold, 0.0))
 
-    summaries: dict[str, dict[str, np.ndarray]] = {}
-    for name in _COUPLED_ANNUAL_DRIVERS:
-        climatology = np.asarray(data[name], dtype=np.float64).reshape(
-            16, 12, 180, 360
-        ).mean(axis=0)
-        raw = {
-            "mean": climatology.mean(axis=0),
-            "std": climatology.std(axis=0),
-            "p10": np.quantile(climatology, 0.10, axis=0),
-            "p90": np.quantile(climatology, 0.90, axis=0),
-        }
-        if name in _COUPLED_ANNUAL_STATIC:
-            raw = {"mean": raw["mean"]}
-        summaries[name] = {}
-        for statistic, values in raw.items():
-            center, scale = _COUPLED_ANNUAL_SCALING[f"{name}:{statistic}"]
-            z = np.clip((values - center) / (scale + 1e-8), -4.0, 4.0)
-            summaries[name][statistic] = z
-            add(z)
-            add(np.maximum(z, 0.0))
-            add(np.minimum(z, 0.0))
+        summaries: dict[str, dict[str, np.ndarray]] = {}
+        for name in _COUPLED_ANNUAL_DRIVERS:
+            trailing = np.asarray(data[name][window], dtype=np.float64)
+            raw = {
+                "mean": trailing.mean(axis=0),
+                "std": trailing.std(axis=0),
+                "p10": np.quantile(trailing, 0.10, axis=0),
+                "p90": np.quantile(trailing, 0.90, axis=0),
+            }
+            if name in _COUPLED_ANNUAL_STATIC:
+                raw = {"mean": raw["mean"]}
+            summaries[name] = {}
+            for statistic, values in raw.items():
+                center, scale = _COUPLED_ANNUAL_SCALING[f"{name}:{statistic}"]
+                z = np.clip((values - center) / (scale + 1e-8), -4.0, 4.0)
+                summaries[name][statistic] = z
+                add(z)
+                add(np.maximum(z, 0.0))
+                add(np.minimum(z, 0.0))
 
-    for left, left_stat, right, right_stat in (
-        ("monthly_precipitation", "std", "air_temperature", "p10"),
-        ("monthly_precipitation", "std", "aboveground_biomass", "p10"),
-        ("monthly_precipitation", "mean", "gpp", "mean"),
-        ("monthly_precipitation", "p10", "dryness", "mean"),
-        ("air_temperature", "std", "gpp", "mean"),
-        ("leaf_area_index", "std", "dryness", "mean"),
-        ("lightning_flash_rate", "mean", "aboveground_biomass", "mean"),
-        ("luh2_cropland_fraction", "mean", "luh2_secondary_fraction", "mean"),
-        ("luh2_rangeland_fraction", "mean", "aboveground_biomass", "mean"),
-        ("soil_carbon", "mean", "air_temperature", "p10"),
-    ):
-        add(summaries[left][left_stat] * summaries[right][right_stat])
+        for left, left_stat, right, right_stat in (
+            ("monthly_precipitation", "std", "air_temperature", "p10"),
+            ("monthly_precipitation", "std", "aboveground_biomass", "p10"),
+            ("monthly_precipitation", "mean", "gpp", "mean"),
+            ("monthly_precipitation", "p10", "dryness", "mean"),
+            ("air_temperature", "std", "gpp", "mean"),
+            ("leaf_area_index", "std", "dryness", "mean"),
+            ("lightning_flash_rate", "mean", "aboveground_biomass", "mean"),
+            ("luh2_cropland_fraction", "mean", "luh2_secondary_fraction", "mean"),
+            ("luh2_rangeland_fraction", "mean", "aboveground_biomass", "mean"),
+            ("soil_carbon", "mean", "air_temperature", "p10"),
+        ):
+            add(summaries[left][left_stat] * summaries[right][right_stat])
 
-    if index != coefficients.size:
-        raise RuntimeError(
-            f"coupled annual basis mismatch: {index} != {coefficients.size}"
-        )
-    correction = np.exp(strength * np.clip(residual, -5.0, 5.0))
-    return prediction * correction[None, ...]
+        if index != coefficients.size:
+            raise RuntimeError(
+                f"coupled annual basis mismatch: {index} != {coefficients.size}"
+            )
+        correction = np.exp(strength * np.clip(residual, -5.0, 5.0))
+        corrected[time] = prediction[time] * correction
+    return corrected
 
 
 _COUPLED_SEASONAL_DYNAMIC = (
@@ -1690,22 +1705,20 @@ def _ecological_regime_brakes(
     continuous functions of observable local state with global coefficients;
     no coordinates, region labels, or geographic branches enter.
     """
-    def mean_state(name: str) -> np.ndarray:
-        return np.asarray(data[name], dtype=np.float64).reshape(
-            16, 12, 180, 360
-        ).mean(axis=(0, 1))
+    def current_state(name: str) -> np.ndarray:
+        return np.asarray(data[name], dtype=np.float64)
 
-    temperature = mean_state("air_temperature")
-    log_brake = np.zeros((180, 360), dtype=np.float64)
+    temperature = current_state("air_temperature")
+    log_brake = np.zeros_like(prediction, dtype=np.float64)
     if "cropland" in enabled:
-        cropland = mean_state("luh2_cropland_fraction")
+        cropland = current_state("luh2_cropland_fraction")
         cool_cultivation = cropland * _falling(temperature, 1.0 / 3.0, 18.0)
         log_brake += p.get("cool_crop_brake", 0.0) * cool_cultivation
     if "fuel" in enabled:
-        annual_rain = mean_state("annual_precipitation")
-        canopy = mean_state("natural_canopy_height")
-        leaf_area = mean_state("leaf_area_index")
-        natural = mean_state("natural_vegetation_fraction")
+        annual_rain = current_state("annual_precipitation")
+        canopy = current_state("natural_canopy_height")
+        leaf_area = current_state("leaf_area_index")
+        natural = current_state("natural_vegetation_fraction")
         humid_closed_canopy = (
             _rising(temperature, 0.5, 20.0)
             * _rising(annual_rain, 1.0 / 250.0, 1200.0)
@@ -1714,7 +1727,7 @@ def _ecological_regime_brakes(
             * natural
         )
         log_brake += p.get("wet_forest_brake", 0.0) * humid_closed_canopy
-    return prediction * np.exp(-log_brake)[None, ...]
+    return prediction * np.exp(-log_brake)
 
 
 
@@ -1752,8 +1765,6 @@ def predict(
         rate = rate * _curing(data, fallback)
     if "lag" in enabled:
         rate = _lag(rate, fallback)
-    if "legacy" in enabled:
-        rate = _legacy(rate, fallback)
     if "stubble" in enabled and fallback.get("stub_k", 0.0) > 0.0:
         # Central Asia burns in April while every climate driver there peaks
         # in July to September, and dryness is at its annual minimum as fire
@@ -1767,7 +1778,7 @@ def predict(
         # cropland is there to burn.
         temperature = data["air_temperature"]
         warming = temperature - np.roll(temperature, 1, axis=0)
-        warming[0] = warming[1]
+        warming[0] = 0.0
         shoulder = np.exp(
             -np.square((temperature - fallback["stub_t"]) / fallback["stub_w"])
         )
@@ -1796,12 +1807,12 @@ def predict(
     prediction = _transform(rate, fallback)
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
-    # First set the long-term fire potential from local fuel, climate and
-    # ignition state; then distribute that potential through the seasonal
-    # phenology equation. This factorisation keeps magnitude and timing as
-    # distinct ecological processes.
+    # Set fire potential from a trailing annual window. Seasonal timing then
+    # remains a causal function of current and accumulated local state.
     prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
     prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
-    prediction = _coupled_valid_closure(prediction, data, fallback, enabled)
+    prediction = np.clip(
+        prediction * fallback.get("annual_scale", 1.0), 0.0, 1.0
+    )
     prediction = _causal_memory_gam(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
