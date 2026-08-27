@@ -62,6 +62,8 @@ PARAMS = {'annual_scale': 1.85,
  'rare_ignition_scale': 0.03514376683207075,
  'rare_canopy_shield': 3.014209424351835,
  'rare_opportunity_half': 0.2588335633047849,
+ 'managed_ignition_scale': 0.004,
+ 'managed_opportunity_half': 0.01,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2010,14 +2012,16 @@ def _rare_lightning_ignition(
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
-    """Supply rare natural ignitions missed by the continuous fire hazard.
+    """Supply rare natural and managed ignitions missed by continuous hazard.
 
     A lightning flash does not imply burned area: it must coincide with warm,
     rain-free fuel, and that fuel must be continuous enough to carry a front.
     The term combines lightning with antecedent productivity and woody biomass,
     then fades smoothly where the existing trailing fire opportunity is already
-    large. This lets rare crown or open-land events occur without amplifying
-    active savannas or creating fire in fuel-free deserts.
+    large. Managed patch burning uses the same dry fine-fuel constraint but is
+    gated by cultivated and grazed land rather than lightning. This represents
+    intentional field and pasture burns without a population forcing, and only
+    fills low-fire opportunity instead of amplifying active fire regimes.
     """
     if "rare_ignition" not in enabled:
         return prediction
@@ -2095,7 +2099,7 @@ def _rare_lightning_ignition(
         trailing[time] = annual
     opportunity_half = max(float(p.get("rare_opportunity_half", 0.2)), 1e-3)
     opportunity_gap = 1.0 / (1.0 + trailing / opportunity_half)
-    ignition = (
+    natural_ignition = (
         scale
         * lightning_chance
         * rain_window
@@ -2104,6 +2108,29 @@ def _rare_lightning_ignition(
         * burnable_land
         * opportunity_gap
     )
+    cropland = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    managed_land = np.clip(cropland + pasture + rangeland, 0.0, 1.0)
+    managed_half = max(float(p.get("managed_opportunity_half", 0.01)), 1e-4)
+    managed_gap = 1.0 / (
+        1.0 + np.power(np.maximum(trailing, 0.0) / managed_half, 0.75)
+    )
+    managed_ignition = (
+        max(float(p.get("managed_ignition_scale", 0.0)), 0.0)
+        * managed_land
+        * rain_window
+        * thermal_window
+        * fine_fuel
+        * managed_gap
+    )
+    ignition = natural_ignition + managed_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
         dtype=np.float32,
