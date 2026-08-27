@@ -28,13 +28,12 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag'
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure')
 
-# Calibrate only the newly validated globally shared event-footprint equation.
+# Calibrate only the two pathway banks that supplied the validated structural gain.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
-    'fire_footprint_background': {'type': 'float', 'low': 0.35, 'high': 0.65},
-    'fire_footprint_w': {'type': 'float', 'low': 1.5, 'high': 2.8},
-    'fire_footprint_natural_w': {'type': 'float', 'low': 0.5, 'high': 0.9},
-    'fire_footprint_lightning_half': {'type': 'float', 'low': 0.02, 'high': 0.1},
-    'fire_footprint_managed_half': {'type': 'float', 'low': 0.05, 'high': 0.2},
+    'managed_bank_store': {'type': 'float', 'low': 0.2, 'high': 1.0},
+    'managed_bank_release': {'type': 'float', 'low': 4.0, 'high': 24.0},
+    'crop_bank_store': {'type': 'float', 'low': 0.4, 'high': 1.0},
+    'crop_bank_release': {'type': 'float', 'low': 12.0, 'high': 48.0},
 }
 
 PARAMS = {'annual_scale': 1.73,
