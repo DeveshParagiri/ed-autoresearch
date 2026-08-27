@@ -3868,3 +3868,21 @@ The coupled audit passes. Halving every input after month 96 changes months 1-96
 baseline; +50 percent changes predictions 28.48 percent and total area to 1.2362. The response is
 sublinear in aggregate and finite, but materially dependent on coupled vegetation state as it
 should be. No Optuna was run because the structural gain is only one official millipoint.
+
+
+### Entry 104: online tree exposes zero-locking but the smooth pulse is refuted
+
+A 64-leaf decision tree was fitted to 3.52 million actual causal site-month trajectories with
+whole cells held out. At 25 percent blend it raises the online OOF score from .7296 to **.7311**;
+stronger blends fall to .7305, .7294, and .7276. Its stable root separates near-zero incumbent
+monthly opportunity, then repeatedly splits on 12-month rainfall departure, GPP/LAI curing,
+humid-climate drying, temperature departure, and rangeland drying. This confirms a zero-lock
+failure but is not a large new held-out ceiling.
+
+The tree was distilled into a smooth additive missed-fire window with causal 12-month local
+normalization. A conservative physical pulse and a stronger version are both neutral at .7296;
+the direct two-state opportunity-by-drying threshold is slightly negative at .7295. Commits
+`04819a6`, `dedd2ed`, and `ab8a0ec` retain those distinct formulations, followed by explicit
+reversions. The tree's large ratios arise where the base prediction is tiny and do not translate
+into useful standalone physics. The active official best remains **.730**; Optuna is still not
+justified.
