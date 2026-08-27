@@ -21,7 +21,7 @@ INPUTS = ('dryness', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_primary_fraction', 'lightning_flash_rate', 'soil_carbon',
           'leaf_area_index', 'natural_canopy_height', 'secondary_canopy_height',
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
-          'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
+          'luh2_pasture_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'dead_fuel_pool',
