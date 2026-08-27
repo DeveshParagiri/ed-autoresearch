@@ -4221,3 +4221,35 @@ fine fuel. Its held-out diagnostic blend reaches .7221, but direct hazard multip
 fail regional and humid-forest guardrails. The next physical test must therefore add
 secondary-open and secondary-woody capacity to conserved pathway shares rather than
 add burned-area mass.
+
+
+### Entry 118: separate managed combustion temperatures reach official .715
+
+The core temperature response was an almost discontinuous switch at 20 degrees C.
+Replacing it everywhere with a broad response centered at 15 degrees C reached
+.7127 but was ecologically false: temperate closed canopy rose to 2.61 times
+observed, boreal forest to 6.82, and arid low fuel to 1.95. The family was evolved
+rather than discarded. Woody and crop-dominated capacities now retain the 20-degree
+response, while only rain-supported managed fine fuel blends toward the broader
+surface-combustion response. The eligibility is a smooth product of trailing GPP,
+pasture/rangeland share, and annual moisture, with natural and secondary woody
+capacity retained in the denominator. It has one global coefficient set and no
+geography or target-derived runtime.
+
+The intermediate globally softened response is committed at `ef78fdd`. The selected
+pathway separation at `f7fb164` raises the exact proxy from .710931 to .714603 and
+evaluates officially at **.715** (bias .752, RMSE .545, seasonal .861, spatial
+.871). Seven of fourteen regions improve; the scalar is not being screened for
+universal regional wins. The ecological guardrail is instead that no pathway becomes
+pathological: temperate closed canopy is 1.005 times observed, boreal forest 1.059,
+tropical open woodland .983, productive rangeland 1.022, cropland .993, arid low fuel
+1.342, and cold managed semiarid .911. Global area is 1.086 times observed and future
+inputs still have exactly zero influence on earlier predictions.
+
+The geographic audit remains candid about the next problem. TENA, CEAM, and MIDE
+burn 3.86, 2.81, and 4.84 times observed, and Morocco remains an extreme low-observed
+country outlier. Those errors predate this mechanism but some worsen as managed fire
+is recovered. The next structural family must distinguish connected seasonal
+managed burning from fragmented or persistently low-fire human landscapes using
+smooth local land-state, fuel, and recurrence physics rather than regional
+coefficients.
