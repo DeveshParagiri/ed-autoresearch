@@ -5158,3 +5158,19 @@ is positive in all four folds only at microscopic scale, while two direct drough
 brakes are flat or harmful. All equations are prefix-exact. The multi-year family adds no
 stable mechanism beyond the incumbent short memories and finite fuel banks, so it receives
 no exact candidate, tuning, or official evaluation.
+
+
+### Entry 166: surface-capacity regional loss follows persistent desiccation
+
+A balanced 1,311-cell diagnosis across northern Africa and tropical American regions
+shows that the new capacity is directionally correct in NHAF but amplifies already-high
+sampled fire in CEAM, NHSA, and SHSA. A depth-two local-state learner improves aggregate
+annual error and three of four spatial folds. Its stable interactions in every fold cross
+dryness variability with combustion-temperature alignment, primary cover, and rain
+variability; the learned surface itself is not promotable.
+
+The physical separation is sustained desiccation rather than geography. NHAF has causal
+mean dryness near 870 and LAI 1.61, versus dryness 280-405 and LAI 2.60-2.99 in the three
+American groups. This supports one bounded test in which the existing surface-seasonality
+capacity is gated by a causal persistent-dryness state. No regional identifier or fitted
+surface enters the proposed equation.
