@@ -68,7 +68,6 @@ PARAMS = {'annual_scale': 1.85,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
- 'woody_drought_ignition_scale': 0.10,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2148,26 +2147,6 @@ def _rare_lightning_ignition(
         * ignition_access
         * pulse_gap
     )
-    lightning_background = _antecedent(
-        lightning, 1.0 - np.exp(-1.0 / 12.0)
-    )
-    background_chance = lightning_background / (
-        lightning_background + 0.01
-    )
-    woody_drought_fuel = (
-        _falling(annual_rain, 1.0 / 60.0, 200.0)
-        * woody_fuel
-        * open_natural
-    )
-    woody_drought_ignition = (
-        max(float(p.get("woody_drought_ignition_scale", 0.0)), 0.0)
-        * woody_drought_fuel
-        * dry_combustion
-        * rain_window
-        * background_chance
-        * opportunity_gap
-    )
-    ignition += woody_drought_ignition
     ignition += rain_pulse_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
