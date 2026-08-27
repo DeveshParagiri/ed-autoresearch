@@ -43,7 +43,6 @@ PARAMS = {'annual_scale': 1.73,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
- 'cold_open_capacity': 2.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 6.5,
  'seasonal_rain_capacity': 0.4,
@@ -460,14 +459,6 @@ def _ecological_fire_capacity(
         * gpp / (gpp + 0.2)
         * open_land
     )
-    cold_open_fuel = (
-        _falling(temperature, 1.0 / 3.0, 8.0)
-        * _rising(annual_rain, 1.0 / 80.0, 150.0)
-        * _falling(annual_rain, 1.0 / 180.0, 900.0)
-        * gpp / (gpp + 0.2)
-        * open_land
-        * 10.0 / (canopy + 10.0)
-    )
     productive_range = (
         rangeland
         * _rising(annual_rain, 1.0 / 120.0, 250.0)
@@ -476,7 +467,6 @@ def _ecological_fire_capacity(
     )
     log_capacity = (
         p.get("cold_forest_capacity", 0.0) * cold_forest
-        + p.get("cold_open_capacity", 0.0) * cold_open_fuel
         + p.get("arid_fine_fuel_capacity", 0.0) * arid_fine_fuel
         - p.get("productive_range_brake", 0.0) * productive_range
     )
