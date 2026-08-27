@@ -49,6 +49,14 @@ PARAMS = {'annual_scale': 1.73,
  'cold_thaw_source': 0.1,
  'surface_bank_w': 1.0,
  'surface_bank_release': 8.0,
+ 'managed_bank_store': 0.6,
+ 'managed_bank_release': 12.0,
+ 'crop_bank_store': 1.0,
+ 'crop_bank_release': 32.0,
+ 'woody_bank_store': 0.4,
+ 'woody_bank_release': 12.0,
+ 'background_bank_store': 0.1,
+ 'background_bank_release': 8.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1489,6 +1497,205 @@ def _annual_regime_closure(
     )
 
 
+def _trailing_annual_hazard(hazard: np.ndarray) -> np.ndarray:
+    """Return a causal current-inclusive trailing-12 hazard sum."""
+    output = np.empty_like(hazard, dtype=np.float64)
+    accumulator = np.zeros_like(hazard[0], dtype=np.float64)
+    for time in range(hazard.shape[0]):
+        accumulator += hazard[time]
+        if time >= 12:
+            accumulator -= hazard[time - 12]
+        output[time] = accumulator * 12.0 / min(time + 1, 12)
+    return output
+
+
+def _pathway_bank_delta(
+    hazard: np.ndarray,
+    pathway_share: np.ndarray,
+    readiness: np.ndarray,
+    storage_fraction: float,
+    release_gain: float,
+    storage_gate: np.ndarray | float = 1.0,
+) -> np.ndarray:
+    """Redistribute one pathway's finite hazard through a causal local bank."""
+    bank = np.zeros_like(hazard[0], dtype=np.float64)
+    hazard_state = np.asarray(hazard[0], dtype=np.float64).copy()
+    allocated = np.empty_like(hazard, dtype=np.float64)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+
+    for time in range(hazard.shape[0]):
+        relative_opportunity = hazard[time] / (
+            hazard[time] + hazard_state + 1e-8
+        )
+        gate = storage_gate[time] if not np.isscalar(storage_gate) else storage_gate
+        stored = (
+            storage_fraction
+            * pathway_share[time]
+            * gate
+            * hazard[time]
+        )
+        release_fraction = 1.0 - np.exp(
+            -(1.0 / 24.0 + release_gain * relative_opportunity * readiness[time])
+        )
+        bank += stored
+        released = release_fraction * bank
+        bank -= released
+        allocated[time] = hazard[time] - stored + released
+        hazard_state += alpha_12 * (hazard[time] - hazard_state)
+
+    return allocated - hazard
+
+
+def _multi_pathway_opportunity_bank(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Release finite pathway hazards in their own combustible windows.
+
+    Natural surface-fire timing is handled by the earlier surface bank. This
+    extension separates managed fine fuel, crop residue, woody fuel, and an
+    unresolved background share. Each pathway stores only its own existing
+    hazard and releases that stock through globally shared causal local-state
+    equations; no burned area is fitted or geographically dispatched.
+    """
+    if "surface_opportunity_bank" not in enabled:
+        return prediction
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6 = _antecedent(rain, alpha_6)
+    rain_12 = _antecedent(rain, alpha_12)
+    deficit_6 = np.maximum(
+        (rain_6 - rain) / (rain_6 + rain + 10.0), 0.0
+    )
+    deficit_12 = np.maximum(
+        (rain_12 - rain) / (rain_12 + rain + 10.0), 0.0
+    )
+    wet_anomaly = np.maximum(
+        (rain - rain_12) / (rain + rain_12 + 10.0), 0.0
+    )
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_3 = _antecedent(gpp, alpha_3)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
+    curing_gate = curing / (curing + 0.05)
+
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 500.0)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_3 = _antecedent(temperature, alpha_3)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    thermal_window = _rising(temperature, 0.25, 5.0)
+    warm_departure_3 = _rising(temperature - temperature_3, 0.5, 1.0)
+    warm_departure_12 = _rising(temperature - temperature_12, 0.5, 2.0)
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_12 = _antecedent(lightning, alpha_12)
+    ignition_12 = lightning_12 / (lightning_12 + 0.01)
+
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+
+    open_natural = natural * 8.0 / (canopy + 8.0)
+    open_cover = np.clip(rangeland + pasture + open_natural, 0.0, 1.0)
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    crop_capacity = crop * fine_fuel
+    total_capacity = 0.05 + surface_capacity + woody_capacity + crop_capacity
+    managed_share = (
+        np.clip(rangeland + pasture, 0.0, 1.0)
+        * fine_fuel
+        / total_capacity
+    )
+    crop_share = crop_capacity / total_capacity
+    woody_share = woody_capacity / total_capacity
+    background_share = 0.05 / total_capacity
+
+    managed_readiness = deficit_6 * combustion * curing_gate * thermal_window
+    crop_readiness = (
+        combustion * curing_gate * thermal_window * warm_departure_3
+    )
+    woody_readiness = (
+        deficit_12
+        * warm_departure_12
+        * thermal_window
+        * ignition_12
+        * (1.0 - wet_anomaly)
+    )
+    background_readiness = deficit_12 * combustion * thermal_window
+    annual_hazard = _trailing_annual_hazard(hazard)
+    managed_storage_gate = 0.2 / (annual_hazard + 0.2)
+
+    adjusted_hazard = hazard.copy()
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        managed_share,
+        managed_readiness,
+        p.get("managed_bank_store", 0.0),
+        p.get("managed_bank_release", 0.0),
+        managed_storage_gate,
+    )
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        crop_share,
+        crop_readiness,
+        p.get("crop_bank_store", 0.0),
+        p.get("crop_bank_release", 0.0),
+    )
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        woody_share,
+        woody_readiness,
+        p.get("woody_bank_store", 0.0),
+        p.get("woody_bank_release", 0.0),
+    )
+    adjusted_hazard += _pathway_bank_delta(
+        hazard,
+        background_share,
+        background_readiness,
+        p.get("background_bank_store", 0.0),
+        p.get("background_bank_release", 0.0),
+    )
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1555,6 +1762,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _annual_regime_closure(
+        prediction, data, fallback, enabled
+    )
+    prediction = _multi_pathway_opportunity_bank(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
