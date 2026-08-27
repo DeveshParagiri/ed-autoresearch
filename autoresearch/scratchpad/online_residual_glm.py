@@ -181,6 +181,7 @@ def main() -> int:
     full_train = "--full-train" in sys.argv
     log_target = "--log-target" in sys.argv
     gamma_loss = "--gamma-loss" in sys.argv
+    full_fit = "--full-fit" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -933,6 +934,43 @@ def main() -> int:
         or factorized_tree
         or cycle_target_tree
     ):
+        if full_fit:
+            train = np.arange(x.shape[0])
+            train_limit = 1_500_000 if full_train else 500_000
+            if train.size > train_limit:
+                train = rng.choice(train, size=train_limit, replace=False)
+            learner = HistGradientBoostingRegressor(
+                loss="gamma" if gamma_loss else "poisson",
+                learning_rate=0.06 if deep_tree else 0.08,
+                max_iter=300 if deep_tree else 100,
+                max_leaf_nodes=64 if deep_tree else 31,
+                min_samples_leaf=250 if deep_tree else 500,
+                l2_regularization=2.5,
+                early_stopping=True,
+                validation_fraction=0.1,
+                random_state=2701,
+            )
+            learner.fit(x[train], y[train], sample_weight=weights[train])
+            fitted = np.empty_like(y)
+            for start in range(0, x.shape[0], 250_000):
+                fitted[start : start + 250_000] = learner.predict(
+                    x[start : start + 250_000]
+                )
+            evaluator = GFED5Evaluator(GFED5_PATH)
+            report(evaluator, "incumbent", incumbent)
+            for strength in (0.25, 0.50, 0.75, 1.0):
+                corrected = baseline * np.power(
+                    np.clip(fitted.reshape(baseline.shape), 1e-6, 1e6),
+                    strength,
+                )
+                candidate = incumbent.copy()
+                candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
+                report(
+                    evaluator,
+                    f"full causal HGB strength={strength}",
+                    candidate,
+                )
+            return 0
         out_of_fold = np.zeros_like(y)
         annual_out_of_fold = np.zeros_like(y) if factorized_tree else None
         trained: HistGradientBoostingRegressor | None = None
