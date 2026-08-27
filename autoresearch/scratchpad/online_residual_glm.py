@@ -162,6 +162,7 @@ def main() -> int:
     factorized_tree = "--factorized-tree" in sys.argv
     cycle_target_tree = "--cycle-target-tree" in sys.argv
     target_weighted = "--target-weighted" in sys.argv
+    full_train = "--full-train" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -778,8 +779,9 @@ def main() -> int:
         for fold in range(3):
             train = np.flatnonzero(folds != fold)
             held = np.flatnonzero(folds == fold)
-            if train.size > 500_000:
-                train = rng.choice(train, size=500_000, replace=False)
+            train_limit = 1_500_000 if full_train else 500_000
+            if train.size > train_limit:
+                train = rng.choice(train, size=train_limit, replace=False)
             if interaction_gam:
                 regressor = make_pipeline(
                     RobustScaler(quantile_range=(25.0, 75.0)),
@@ -870,8 +872,9 @@ def main() -> int:
         for fold in range(3):
             train = np.flatnonzero(folds != fold)
             held = np.flatnonzero(folds == fold)
-            if train.size > 500_000:
-                train = rng.choice(train, size=500_000, replace=False)
+            train_limit = 1_500_000 if full_train else 500_000
+            if train.size > train_limit:
+                train = rng.choice(train, size=train_limit, replace=False)
             regressor = HistGradientBoostingRegressor(
                 loss="squared_error" if annual_target_tree else "poisson",
                 learning_rate=(
