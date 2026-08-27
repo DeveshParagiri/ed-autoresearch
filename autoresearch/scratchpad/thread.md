@@ -5254,3 +5254,20 @@ annual excess to 3.63 times observed but lose fold stability. Prefix invariance 
 and major ecological guardrails are unchanged. The mechanism is rejected without a full-
 grid or official run: current monthly GPP and LAI do not identify the April/October
 management clock strongly enough to improve the fire model honestly.
+
+
+### Entry 172: coherent surface capacity is the new exact incumbent
+
+The held-cell equation was installed directly as a causal physical response, not as a
+learned surface. Dryness reliability is the inverse of trailing local coefficient of
+variation; combustion-temperature overlap measures whether the months capable of burning
+are also the warm months; primary cover smoothly limits that variable surface response.
+All constants and coefficients are shared globally, and no labels, coordinates, neighbours,
+future state, fitted spline, or region-specific parameter enter the prediction path.
+
+The canonical model reproduces exact Overall **.718995365**, with bias .756759, RMSE
+.547519, seasonal .861676, and spatial .881504. This is +.000112787 over the previous exact
+incumbent and improves 9 of 14 regions. Official evaluation remains **.719** after rounding,
+with bias .757, RMSE .548, seasonal .862, and spatial .882. The faithful sixth ledger row
+and progress figure are retained. This is a valid incremental improvement, but not a
+mechanism-level jump and therefore does not trigger Optuna.
