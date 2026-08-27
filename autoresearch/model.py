@@ -49,6 +49,8 @@ PARAMS = {'annual_scale': 0.9956870515976485,
  'alloc_vpd_rise_half': 400.0,
  'alloc_vpd_rise_n': 1.0,
  'allocation_glm_w': 1.0,
+ 'cool_crop_brake': 0.5,
+ 'wet_forest_brake': 0.3,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -1529,6 +1531,46 @@ def _coupled_valid_closure(
     )
 
 
+def _ecological_regime_brakes(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Smooth local suppression in two physically distinct fire regimes.
+
+    Cool cultivated landscapes are fragmented and repeatedly harvested, while
+    humid tall closed canopy keeps fine fuel shaded and moist. Both gates are
+    continuous functions of observable local state with global coefficients;
+    no coordinates, region labels, or geographic branches enter.
+    """
+    def mean_state(name: str) -> np.ndarray:
+        return np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=(0, 1))
+
+    temperature = mean_state("air_temperature")
+    log_brake = np.zeros((180, 360), dtype=np.float64)
+    if "cropland" in enabled:
+        cropland = mean_state("luh2_cropland_fraction")
+        cool_cultivation = cropland * _falling(temperature, 1.0 / 3.0, 18.0)
+        log_brake += p.get("cool_crop_brake", 0.0) * cool_cultivation
+    if "fuel" in enabled:
+        annual_rain = mean_state("annual_precipitation")
+        canopy = mean_state("natural_canopy_height")
+        leaf_area = mean_state("leaf_area_index")
+        natural = mean_state("natural_vegetation_fraction")
+        humid_closed_canopy = (
+            _rising(temperature, 0.5, 20.0)
+            * _rising(annual_rain, 1.0 / 250.0, 1200.0)
+            * _rising(canopy, 1.0 / 3.0, 15.0)
+            * _rising(leaf_area, 2.0, 2.5)
+            * natural
+        )
+        log_brake += p.get("wet_forest_brake", 0.0) * humid_closed_canopy
+    return prediction * np.exp(-log_brake)[None, ...]
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1613,5 +1655,6 @@ def predict(
     # phenology equation. This factorisation keeps magnitude and timing as
     # distinct ecological processes.
     prediction = _coupled_annual_correction(prediction, data, fallback, enabled)
+    prediction = _ecological_regime_brakes(prediction, data, fallback, enabled)
     prediction = _coupled_valid_closure(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
