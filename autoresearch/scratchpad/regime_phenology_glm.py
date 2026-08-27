@@ -35,6 +35,7 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> flo
 
 
 def main() -> int:
+    joint = "--joint" in sys.argv
     model = load_model()
     data = load_inputs(model.INPUTS)
     incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
@@ -194,8 +195,15 @@ def main() -> int:
             add(f"opportunity_{threshold:.2f}_x_{name}", opportunity * signal)
 
     x = np.column_stack(columns).astype(np.float64)
-    y = obs_alloc[months, rows, cols].astype(np.float64)
-    weight = np.repeat(obs_annual[cell_rows, cell_cols] + float(obs_annual.mean()) * 0.01, 12)
+    if joint:
+        y = obs_cycle[months, rows, cols].astype(np.float64)
+        weight = y + float(y.mean()) * 0.02
+    else:
+        y = obs_alloc[months, rows, cols].astype(np.float64)
+        weight = np.repeat(
+            obs_annual[cell_rows, cell_cols] + float(obs_annual.mean()) * 0.01,
+            12,
+        )
     x_mean = np.average(x, axis=0, weights=weight)
     x_scale = np.sqrt(np.average(np.square(x - x_mean), axis=0, weights=weight)) + 1e-8
     xs = (x - x_mean) / x_scale
@@ -220,6 +228,9 @@ def main() -> int:
     def candidate_from(values: np.ndarray, strength: float) -> np.ndarray:
         learned = np.zeros((12, 180, 360), dtype=np.float64)
         learned[months, rows, cols] = np.maximum(values, 1e-12)
+        if joint:
+            cycle = (1.0 - strength) * incumbent_cycle + strength * learned
+            return np.tile(cycle, (16, 1, 1)).astype(np.float32)
         learned /= learned.sum(axis=0, keepdims=True) + 1e-12
         blended = np.power(incumbent_alloc + 1e-12, 1.0 - strength) * np.power(learned + 1e-12, strength)
         blended /= blended.sum(axis=0, keepdims=True) + 1e-12

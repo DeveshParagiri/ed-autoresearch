@@ -3650,3 +3650,29 @@ not future or cross-site information. With local climatological state, the coupl
 is therefore hierarchical interaction among incumbent opportunity, absolute temperature, current
 and antecedent rain, annual rain regime, dryness, fuel, lightning, and land use, not another
 univariate curve or scalar tune.
+
+
+### Entry 94: smooth ecological brakes fix closed-canopy excess without geography
+
+Two pointwise brakes were added as continuous functions of local observable state with globally
+shared strengths. The cool-cultivated brake suppresses fire where cropland coincides with cool
+conditions, while the humid closed-canopy brake combines warm temperature, high annual rainfall,
+tall canopy, high LAI, and natural vegetation. No country, region, coordinate, or geographic
+branch enters either equation. The first experiment is committed as `3c62387`; strengthening the
+humid closed-canopy response is committed as `3fb7bd1`.
+
+Official Overall remains **0.743** at `3fb7bd1` (bias .784, RMSE .581, seasonal .851, spatial
+.917), but the ecological failure improves materially: intact tropical closed-canopy burning falls
+from 2.01 to 1.24 times observed. The all-country and ecological audit is deliberately broader than
+the Congo: TENA improves to .551, Europe to .662, SHSA to .633, and EQAS to .628, while excessive
+temperate agricultural fire, productive-rangeland excess, and Australia/arid underprediction remain
+explicit targets. This candidate is preferred over the slightly higher scalar alternative because
+it removes a known physical pathology rather than optimizing only the global score.
+
+An explainable boosting diagnostic, excluded from production, reaches 0.758 with the annual map
+fixed. Its strongest interpretable interactions couple temperature anomaly to mean-temperature
+regime, lightning anomaly to thermal and land-use state, LAI anomaly to thermal regime, incumbent
+fire opportunity to dryness anomaly, and seasonal harmonics to temperature and GPP. A 365-term
+linear regime GLM gains only .003 out of fold and its joint variant fails, so neither is promoted.
+The next experiment will compress the nonlinear diagnostic into a small family of smooth thermal,
+moisture, ignition, and fuel-phenology gates before any tuning is considered.
