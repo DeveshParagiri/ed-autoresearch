@@ -4566,3 +4566,22 @@ is **.717** (bias .755, RMSE .546, seasonal .861, spatial .879). Seven of fourte
 regions improve. Intact tropical closed fire moves from .842 to .902 times observed
 and arid fire from 1.322 to 1.299, with no new ecological pathology. A future-half
 perturbation leaves the entire preceding prefix bit-identical.
+
+
+### Entry 132: clean held-block capacity is only about .005 above current
+
+A four-fold 15-degree held-block learner was restricted to causal precipitation,
+dryness, temperature, LUH2, and lightning features. Coordinates defined folds but were
+not features; no ED state, GPP, modern fire weather, region, neighbour, calendar index,
+future value, or benchmark-derived runtime field was admitted. The clean causal rebuild
+starts at .669379 and reaches .710636 under joint annual-map and normalized-cycle
+correction.
+
+Applied diagnostically to the current repaired model, annual-map correction reaches
+.718443, normalized-cycle correction .721356, and their joint result **.722694**, only
+.005288 above the .717405 exact baseline. Stable cycle information is a short warming
+departure crossed with lightning and dryness departures; stable map information is a
+long temperature state crossed with managed-open cover and trailing lightning. This
+identifies mechanisms worth translating, but it does not provide held-out evidence for
+an honest route to .8 with the present observable set. No learned surface enters the
+runtime or official ledger.
