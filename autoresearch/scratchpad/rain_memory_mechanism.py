@@ -110,8 +110,36 @@ def main() -> int:
                 )
 
         audit("gpp_memory_24m", gpp_24m)
-        audit("dryness_memory_12m", running(np.asarray(data["dryness"]), 12.0))
+        dryness_12m = running(np.asarray(data["dryness"]), 12.0)
+        audit("dryness_memory_12m", dryness_12m)
         audit("rain_memory_12m", rain_12m)
+
+        gpp_edges = np.unique(
+            np.quantile(gpp_24m[land.repeat(gpp_24m.shape[0], axis=0)], np.linspace(0.0, 1.0, 6))
+        )
+        dryness_edges = np.unique(
+            np.quantile(dryness_12m[land.repeat(dryness_12m.shape[0], axis=0)], np.linspace(0.0, 1.0, 6))
+        )
+        ratio_matrix = np.full((gpp_edges.size - 1, dryness_edges.size - 1), np.nan)
+        share_matrix = np.full_like(ratio_matrix, np.nan)
+        global_observed = float((observed * mass_weight * land).sum())
+        for i in range(ratio_matrix.shape[0]):
+            for j in range(ratio_matrix.shape[1]):
+                selected = (
+                    land
+                    & (gpp_24m >= gpp_edges[i])
+                    & (gpp_24m <= gpp_edges[i + 1] if i == ratio_matrix.shape[0] - 1 else gpp_24m < gpp_edges[i + 1])
+                    & (dryness_12m >= dryness_edges[j])
+                    & (dryness_12m <= dryness_edges[j + 1] if j == ratio_matrix.shape[1] - 1 else dryness_12m < dryness_edges[j + 1])
+                )
+                predicted_mass = float((incumbent * mass_weight * selected).sum())
+                observed_mass = float((observed * mass_weight * selected).sum())
+                ratio_matrix[i, j] = predicted_mass / (observed_mass + 1e-12)
+                share_matrix[i, j] = observed_mass / global_observed
+        print("mass ratio matrix gpp_memory_24m x dryness_memory_12m", flush=True)
+        print(np.array2string(ratio_matrix, precision=3), flush=True)
+        print("observed mass share matrix", flush=True)
+        print(np.array2string(share_matrix, precision=3), flush=True)
         return 0
     families = {
         "recurrent-rain-curing": drying * fuel_construction * fine_fuel * recurrent,
