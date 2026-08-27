@@ -128,6 +128,21 @@ def main() -> int:
     add("vpd_pulse_3m_x_opportunity", np.maximum(departures[3.0], 0.0) * opportunity)
     add("vpd_background_x_fuel_bank", background * fuel_bank)
 
+    if "--reduced" in sys.argv:
+        retained = {
+            "vpd_departure_3m",
+            "vpd_departure_3m_positive",
+            "vpd_departure_24m_negative",
+            "vpd_pulse_3m_x_fuel_bank",
+            "vpd_pulse_3m_x_seasonal_climate",
+            "vpd_pulse_3m_x_cropland",
+            "vpd_pulse_3m_x_opportunity",
+            "vpd_background_x_fuel_bank",
+        }
+        selected = [index for index, name in enumerate(names) if name in retained]
+        names = [names[index] for index in selected]
+        columns = [columns[index] for index in selected]
+
     x = np.column_stack(columns)
     offset = incumbent_rows + 1e-4
     y = observed_cycle[months, rows, cols] / offset
@@ -140,7 +155,8 @@ def main() -> int:
     report(evaluator, "incumbent", incumbent)
     rng = np.random.default_rng(491)
     folds = np.repeat(rng.integers(0, 3, size=cells.size), 12)
-    for alpha in (0.03, 0.01, 0.003, 0.001):
+    alpha_values = (0.03,) if "--reduced" in sys.argv else (0.03, 0.01, 0.003, 0.001)
+    for alpha in alpha_values:
         out_of_fold = np.zeros_like(y)
         coefficients = []
         for fold in range(3):
@@ -164,7 +180,8 @@ def main() -> int:
             candidate = np.tile(learned, (16, 1, 1)).astype(np.float32)
             report(evaluator, f"OOF alpha={alpha} strength={strength}", candidate)
 
-    final = PoissonRegressor(alpha=0.01, max_iter=2000, tol=1e-8)
+    final_alpha = 0.03 if "--reduced" in sys.argv else 0.01
+    final = PoissonRegressor(alpha=final_alpha, max_iter=2000, tol=1e-8)
     final.fit(standardized, y, sample_weight=weights)
     print(f"VPD_GLM_INTERCEPT={final.intercept_!r}")
     print(f"VPD_GLM_NAMES={tuple(names)!r}")
