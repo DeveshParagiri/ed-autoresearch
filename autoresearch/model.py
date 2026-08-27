@@ -2465,6 +2465,13 @@ def _dead_fuel_pool_response(
         rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
     )
     woody_cover = natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    seasonal_grass_climate = (
+        _rising(annual_rain, 1.0 / 150.0, 400.0)
+        * _falling(annual_rain, 1.0 / 250.0, 1700.0)
+    )
 
     temperature = np.asarray(data["air_temperature"], dtype=np.float64)
     temperature_memory = _antecedent(
@@ -2508,7 +2515,7 @@ def _dead_fuel_pool_response(
             * woody_ignition[time]
         )
         available[time] = (
-            fine_available * (0.5 + open_cover[time])
+            fine_available * (0.5 + 1.5 * seasonal_grass_climate[time])
             + 0.5 * woody_available
         )
         fine_stock *= np.exp(
