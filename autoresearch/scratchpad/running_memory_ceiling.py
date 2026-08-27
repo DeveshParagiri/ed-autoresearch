@@ -37,6 +37,13 @@ MEMORY_INPUTS = (
     "lightning_flash_rate",
 )
 
+CANDIDATE_FORCINGS = (
+    "vapor_pressure_deficit_mean",
+    "wind_speed_mean",
+    "wet_day_fraction",
+    "maximum_consecutive_dry_days",
+)
+
 
 def running_mean(values: np.ndarray, months: float) -> np.ndarray:
     alpha = 1.0 - np.exp(-1.0 / months)
@@ -61,7 +68,13 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> Non
 
 def main() -> int:
     model = load_model()
-    data = load_inputs(model.INPUTS)
+    candidate_forcings = "--candidate-forcings" in sys.argv
+    requested_inputs = tuple(
+        dict.fromkeys(
+            model.INPUTS + (CANDIDATE_FORCINGS if candidate_forcings else ())
+        )
+    )
+    data = load_inputs(requested_inputs)
     incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
     incumbent_cycle = incumbent.reshape(16, 12, 180, 360).mean(axis=0)
     with Dataset(GFED5_PATH) as dataset:
@@ -76,7 +89,7 @@ def main() -> int:
     names = ["incumbent"]
     columns = [incumbent_cycle[months, rows, cols]]
     cycles: dict[str, np.ndarray] = {}
-    for name in model.INPUTS:
+    for name in requested_inputs:
         cycle = np.asarray(data[name]).reshape(16, 12, 180, 360).mean(axis=0)
         cycles[name] = cycle
         names.extend((f"{name}:current", f"{name}:previous"))
@@ -87,7 +100,10 @@ def main() -> int:
             )
         )
 
-    for name in MEMORY_INPUTS:
+    memory_inputs = MEMORY_INPUTS + (
+        CANDIDATE_FORCINGS if candidate_forcings else ()
+    )
+    for name in memory_inputs:
         raw = np.asarray(data[name], dtype=np.float32)
         for timescale in (3.0, 6.0, 12.0, 24.0):
             memory = running_mean(raw, timescale).reshape(
