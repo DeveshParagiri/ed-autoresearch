@@ -62,7 +62,7 @@ PARAMS = {'annual_scale': 1.73,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.5,
  'seasonal_rain_capacity': 0.4,
- 'climatological_release_w': 1.2,
+ 'climatological_release_w': 0.001,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
@@ -2304,7 +2304,7 @@ def _climatological_fuel_release(
     second_moment = np.zeros_like(mean)
     calendar_mean = np.zeros((12,) + mean.shape, dtype=np.float64)
     calendar_count = np.zeros(12, dtype=np.int64)
-    factor = np.ones_like(prediction, dtype=np.float64)
+    release_hazard = np.zeros_like(prediction, dtype=np.float64)
     for time in range(prediction.shape[0]):
         count = time + 1
         delta = rain[time] - mean
@@ -2334,8 +2334,13 @@ def _climatological_fuel_release(
             * burn_access
             * missing_window
         )
-        factor[time] = np.exp(np.clip(strength * release, 0.0, 5.0))
-    return np.asarray(np.clip(prediction * factor, 0.0, 1.0), dtype=np.float32)
+        release_hazard[time] = strength * release
+    return np.asarray(
+        np.clip(
+            1.0 - (1.0 - prediction) * np.exp(-release_hazard), 0.0, 1.0
+        ),
+        dtype=np.float32,
+    )
 
 
 
