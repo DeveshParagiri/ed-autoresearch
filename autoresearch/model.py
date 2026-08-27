@@ -22,7 +22,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
           'maximum_consecutive_dry_days', 'aboveground_biomass',
-          'luh2_primary_fraction')
+          'luh2_primary_fraction', 'lightning_flash_rate')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
@@ -41,6 +41,12 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 0.95,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.7482273413045754,
+ 'annual_pump_w': 0.02,
+ 'annual_pump_rain_std': 50.0,
+ 'annual_pump_rain_n': 4.0,
+ 'annual_pump_gpp_half': 0.1,
+ 'annual_pump_flash_half': 0.01,
+ 'annual_pump_capacity': 0.10,
  'annual_vpd_half': 1.7380558910922053,
  'annual_vpd_n': 3.5111403706263125,
  'annual_vpd_w': 0.1406449712828405,
@@ -576,6 +582,54 @@ def _annual_seasonal_closure(
         )
         target *= (weight.sum() / ((target * _CELL_AREA).sum() + 1e-12))
         annual_burn = np.clip(target, 0.0, 11.5)
+
+    if "fuel" in enabled and p.get("annual_pump_w", 0.0) > 0.0:
+        # A strong wet season grows connected fine fuel that becomes available
+        # to burn in the following dry season.  This wet-dry fuel pump is weak
+        # in aseasonal deserts and forests, strongest in productive open
+        # seasonal vegetation, and requires an ignition opportunity.  It adds
+        # annual opportunity only where the incumbent has remaining capacity.
+        monthly_rain = np.clip(
+            data["monthly_precipitation"], 0.0, None
+        ).reshape(16, 12, 180, 360)
+        rain_variability = monthly_rain.std(axis=1, keepdims=True)
+        ratio = rain_variability / (p["annual_pump_rain_std"] + 1e-12)
+        powered = np.power(ratio, p["annual_pump_rain_n"])
+        seasonal_rain = powered / (1.0 + powered)
+
+        gpp = np.clip(data["gpp"], 0.0, None).reshape(
+            16, 12, 180, 360
+        ).mean(axis=1, keepdims=True)
+        primary = np.clip(
+            data["luh2_primary_fraction"], 0.0, 1.0
+        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
+        biomass = np.clip(
+            data["aboveground_biomass"], 0.0, None
+        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
+        intact = primary * biomass / (
+            biomass + p["annual_intact_half"] + 1e-12
+        )
+        open_fuel = (gpp / (gpp + p["annual_pump_gpp_half"] + 1e-12)) * (
+            1.0 - intact
+        )
+
+        flash = np.clip(
+            data["lightning_flash_rate"], 0.0, None
+        ).reshape(16, 12, 180, 360).mean(axis=1, keepdims=True)
+        ignition = 0.5 + 0.5 * flash / (
+            flash + p["annual_pump_flash_half"] + 1e-12
+        )
+        capacity = np.clip(
+            1.0 - annual_burn / (p["annual_pump_capacity"] + 1e-12),
+            0.0,
+            1.0,
+        )
+        target = annual_burn + (
+            p["annual_pump_w"] * seasonal_rain * open_fuel * ignition * capacity
+        )
+        before = (annual_burn * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
+        after = (target * _CELL_AREA).sum(axis=(2, 3), keepdims=True)
+        annual_burn = np.clip(target * (before / (after + 1e-12)), 0.0, 11.5)
 
     # The annual head has its own intercept. This is deliberately downstream of
     # map-shaping factors so global level can be calibrated without changing
