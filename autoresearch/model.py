@@ -74,6 +74,7 @@ PARAMS = {'annual_scale': 1.73,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
  'productive_range_brake': 6.5,
+ 'surface_seasonality_capacity': 2.0,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
@@ -548,6 +549,114 @@ def _ecological_fire_capacity(
     )
     return np.asarray(
         np.clip(prediction * np.exp(np.clip(log_capacity, -5.0, 5.0)), 0.0, 1.0),
+        dtype=np.float32,
+    )
+
+
+def _surface_seasonality_capacity(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Raise finite fire capacity in warm seasonal connected surface fuel.
+
+    A large trailing annual temperature range can lengthen the portion of a
+    warm site's year in which rain-built open fuel is combustible. The same
+    range in boreal forest or fuel-poor desert must not create fire, so the
+    response is gated by warm mean temperature, causal rain-supported fuel,
+    local open cover, productivity, combustion weather, and landscape
+    continuity. This changes event capacity, not ignition timing.
+    """
+    if "regime_capacity" not in enabled:
+        return prediction
+    strength = float(max(p.get("surface_seasonality_capacity", 0.0), 0.0))
+    if strength <= 0.0:
+        return prediction
+
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    temperature_std = np.empty_like(temperature)
+    for time in range(temperature.shape[0]):
+        start = max(0, time - 11)
+        temperature_std[time] = temperature[start : time + 1].std(axis=0)
+    seasonality = temperature_std / (temperature_std + 4.0)
+    warm = _rising(temperature_12, 1.0 / 3.0, 15.0)
+
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_support = (
+        _rising(annual_rain, 0.01, 350.0)
+        * annual_rain / (annual_rain + 500.0)
+        * np.exp(-annual_rain / 3000.0)
+    )
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 250.0) / (1.0 + rain / 35.0)
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    secondary = np.clip(
+        np.asarray(data["secondary_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    secondary_canopy = np.clip(
+        np.asarray(data["secondary_canopy_height"], dtype=np.float64),
+        0.0,
+        None,
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    open_cover = np.clip(
+        natural * 8.0 / (canopy + 8.0)
+        + secondary * 8.0 / (secondary_canopy + 8.0)
+        + np.clip(pasture + rangeland, 0.0, 1.0),
+        0.0,
+        2.0,
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    urban = np.clip(
+        np.asarray(data["luh2_urban_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
+    modifier = np.clip(
+        open_cover
+        * fine_fuel
+        * continuity
+        * combustion
+        * warm
+        * rain_support
+        * seasonality,
+        0.0,
+        1.0,
+    )
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    adjusted_hazard = hazard * (1.0 + strength * modifier)
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
         dtype=np.float32,
     )
 
@@ -2315,6 +2424,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _fragmented_managed_recurrence_brake(
+        prediction, data, fallback, enabled
+    )
+    prediction = _surface_seasonality_capacity(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
