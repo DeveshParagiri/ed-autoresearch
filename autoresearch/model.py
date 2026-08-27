@@ -65,7 +65,6 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'greenup_brake': 2.0,
- 'dry_lightning_background_scale': 0.01,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
@@ -2148,23 +2147,6 @@ def _rare_lightning_ignition(
         * ignition_access
         * pulse_gap
     )
-    lightning_background = _antecedent(
-        lightning, 1.0 - np.exp(-1.0 / 24.0)
-    )
-    background_chance = lightning_background / (
-        lightning_background + 0.02
-    )
-    dry_lightning_ignition = (
-        max(float(p.get("dry_lightning_background_scale", 0.0)), 0.0)
-        * background_chance
-        * rain_window
-        * thermal_window
-        * fuel_continuity
-        * burnable_land
-        * opportunity_gap
-        * dry_combustion
-    )
-    ignition += dry_lightning_ignition
     ignition += rain_pulse_ignition
     return np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
