@@ -25,8 +25,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards', 'surface_opportunity_bank',
-              'conditional_allocation')
+              'pathway_hazards', 'surface_opportunity_bank')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -1139,11 +1138,14 @@ def _surface_fire_opportunity_bank(
     """Store surface-fire hazard until fuel is physically combustible.
 
     A share of open-land fire opportunity enters a local bank each month.
-    Release accelerates only when antecedent fine fuel, curing, rainfall
-    deficit, atmospheric dryness and an above-background fire opportunity
-    coincide. Stored and released quantities are expressed in hazard space, so
-    this moves finite fire potential through time rather than multiplying it.
-    Woody and crop pathways are protected by a continuous surface-fuel share.
+    Sustained rain stores high surface-fire opportunity while fuel grows.
+    Release accelerates after moderate antecedent rain is followed by local
+    drydown, provided fine fuel and atmospheric combustion are available. A
+    coincident positive rain and lightning anomaly marks wet convection and
+    quenches rather than ignites surface fire. Stored and released quantities
+    are expressed in hazard space, so this moves finite fire potential through
+    time rather than multiplying it. Woody and crop pathways are protected by
+    a continuous surface-fuel share.
     """
     if "surface_opportunity_bank" not in enabled:
         return prediction
@@ -1152,25 +1154,34 @@ def _surface_fire_opportunity_bank(
         return prediction
 
     alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
-    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
     alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
     gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
-    gpp_3 = _antecedent(gpp, alpha_3)
     gpp_12 = _antecedent(gpp, alpha_12)
     fine_fuel = gpp_12 / (gpp_12 + 0.35)
-    curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
 
     rain = np.clip(
         np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
     )
-    rain_6 = _antecedent(rain, alpha_6)
-    rain_deficit = np.maximum(
-        (rain_6 - rain) / (rain_6 + rain + 10.0), 0.0
+    rain_3 = _antecedent(rain, alpha_3)
+    rain_12 = _antecedent(rain, alpha_12)
+    sustained_wet = _rising(rain_3, 1.0 / 20.0, 60.0)
+    moderate_rain_fuel = (
+        (1.0 - np.exp(-rain_3 / 12.0))
+        * np.exp(-rain_3 / 70.0)
+        * _rising(rain_12 - rain, 1.0 / 20.0, -10.0)
     )
     dryness = np.clip(
         np.asarray(data["dryness"], dtype=np.float64), 0.0, None
     )
     combustion = dryness / (dryness + 500.0)
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_12 = _antecedent(lightning, alpha_12)
+    wet_convection = (
+        _rising(rain - rain_12, 1.0 / 20.0, 10.0)
+        * _rising(lightning - lightning_12, 100.0, 0.002)
+    )
 
     natural = np.clip(
         np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
@@ -1205,6 +1216,7 @@ def _surface_fire_opportunity_bank(
     )
 
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    active_hazard = hazard / (hazard + 0.003)
     bank = np.zeros_like(hazard[0])
     hazard_state = hazard[0].copy()
     allocated = np.empty_like(hazard)
@@ -1212,23 +1224,28 @@ def _surface_fire_opportunity_bank(
         relative_opportunity = hazard[time] / (
             hazard[time] + hazard_state + 1e-8
         )
-        physical_window = np.sqrt(
+        release_window = np.sqrt(
             np.clip(
                 fine_fuel[time]
-                * combustion[time]
-                * rain_deficit[time],
+                * combustion[time],
                 0.0,
                 1.0,
             )
         )
-        physical_window *= 0.25 + 0.75 * curing[time] / (
-            curing[time] + 0.05
+        release_window *= (
+            moderate_rain_fuel[time] * (1.0 - wet_convection[time])
         )
-        release_opportunity = relative_opportunity * physical_window
+        release_opportunity = relative_opportunity * release_window
         release_fraction = 1.0 - np.exp(
             -(1.0 / 24.0 + 8.0 * release_opportunity)
         )
-        stored = strength * surface_share[time] * hazard[time]
+        stored = (
+            strength
+            * surface_share[time]
+            * hazard[time]
+            * (0.25 + 0.75 * active_hazard[time])
+            * sustained_wet[time]
+        )
         bank += stored
         released = release_fraction * bank
         bank -= released
