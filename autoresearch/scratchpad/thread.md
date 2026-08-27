@@ -5079,3 +5079,20 @@ to 1.380 times observed and arid-low-fuel fire from 1.255 to 1.592. Its small +.
 does not justify installing the tree or tuning. Only a smooth warm, rain-supported surface-
 seasonality mechanism that excludes cold and fuel-poor systems merits one bounded sampled
 falsification.
+
+
+### Entry 161: bounded surface seasonality yields a small exact step
+
+The thermal-range interaction was translated into a globally shared local capacity rather
+than the learned surface. Connected surface fuel and combustion are multiplied by smooth
+warm-mean and rain-supported-fuel gates, then by the causal trailing-twelve temperature
+standard deviation. The hazard multiplier is `1 + k Q`; it has no labels, coordinates,
+neighbours, future state, or benchmark-derived runtime field.
+
+Every tested strength from .25 through 4 improves annual-log error in all four held blocks.
+Exact Overall peaks at strength 2 at **.718706115**, a +.000342707 step; strength 4 reverses,
+so no tuning follows. Ecological ratios remain bounded: intact tropical .895 to .902,
+temperate closed .965 to .978, boreal 1.054 to 1.054, tropical open 1.017 to 1.053,
+productive rangeland .943 to .967, crop .912 to .918, and arid low fuel 1.255 to 1.256.
+The fixed strength-2 equation is justified for canonical installation and one clean exact
+verification before any official evaluation.
