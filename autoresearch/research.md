@@ -6,6 +6,8 @@ Improve `model.py` as a mechanistic model of monthly burned area for fire. Your 
 
 Coupled-ready candidates must be pointwise across grid cells because ED sites run independently: do not use neighbour or other cross-cell operations. Use only predictors marked coupled-valid in `inputs/README.md`.
 
+Official Overall is necessary but not sufficient evidence of a better model. Before promoting a candidate, inspect regional breadth, spatial maps, seasonal cycles, global burned area, and ecological plausibility across high- and low-fire land-cover regimes. Reject gains that depend on implausible regional compensation, such as severe false burning in closed-canopy forest, even when the global scalar improves; diagnose such failures by general biome or observable land state rather than adding a geographic mask or region-specific correction.
+
 ## Model interface
 
 `INPUTS` lists the exact variables loaded from `inputs/*.nc`. `PARAMS` holds the current coefficients. `SEARCH_SPACE` lists the coefficients the Optuna (hyper param optim tool) may tune. `COMPONENTS` can name at most 15 physical terms for "shapley-style" ablation.
