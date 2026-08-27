@@ -105,8 +105,14 @@ def load_daily_vpd_duration() -> np.ndarray:
 def main() -> int:
     vpd_only = "--vpd-only" in sys.argv
     duration_only = "--duration-only" in sys.argv
+    event_only = "--event-only" in sys.argv
     model = load_model()
-    data = load_inputs(model.INPUTS)
+    requested = list(model.INPUTS)
+    if vpd_only:
+        requested.append("vapor_pressure_deficit_mean")
+    if event_only:
+        requested.extend(("wet_day_fraction", "maximum_consecutive_dry_days"))
+    data = load_inputs(tuple(dict.fromkeys(requested)))
     params = dict(model.PARAMS)
     if vpd_only:
         params["vpd_memory_w"] = 0.0
@@ -126,6 +132,8 @@ def main() -> int:
     rangeland = extract("luh2_rangeland_fraction")
     cropland = extract("luh2_cropland_fraction")
     vpd = extract("vapor_pressure_deficit_mean") if vpd_only else None
+    wet_days = extract("wet_day_fraction") if event_only else None
+    dry_spell = extract("maximum_consecutive_dry_days") if event_only else None
     duration = (
         np.asarray(load_daily_vpd_duration()[:, rows, cols].T, dtype=np.float64)
         if duration_only
@@ -264,6 +272,44 @@ def main() -> int:
             duration * rangeland,
             duration * cropland,
             duration * opportunity,
+        )
+    if event_only:
+        assert wet_days is not None and dry_spell is not None
+        wet_3m = running(wet_days, 3.0)
+        wet_12m = running(wet_days, 12.0)
+        dry_3m = running(dry_spell, 3.0)
+        dry_12m = running(dry_spell, 12.0)
+        wet_departure = wet_days - wet_3m
+        dry_departure = dry_spell - dry_3m
+        opportunity = sigmoid((share - 0.05) / 0.025)
+        names = (
+            "wet_day_fraction",
+            "wet_day_fraction_3m",
+            "wet_day_fraction_departure_3m",
+            "wet_day_fraction_12m",
+            "dry_spell",
+            "dry_spell_3m",
+            "dry_spell_departure_3m",
+            "dry_spell_12m",
+            "dry_spell_x_fuel_bank",
+            "dry_spell_x_humid_climate",
+            "dry_spell_x_rangeland",
+            "dry_spell_x_opportunity",
+        )
+        normalized_dry_spell = dry_spell / 31.0
+        feature_fields = (
+            wet_days,
+            wet_3m,
+            wet_departure,
+            wet_12m,
+            normalized_dry_spell,
+            dry_3m / 31.0,
+            dry_departure / 31.0,
+            dry_12m / 31.0,
+            normalized_dry_spell * fuel_bank[12.0],
+            normalized_dry_spell * humid_climate,
+            normalized_dry_spell * rangeland,
+            normalized_dry_spell * opportunity,
         )
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
