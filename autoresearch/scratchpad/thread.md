@@ -5031,3 +5031,18 @@ and managed recurrence gate keep its effective stored fraction below one, with a
 maximum of .99276. It is not causing negative hazard or runaway mass. The candidate is
 rejected without official evaluation or tuning, and the exact incumbent is restored in a
 separate commit.
+
+
+### Entry 158: honest pathway headroom remains concentrated in the annual map
+
+A pinned chunked pass reproduces the incumbent exactly at .718363408 over all 18,316
+land cells. On 2,235 whole held cells carrying 85.00% of observed-fire weight, eighteen
+causal ecological pathway interactions raise the annual-map score to .721890, cycle-only
+to .719522, and joint to **.723182**. These fitted corrections are diagnostic only.
+
+Annual-map error improves in every fold, whereas cycle error reverses in two of four.
+Stable annual information lies in humid woody shielding, managed-open opportunity,
+warm-open recurrence, recurrent surface opportunity, cold-open thaw, and urban-transition
+fragmentation. The remaining honest headroom exposed by these coarse interactions is only
+.00482 and is predominantly spatial allocation; there is no evidence for a universal new
+seasonal clock or an Optuna-worthy step.
