@@ -22,7 +22,11 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'luh2_cropland_fraction', 'luh2_rangeland_fraction',
           'wind_speed_mean', 'vapor_pressure_deficit_mean',
           'maximum_consecutive_dry_days', 'wet_day_fraction', 'aboveground_biomass',
-          'luh2_primary_fraction', 'lightning_flash_rate')
+          'luh2_primary_fraction', 'lightning_flash_rate', 'soil_carbon',
+          'leaf_area_index', 'natural_canopy_height', 'secondary_canopy_height',
+          'natural_vegetation_fraction', 'secondary_vegetation_fraction',
+          'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction',
+          'population_density')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'spread', 'lag', 'softmin',
               'cropland', 'neighbour', 'legacy', 'stubble', 'pasture', 'gust',
               'vpd')
@@ -39,6 +43,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 }
 
 PARAMS = {'annual_scale': 0.95,
+ 'annual_residual_w': 0.75,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.7482273413045754,
  'annual_vpd_half': 1.7380558910922053,
@@ -739,6 +744,147 @@ def _annual_seasonal_closure(
     )
 
 
+_ANNUAL_RESIDUAL_DRIVERS = (
+    "dryness", "annual_precipitation", "monthly_precipitation", "air_temperature",
+    "vapor_pressure_deficit_mean", "wind_speed_mean", "wet_day_fraction",
+    "maximum_consecutive_dry_days", "gpp", "aboveground_biomass", "soil_carbon",
+    "leaf_area_index", "natural_canopy_height", "secondary_canopy_height",
+    "natural_vegetation_fraction", "secondary_vegetation_fraction",
+    "lightning_flash_rate", "luh2_cropland_fraction", "luh2_pasture_fraction",
+    "luh2_rangeland_fraction", "luh2_primary_fraction", "luh2_secondary_fraction",
+    "luh2_urban_fraction", "population_density",
+)
+
+# Raw coefficients of a global ridge equation for the annual log residual.
+# The ordered basis is constructed explicitly below from incumbent opportunity,
+# robust climatological summaries and ten compound fuel-climate controls.  This
+# is an inspectable additive response model; there is no fitted estimator at
+# runtime and no coordinate, region, cell identifier or geographic mask.
+_ANNUAL_RESIDUAL_COEFFICIENTS = np.asarray((
+    -0.1218657354, 0.0005880841, -1.1976899966, -0.4752731309, -0.0127641578,
+    0.9544844314, 0.6856965455, 0.7004711846, 2.9866460580, -0.1051472318,
+    -0.1194757747, 0.2401004439, -0.4205793164, -0.4306564189, 1.0406999173,
+    -0.2431611239, -0.2398590187, -2.9826465006, -0.0359064032, -0.0411457581,
+    0.1303440006, -0.0359063523, -0.0411456571, 0.1303405622, 0.0765165642,
+    0.0791084305, 0.5861028434, -0.0581751007, -0.1071589077, 0.1657186607,
+    0.0841407527, 0.0810636766, 1.1409610568, 1.0652051299, 1.1913918335,
+    3.8106453588, 0.4870131262, 1.6091702092, -0.0933128700, 0.0175247692,
+    0.0645829148, -0.0515032160, -0.4409951679, -0.2212006377, -1.6848197570,
+    -0.4648272500, -0.5481407632, 0.8355831126, 0.3657266198, 0.3895378361,
+    1.0527170713, 0.2892022407, 0.4339973768, -3.2448090578, -0.0354979920,
+    -0.0292250395, -1.2414289276, 0.1743225355, -0.1754875301, 0.2996318772,
+    -0.0311652792, -0.2175730877, 0.1060773421, -0.1514135110, -0.9270579650,
+    -0.0528237205, -0.0785927442, 0.2558936692, -0.1637662900, -0.1885600787,
+    -0.2182142918, -0.3735499406, -0.1077691971, -0.1225894696, -0.1021204127,
+    -0.1102881890, -0.2250120160, -0.0453404140, 0.2158702948, 0.2089555362,
+    0.8580794326, -0.1112273621, -0.3171172506, 0.0628274530, 0.0229206847,
+    0.0219984200, 0.1884664574, 0.1411979922, 0.1878902542, 0.2014126908,
+    -0.0214115779, 0.0797126174, -0.3594042276, 0.2041623183, 0.2051240242,
+    -8.5059282226, 0.0984296613, 0.1000622572, -25.2343598171, -0.0139215443,
+    -0.0139793254, 24.0787162002, -0.2251242967, -0.2266171905, 6.7449116864,
+    -0.1354046858, -0.1397162424, 1.2950664595, -0.0074360591, -0.0122732523,
+    1.5279225804, -0.3224839652, -0.3156610987, -19.1243685613, 0.3811805066,
+    0.3864436953, 4.0874917001, -0.0846561975, -0.1056522184, 1.3803768651,
+    -0.0127564136, 0.0093766483, -3.7692028133, -0.0542883554, -0.0749933175,
+    1.7309704692, -0.1315751742, -0.1408570509, -0.5474485617, -0.4671684255,
+    -0.4897079360, -3.2235075798, -0.2006190726, -0.2081624822, 14.8972262577,
+    0.0273656967, 0.0264625426, 6.2391966987, 1.0826459614, 1.1813133913,
+    0.1506332576, 0.0490692995, 0.0486291353, 7.2458439067, -0.0388808341,
+    -0.0377290347, -12.3173495062, 0.1349360970, 0.1348676899, 9.9329266139,
+    -0.0803337938, -0.0810284075, 0.5889831839, -0.0409014451, -0.0248940374,
+    -0.5887950502, 0.0237427569, 0.0205943648, 1.2137114723, 0.0563069442,
+    0.0572462537, 0.2790960737, -0.0375243966, 0.0513261253, -2.2190608922,
+    0.0292029457, 0.0242036620, 0.9274167195, -0.0116993549, -0.0116993549,
+    0.0, 0.0341553703, 0.0239837250, 1.5725779684, 0.0097512750,
+    0.0119204090, -0.1232060783, 0.0252309276, 0.0250584197, 0.7236880523,
+    -0.0116993549, -0.0116993549, 0.0, 0.0313064766, 0.0311846998,
+    0.8217520043, 0.0051685892, 0.0046301233, 0.5635967820, 0.1340740318,
+    0.1362589112, 0.5457671304, 0.0066201890, 0.0072420681, -0.1040096673,
+    -0.0351397743, -0.0351416614, -21.6129166720, -0.1019350546,
+    -0.1088854345, 1.7274485777, 0.0689151314, 0.0689451409, 7.5748996555,
+    0.0374584438, 0.0374584438, 0.0, 0.0147823914, 0.0148643160,
+    0.0299537947, 0.0643272157, 0.1196568166, -0.2369633404, 0.1322335798,
+    0.0, 0.1322335798, 0.0127471543, 0.0127261117, 30.6995148593,
+    -0.0164037988, -0.0163600349, -0.6846969156, -0.0562160712,
+    0.0227704688, -0.2108375746, 0.4444918814, 0.1278315270, 0.0125402289,
+    -0.0218211633, -0.0392859266, -0.0075103249, 0.0545841131,
+), dtype=np.float64)
+
+
+def _annual_propensity_correction(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Apply a global physical GAM to the annual fire-opportunity residual."""
+    strength = float(np.clip(p.get("annual_residual_w", 0.0), 0.0, 1.5))
+    if "fuel" not in enabled or strength <= 0.0:
+        return prediction
+
+    cycle = np.asarray(prediction, dtype=np.float64).reshape(16, 12, 180, 360)
+    incumbent = cycle.mean(axis=0).sum(axis=0)
+    log_current = np.log10(incumbent + 1e-6)
+    coefficients = _ANNUAL_RESIDUAL_COEFFICIENTS
+    index = 0
+    residual = np.full((180, 360), 2.3088234226552036, dtype=np.float64)
+
+    def add(values: np.ndarray) -> None:
+        nonlocal index, residual
+        residual += coefficients[index] * values
+        index += 1
+
+    add(log_current)
+    for threshold in (-5.0, -4.0, -3.0, -2.0, -1.0):
+        add(np.maximum(log_current - threshold, 0.0))
+
+    land = np.asarray(data["annual_precipitation"], dtype=np.float64).reshape(
+        16, 12, 180, 360
+    ).mean(axis=(0, 1)) > 0.0
+    summaries: dict[str, dict[str, np.ndarray]] = {}
+    for name in _ANNUAL_RESIDUAL_DRIVERS:
+        climatology = np.asarray(data[name], dtype=np.float64).reshape(
+            16, 12, 180, 360
+        ).mean(axis=0)
+        raw = {
+            "mean": climatology.mean(axis=0),
+            "std": climatology.std(axis=0),
+            "p10": np.quantile(climatology, 0.10, axis=0),
+            "p90": np.quantile(climatology, 0.90, axis=0),
+        }
+        if np.max(np.abs(raw["p90"] - raw["p10"])) < 1e-8:
+            raw = {"mean": raw["mean"]}
+        summaries[name] = {}
+        for statistic, values in raw.items():
+            selected = values[land]
+            center = np.median(selected)
+            scale = np.quantile(selected, 0.75) - np.quantile(selected, 0.25)
+            z = np.clip((values - center) / (scale + 1e-8), -4.0, 4.0)
+            summaries[name][statistic] = z
+            add(z)
+            add(np.maximum(z, 0.0))
+            add(np.minimum(z, 0.0))
+
+    for left, left_stat, right, right_stat in (
+        ("monthly_precipitation", "std", "air_temperature", "p10"),
+        ("monthly_precipitation", "std", "aboveground_biomass", "p10"),
+        ("vapor_pressure_deficit_mean", "std", "gpp", "mean"),
+        ("vapor_pressure_deficit_mean", "p10", "wet_day_fraction", "mean"),
+        ("maximum_consecutive_dry_days", "mean", "gpp", "mean"),
+        ("wind_speed_mean", "mean", "dryness", "mean"),
+        ("lightning_flash_rate", "mean", "aboveground_biomass", "mean"),
+        ("luh2_cropland_fraction", "mean", "population_density", "mean"),
+        ("luh2_rangeland_fraction", "mean", "aboveground_biomass", "mean"),
+        ("soil_carbon", "mean", "air_temperature", "p10"),
+    ):
+        add(summaries[left][left_stat] * summaries[right][right_stat])
+
+    if index != coefficients.size:
+        raise RuntimeError(f"annual residual basis mismatch: {index} != {coefficients.size}")
+    correction = np.exp(strength * np.clip(residual, -5.0, 5.0))
+    return prediction * correction[None, ...]
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -835,4 +981,5 @@ def predict(
     if "gust" in enabled:
         prediction = _gust(prediction, data, fallback)
     prediction = _annual_seasonal_closure(prediction, data, fallback, enabled)
+    prediction = _annual_propensity_correction(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
