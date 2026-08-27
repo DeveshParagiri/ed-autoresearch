@@ -65,7 +65,6 @@ PARAMS = {'annual_scale': 1.85,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
  'greenup_brake': 2.0,
- 'lightning_memory_w': 0.5,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
@@ -2035,21 +2034,7 @@ def _rare_lightning_ignition(
     lightning = np.clip(
         np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
     )
-    # Monthly lightning peaks with convective rain, while dry-lightning
-    # ignition opportunity depends on the site's longer storm regime being
-    # exposed during a rain-free month. Blend current strikes with a causal
-    # two-year background before applying the explicit dry-fuel gates below.
-    lightning_memory = _antecedent(
-        lightning, 1.0 - np.exp(-1.0 / 24.0)
-    )
-    memory_weight = float(
-        np.clip(p.get("lightning_memory_w", 0.0), 0.0, 1.0)
-    )
-    ignition_lightning = (
-        (1.0 - memory_weight) * lightning
-        + memory_weight * lightning_memory
-    )
-    lightning_chance = ignition_lightning / (ignition_lightning + 0.02)
+    lightning_chance = lightning / (lightning + 0.02)
     rain = np.clip(
         np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
     )
