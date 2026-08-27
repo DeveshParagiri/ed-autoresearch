@@ -4506,3 +4506,46 @@ status is unresolved rather than clean or proven contaminated. A clean export no
 requires the exact source commit, runtime configuration, restart hashes, endogenous
 fire throughout the ancestry, and pre-fire output timing. Score dependence on the
 uncertain frozen states is being measured before the canonical line is changed.
+
+
+### Entry 129: dry-window opportunity is real but too small
+
+A causal annual drying-opportunity state resolves one genuine error in the previous
+residual framing. Half of area-weighted excess fire is concentrated in 536 cells, not
+a diffuse low-rate tail. Those cells are wet, warm, short-canopy mosaics: only .79% of
+their excess meets the incumbent tall humid-closed gate, while 24.0% meets a conservative
+humid-short state. The model/observation ratio declines from 1.95 in cells with no hard
+dry month to .68 in cells with nine to twelve dry months; a causal smooth occupancy is
+broadly, though not strictly, monotone.
+
+The corresponding global brake uses a causal twelve-month dry-window occupancy, rain
+memory, temperature memory, annual rain, short canopy, and natural cover. Applied in
+hazard space before pathway scaling, its best strength reaches .717018 (+.000130).
+All four components and nine of fourteen regions improve, and intact tropical closed
+fire falls from .842 to .820 times observed without creating a new pathology. The
+paired semi-arid continuity gain is negative at every strength. This is a valid local
+mechanism but not a structural step, so it is not promoted, tuned, or evaluated.
+
+
+### Entry 130: clean-state sensitivity and exogenous rebuild bound
+
+The current .716889 proxy materially depends on the frozen ED structural fields, but
+the dependence must not be equated numerically with leakage. Replacing ED natural and
+secondary fractions by LUH2 equivalents costs .00034 and .00101, disabling the soil-
+carbon mechanism costs .00001, and disabling LAI-conditioned mechanisms costs .00237.
+Removing AGB-conditioned mechanisms falls to .67797 and removing natural structure
+falls to .69910. Two combined, unretuned controls span .64134--.67956; most loss is in
+spatial partitioning and annual scaling. These controls remove both contaminated
+ancestry and physically real fuel information, so they establish sensitivity, not the
+size or sign of score inflation.
+
+Two independent models then rebuild fire using only precipitation, temperature,
+dryness, LUH2 land use, and lightning. A causal rain-production/live-dead-fuel stock
+peaks at .664241; a mass-conserving land-use pathway partition peaks at .666015.
+Both are prefix-exact, but both retain severe false fire across closed canopy, boreal,
+rangeland, and arid systems. The missing discriminator is actual vegetation and fuel
+state, not another precipitation response. The recorded .717 remains a reproducible
+official sensitivity result and the online use of ED prognostic state remains
+mechanistically legitimate, but a leakage-free validation now requires a clean
+endogenous-fire ED ancestry and pre-fire exports of native fuel, moisture, and snow
+state before further parameter tuning or an official claim toward .8.
