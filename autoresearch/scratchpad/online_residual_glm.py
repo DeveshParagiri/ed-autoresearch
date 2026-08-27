@@ -740,7 +740,7 @@ def main() -> int:
 
         out_of_fold = np.zeros_like(y)
         trained = None
-        log_ratio = np.log(np.clip(y, 1e-4, 1e4))
+        ebm_target = y if causal_ebm else np.log(np.clip(y, 1e-4, 1e4))
         for fold in range(3):
             train = np.flatnonzero(folds != fold)
             held = np.flatnonzero(folds == fold)
@@ -762,15 +762,20 @@ def main() -> int:
                 early_stopping_rounds=60,
                 min_samples_leaf=100,
                 max_leaves=5 if causal_ebm else 3,
-                objective="rmse",
+                objective="poisson_deviance" if causal_ebm else "rmse",
                 n_jobs=-2,
                 random_state=811 + fold,
             )
-            learner.fit(x[train], log_ratio[train], sample_weight=weights[train])
+            learner.fit(
+                x[train], ebm_target[train], sample_weight=weights[train]
+            )
             for start in range(0, held.size, 200_000):
                 batch = held[start : start + 200_000]
-                out_of_fold[batch] = np.exp(
-                    np.clip(learner.predict(x[batch]), -8.0, 8.0)
+                predicted = learner.predict(x[batch])
+                out_of_fold[batch] = (
+                    np.clip(predicted, 1e-6, 1e6)
+                    if causal_ebm
+                    else np.exp(np.clip(predicted, -8.0, 8.0))
                 )
             trained = learner
             print(
