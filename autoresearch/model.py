@@ -67,6 +67,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_dry_half': 500.0,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
+ 'lightning_reservoir_scale': 0.015,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
  'vpd_half': 0.29948860381280695,
@@ -2155,6 +2156,121 @@ def _rare_lightning_ignition(
     )
 
 
+def _lightning_reservoir_ignition(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Ignite cured continuous fuel from persistent and recent lightning.
+
+    The instantaneous lightning field misses two physical timescales. Repeated
+    storms establish the local natural-ignition regime, while a recent storm
+    cluster supplies actual strikes during the combustible phase. Both matter
+    only where antecedent production has built continuous fine or woody fuel,
+    current rain has fallen below its reservoir, and the fuel is warm and dry.
+    The same smooth equation is used at every site and reads only current and
+    accumulated past state.
+    """
+    if "rare_ignition" not in enabled:
+        return prediction
+    scale = float(max(p.get("lightning_reservoir_scale", 0.0), 0.0))
+    if scale <= 0.0:
+        return prediction
+
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    lightning_3m = _antecedent(lightning, 1.0 - np.exp(-1.0 / 3.0))
+    lightning_12m = _antecedent(lightning, 1.0 - np.exp(-1.0 / 12.0))
+    persistent_ignition = lightning_12m / (lightning_12m + 0.01)
+    recent_storms = lightning_3m / (lightning_3m + 0.01)
+    lightning_pulse = np.maximum(
+        (lightning_3m - lightning_12m)
+        / (lightning_3m + lightning_12m + 0.005),
+        0.0,
+    )
+    ignition_opportunity = persistent_ignition * (
+        0.5 + 0.5 * recent_storms
+    ) + lightning_pulse
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6m = _antecedent(rain, 1.0 - np.exp(-1.0 / 6.0))
+    curing = np.maximum(
+        (rain_6m - rain) / (rain_6m + rain + 10.0), 0.0
+    )
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 500.0) * curing
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    combustion *= _rising(temperature, 1.0 / 3.0, 5.0)
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12m = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
+    fine_fuel = gpp_12m / (gpp_12m + 0.25)
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    woody_fuel = biomass / (biomass + 1.0)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    open_fuel = fine_fuel * natural * 10.0 / (canopy + 10.0)
+    temperature_24m = _antecedent(
+        temperature, 1.0 - np.exp(-1.0 / 24.0)
+    )
+    cold_woody_fuel = (
+        woody_fuel
+        * natural
+        * canopy / (canopy + 8.0)
+        * _falling(temperature_24m, 1.0 / 3.0, 8.0)
+    )
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    leaf_area = np.clip(
+        np.asarray(data["leaf_area_index"], dtype=np.float64), 0.0, None
+    )
+    humid_closed_canopy = (
+        _rising(temperature, 0.5, 20.0)
+        * _rising(annual_rain, 1.0 / 250.0, 1200.0)
+        * _rising(canopy, 1.0 / 3.0, 15.0)
+        * _rising(leaf_area, 2.0, 2.5)
+        * natural
+    )
+    accessible_fuel = (
+        open_fuel + 0.5 * cold_woody_fuel
+    ) * np.exp(-4.0 * humid_closed_canopy)
+
+    trailing = np.empty_like(prediction, dtype=np.float64)
+    for time in range(prediction.shape[0]):
+        start = max(0, time - 11)
+        annual = np.asarray(prediction[start : time + 1], dtype=np.float64).sum(
+            axis=0
+        )
+        trailing[time] = annual * 12.0 / (time - start + 1)
+    fire_return_gap = 1.0 / (1.0 + trailing / 0.04)
+    ignition = (
+        scale
+        * ignition_opportunity
+        * combustion
+        * accessible_fuel
+        * fire_return_gap
+    )
+    return np.asarray(
+        np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
+        dtype=np.float32,
+    )
+
+
 def _state_dependent_fire_season(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2356,6 +2472,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
+    prediction = _lightning_reservoir_ignition(
+        prediction, data, fallback, enabled
+    )
     prediction = _live_fuel_greenup_brake(
         prediction, data, fallback, enabled
     )
