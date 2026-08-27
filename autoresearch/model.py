@@ -26,7 +26,8 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
           'natural_vegetation_fraction', 'secondary_vegetation_fraction',
           'luh2_pasture_fraction', 'luh2_secondary_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
-              'softmin', 'cropland', 'phenology', 'regime_capacity')
+              'softmin', 'cropland', 'phenology', 'regime_capacity',
+              'drought_code')
 
 # Focus tuning on the independently validated global annual and seasonal heads.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -60,6 +61,10 @@ PARAMS = {'annual_scale': 1.85,
  'cold_forest_capacity': 3.0,
  'arid_fine_fuel_capacity': 2.0,
  'productive_range_brake': 2.0,
+ 'drought_code_w': 0.75,
+ 'fast_moisture_capacity': 80.0,
+ 'deep_moisture_capacity': 400.0,
+ 'thermal_drying_rate': 2.5,
  'vpd_half': 0.29948860381280695,
  'vpd_n': 0.5277493750705042,
  'vpd_cap': 5.0,
@@ -2002,6 +2007,67 @@ def _ecological_fire_capacity(
     )
 
 
+def _causal_drought_code(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Shift fire opportunity with fast and deep fuel-moisture stores.
+
+    Monthly rain can leave identical totals through frequent small events or a
+    single recharge pulse. Without inventing daily events, two causal water
+    stores retain the physically important hysteresis: litter dries within
+    weeks, while duff and coarse fuel remember drought over seasons. Thermal
+    demand drains both stores, rain refills them, and antecedent GPP prevents a
+    dry but fuel-free cell from gaining fire. The drought response is divided
+    by its own trailing state, so it reallocates local opportunity toward
+    sustained dry-down rather than adding an unconstrained source of fire.
+    """
+    if "drought_code" not in enabled:
+        return prediction
+    strength = float(p.get("drought_code_w", 0.0))
+    if strength <= 0.0:
+        return prediction
+
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    thermal_demand = p.get("thermal_drying_rate", 2.5) * np.maximum(
+        temperature + 5.0, 0.0
+    )
+    fast_capacity = max(float(p.get("fast_moisture_capacity", 80.0)), 1.0)
+    deep_capacity = max(float(p.get("deep_moisture_capacity", 400.0)), 1.0)
+    fast_store = np.clip(rain[0], 0.0, fast_capacity)
+    deep_store = np.clip(4.0 * rain[0], 0.0, deep_capacity)
+    drought = np.empty_like(rain, dtype=np.float64)
+    for time in range(rain.shape[0]):
+        fast_store = np.clip(
+            fast_store + rain[time] - thermal_demand[time],
+            0.0,
+            fast_capacity,
+        )
+        deep_store = np.clip(
+            deep_store + rain[time] - 0.35 * thermal_demand[time],
+            0.0,
+            deep_capacity,
+        )
+        fast_deficit = 1.0 - fast_store / fast_capacity
+        deep_deficit = 1.0 - deep_store / deep_capacity
+        drought[time] = fast_deficit * (0.3 + 0.7 * deep_deficit)
+
+    drought_memory = _antecedent(drought, 1.0 - np.exp(-1.0 / 12.0))
+    relative_drought = (drought + 0.15) / (drought_memory + 0.15)
+    gpp_memory = _antecedent(
+        np.asarray(data["gpp"], dtype=np.float64),
+        1.0 - np.exp(-1.0 / 12.0),
+    )
+    fine_fuel = gpp_memory / (gpp_memory + 0.5)
+    correction = np.power(np.clip(relative_drought, 0.2, 5.0), strength * fine_fuel)
+    return np.asarray(np.clip(prediction * correction, 0.0, 1.0), dtype=np.float32)
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -2090,4 +2156,5 @@ def predict(
     prediction = _causal_mechanistic_glm(prediction, data, fallback, enabled)
     prediction = _absolute_causal_glm(prediction, data, fallback, enabled)
     prediction = _ecological_fire_capacity(prediction, data, fallback, enabled)
+    prediction = _causal_drought_code(prediction, data, fallback, enabled)
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
