@@ -36,7 +36,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 }
 
 PARAMS = {'annual_scale': 1.73,
- 'event_scale_half': 0.003,
+ 'fuel_continuity_half': 0.25,
  'pathway_mix_w': 0.35,
  'surface_bank_w': 1.0,
  'conditional_allocation_w': 1.0,
@@ -305,8 +305,62 @@ def _pathway_event_scaling(
     ignition without assigning a region or coordinate to any pathway.
     """
     annual_scale = float(max(p.get("annual_scale", 1.0), 0.0))
-    event_half = float(max(p.get("event_scale_half", 0.003), 1e-8))
-    connected = prediction / (prediction + event_half)
+    continuity_half = float(max(p.get("fuel_continuity_half", 0.25), 1e-8))
+    gpp_for_continuity = np.clip(
+        np.asarray(data["gpp"], dtype=np.float64), 0.0, None
+    )
+    fine_fuel_continuity = _antecedent(
+        gpp_for_continuity, 1.0 - np.exp(-1.0 / 12.0)
+    )
+    fine_fuel_continuity = fine_fuel_continuity / (
+        fine_fuel_continuity + 0.35
+    )
+    natural_for_continuity = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy_for_continuity = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass_for_continuity = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    range_for_continuity = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture_for_continuity = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop_for_continuity = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    open_for_continuity = np.clip(
+        range_for_continuity
+        + pasture_for_continuity
+        + natural_for_continuity * 8.0 / (canopy_for_continuity + 8.0),
+        0.0,
+        1.0,
+    )
+    surface_continuity = (
+        (1.0 - crop_for_continuity)
+        * fine_fuel_continuity
+        * open_for_continuity
+    )
+    woody_continuity = (
+        natural_for_continuity
+        * canopy_for_continuity / (canopy_for_continuity + 8.0)
+        * biomass_for_continuity / (biomass_for_continuity + 1.0)
+    )
+    residue_continuity = crop_for_continuity * fine_fuel_continuity
+    available_continuity = 1.0 - (
+        (1.0 - surface_continuity)
+        * (1.0 - woody_continuity)
+        * (1.0 - residue_continuity)
+    )
+    connected = available_continuity / (
+        available_continuity + continuity_half
+    )
     old_scale = 1.0 + (annual_scale - 1.0) * connected
     old_burn = np.clip(prediction * old_scale, 0.0, 1.0 - 1e-7)
     if "pathway_hazards" not in enabled:
