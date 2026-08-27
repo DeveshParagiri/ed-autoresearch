@@ -163,6 +163,7 @@ def main() -> int:
     cycle_target_tree = "--cycle-target-tree" in sys.argv
     target_weighted = "--target-weighted" in sys.argv
     full_train = "--full-train" in sys.argv
+    log_target = "--log-target" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -501,7 +502,7 @@ def main() -> int:
     ratio_target = target / offset
     y = (
         np.log(np.clip(ratio_target, 1e-4, 1e4))
-        if annual_target_tree
+        if annual_target_tree or log_target
         else ratio_target
     )
     weights = offset + float(offset.mean()) * 0.02
@@ -876,7 +877,11 @@ def main() -> int:
             if train.size > train_limit:
                 train = rng.choice(train, size=train_limit, replace=False)
             regressor = HistGradientBoostingRegressor(
-                loss="squared_error" if annual_target_tree else "poisson",
+                loss=(
+                    "squared_error"
+                    if annual_target_tree or log_target
+                    else "poisson"
+                ),
                 learning_rate=(
                     0.05 if ultra_tree else (0.06 if deep_tree else 0.08)
                 ),
@@ -972,7 +977,7 @@ def main() -> int:
         for strength in (0.10, 0.25, 0.50, 0.75, 1.0):
             correction = (
                 np.exp(np.clip(out_of_fold, -8.0, 8.0))
-                if annual_target_tree
+                if annual_target_tree or log_target
                 else out_of_fold
             )
             corrected = baseline * np.power(
@@ -1027,7 +1032,7 @@ def main() -> int:
             y[importance_rows],
             scoring=(
                 "neg_mean_squared_error"
-                if annual_target_tree
+                if annual_target_tree or log_target
                 else "neg_mean_poisson_deviance"
             ),
             n_repeats=2,
