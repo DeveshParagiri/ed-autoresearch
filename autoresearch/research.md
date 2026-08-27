@@ -4,6 +4,8 @@
 
 Improve `model.py` as a mechanistic model of monthly burned area for fire. Your hard goal is to maximize official GFED5 ILAMB Overall with a soft requirement of ensuring performance gain is across regions and not concentrated in one core region. Directly edit only model.py, do not modify `inputs/`, `results.tsv`, GFED5, or the `ar` cli implementation.
 
+Coupled-ready candidates must be pointwise across grid cells because ED sites run independently: do not use neighbour or other cross-cell operations. Use only predictors marked coupled-valid in `inputs/README.md`.
+
 ## Model interface
 
 `INPUTS` lists the exact variables loaded from `inputs/*.nc`. `PARAMS` holds the current coefficients. `SEARCH_SPACE` lists the coefficients the Optuna (hyper param optim tool) may tune. `COMPONENTS` can name at most 15 physical terms for "shapley-style" ablation.
@@ -34,6 +36,8 @@ Repeat indefinitely:
 4. Run Optuna and copy its winning coefficients into `PARAMS` .
 5. Commit `model.py` with a concise message, then run evaluation once with a concise, concrete description of the hypothesis.
 6. Inspect all returned evidence, decide whether to continue, revise, combine, or abandon the line, and begin the next experiment. To restore any recorded one-file model, run `git restore --source COMMIT -- model.py` from this directory.
+
+Every distinct `model.py` formulation that reaches a proxy score is an experiment and must be committed, including intermediate and non-improving results. Restore the objective-best formulation in a later explicit commit rather than erasing a rejected experiment from history.
 
 ## Scientific judgment
 
