@@ -97,6 +97,8 @@ PARAMS = {'annual_scale': 1.73,
  'soft_s': 2.0,
  'crop_k': 1.22,
  'crop_n': 1.514,
+ 'crop_rain_management_w': 1.5,
+ 'crop_residue_event_scale': 0.02,
  'nb_w': 0.5431013864547594,
  'nb_diag': 0.5,
  'leg_w': 0.3,
@@ -2191,6 +2193,90 @@ def _state_dependent_fire_season(
     )
 
 
+def _rain_conditioned_crop_management(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Separate fuel removal from residue fire in cultivated landscapes.
+
+    In weakly seasonal productive cropland, harvest, grazing, roads, and field
+    boundaries remove or fragment fuel before it can support a spreading fire.
+    In strongly seasonal cropland, antecedent rain can instead build residue
+    that becomes burnable as the wet season ends. Rainfall variability thus
+    changes the role of the same observable land use without any geographic
+    dispatch or region-specific coefficient.
+    """
+    if "cropland" not in enabled:
+        return prediction
+    brake_strength = float(max(p.get("crop_rain_management_w", 0.0), 0.0))
+    event_scale = float(max(p.get("crop_residue_event_scale", 0.0), 0.0))
+    if brake_strength <= 0.0 and event_scale <= 0.0:
+        return prediction
+
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    alpha = 1.0 - np.exp(-1.0 / 12.0)
+    mean = np.asarray(rain[0], dtype=np.float64).copy()
+    variance = np.zeros_like(mean)
+    rain_mean = np.empty_like(rain, dtype=np.float64)
+    rain_spread = np.empty_like(rain, dtype=np.float64)
+    for time in range(rain.shape[0]):
+        departure = rain[time] - mean
+        mean += alpha * departure
+        variance = (1.0 - alpha) * (
+            variance + alpha * np.square(departure)
+        )
+        rain_mean[time] = mean
+        rain_spread[time] = np.sqrt(np.maximum(variance, 0.0))
+    seasonality = rain_spread / (rain_mean + rain_spread + 25.0)
+
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    productive = annual_rain / (annual_rain + 400.0)
+    fragmentation = crop * productive * (1.0 - seasonality)
+    adjusted = np.asarray(prediction, dtype=np.float64) * np.exp(
+        -brake_strength * fragmentation
+    )
+
+    if event_scale > 0.0:
+        fuel = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+        fuel_memory = _antecedent(fuel, alpha)
+        residue = fuel_memory / (fuel_memory + 0.35)
+        drying = np.maximum(
+            (rain_mean - rain) / (rain_mean + rain + 10.0), 0.0
+        )
+        dryness = np.clip(
+            np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+        )
+        combustion = dryness / (dryness + 500.0)
+        temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+        warming = np.empty_like(temperature)
+        warming[0] = 0.0
+        warming[1:] = np.maximum(temperature[1:] - temperature[:-1], 0.0)
+        thermal_shoulder = _rising(temperature, 1.0 / 3.0, 5.0) * np.exp(
+            -np.square((temperature - 18.0) / 12.0)
+        )
+        residue_event = (
+            event_scale
+            * crop
+            * seasonality
+            * residue
+            * drying
+            * combustion
+            * thermal_shoulder
+            * np.clip(warming / 5.0, 0.0, 1.0)
+        )
+        adjusted = 1.0 - (1.0 - adjusted) * np.exp(-residue_event)
+    return np.asarray(np.clip(adjusted, 0.0, 1.0), dtype=np.float32)
+
+
 def _seasonal_rainfall_capacity(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2356,6 +2442,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
+    prediction = _rain_conditioned_crop_management(
+        prediction, data, fallback, enabled
+    )
     prediction = _live_fuel_greenup_brake(
         prediction, data, fallback, enabled
     )
