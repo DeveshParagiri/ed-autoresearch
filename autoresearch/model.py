@@ -86,6 +86,7 @@ PARAMS = {'annual_scale': 1.73,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
  'rain_pulse_opportunity_half': 0.02,
+ 'rare_natural_onset_scale': 0.003,
  'D_high': 2940.51756322311,
  'D_low': 70.18267183720735,
  'P_half': 12.808863354047988,
@@ -705,8 +706,89 @@ def _rare_lightning_ignition(
         * pulse_gap
     )
     ignition += rain_pulse_ignition
-    return np.asarray(
+    incumbent = np.asarray(
         np.clip(1.0 - (1.0 - prediction) * np.exp(-ignition), 0.0, 1.0),
+        dtype=np.float32,
+    )
+
+    # A separate rare source captures the onset of the natural fire season.
+    # It requires fuel production in preceding wet months, current curing and
+    # combustion, rapid warming, and a fresh lightning pulse. The source fades
+    # where the incumbent already realizes substantial trailing fire, so it
+    # cannot simply amplify active savannas. LUH2 primary is used alone here:
+    # the prepared LUH2 secondary aggregate is not a compositional cover share.
+    onset_scale = float(max(p.get("rare_natural_onset_scale", 0.0), 0.0))
+    if onset_scale <= 0.0:
+        return incumbent
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    temperature_3 = _antecedent(temperature, alpha_3)
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    dryness_3 = _antecedent(dryness, alpha_3)
+    lightning_3 = _antecedent(lightning, alpha_3)
+
+    heat_onset = _rising(temperature - temperature_3, 1.0 / 1.5, 0.5)
+    dryness_departure = (dryness - dryness_3) / (
+        dryness + dryness_3 + 100.0
+    )
+    drying_onset = _rising(dryness_departure, 25.0, 0.01)
+    combustion = np.sqrt(
+        dryness / (dryness + 250.0) * 1.0 / (1.0 + rain / 35.0)
+    )
+    lightning_departure = np.maximum(
+        (lightning - lightning_3) / (lightning + lightning_3 + 0.002),
+        0.0,
+    )
+    lightning_arrival = _rising(lightning_departure, 10.0, 0.05)
+    ignition_timing = lightning_3 / (lightning_3 + 0.02) * (
+        0.35 + 0.65 * lightning_arrival
+    )
+
+    primary = np.clip(
+        np.asarray(data["luh2_primary_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    managed = np.clip(crop + pasture + rangeland, 0.0, 1.0)
+    natural_share = primary / (primary + managed + 0.1)
+    onset_fuel = np.power(annual_rain / (annual_rain + 250.0), 2.0) * np.exp(
+        -annual_rain / 3000.0
+    )
+
+    incumbent_hazard = -np.log1p(
+        -np.clip(np.asarray(incumbent, dtype=np.float64), 0.0, 1.0 - 1e-7)
+    )
+    trailing_onset_hazard = np.empty_like(incumbent_hazard)
+    accumulator = np.zeros_like(incumbent_hazard[0])
+    for time in range(incumbent_hazard.shape[0]):
+        accumulator += incumbent_hazard[time]
+        if time >= 12:
+            accumulator -= incumbent_hazard[time - 12]
+        trailing_onset_hazard[time] = accumulator
+    onset_opportunity = 1.0 / (1.0 + trailing_onset_hazard / 0.1)
+    onset_source = (
+        natural_share
+        * heat_onset
+        * drying_onset
+        * combustion
+        * ignition_timing
+        * onset_fuel
+        * onset_opportunity
+    )
+    return np.asarray(
+        np.clip(
+            1.0
+            - (1.0 - incumbent)
+            * np.exp(-np.clip(onset_scale * onset_source, 0.0, 50.0)),
+            0.0,
+            1.0,
+        ),
         dtype=np.float32,
     )
 
