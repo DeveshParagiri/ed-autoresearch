@@ -3950,3 +3950,8 @@ remains plausible but identifies the next targets: global area 1.100 times obser
 intact tropical closed canopy 1.114, boreal forest 1.084, productive rangeland 1.342,
 cropland 1.385, and arid low-fuel land .331. A weighted-conservation variant removes
 mass drift but scores .7354 and is rejected; `53af1c4` restores the exact official best.
+The restored model remains exactly prefix-invariant through month 96 when every future
+input is halved. Scaling every frozen ED state field by .5 changes area-weighted
+predictions 23.87 percent and total burn to .8397 of baseline; scaling them by 1.5
+changes predictions 25.47 percent and total burn to 1.1943. The coupled response is
+finite, material, and sublinear in aggregate.
