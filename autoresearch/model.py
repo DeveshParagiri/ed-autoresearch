@@ -25,7 +25,7 @@ INPUTS = ('dryness', 'annual_precipitation', 'monthly_precipitation', 'air_tempe
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing', 'lag',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'drought_maturation', 'dead_fuel_pool',
-              'pathway_hazards')
+              'pathway_hazards', 'conditional_allocation')
 
 # Focus tuning only on the newly validated causal dead-fuel state equation.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -37,6 +37,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
+ 'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
  'cold_forest_capacity': 3.0,
@@ -1064,6 +1065,82 @@ def _live_fuel_greenup_brake(
     return np.asarray(allocated, dtype=np.float32)
 
 
+def _conditional_fire_allocation(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Move local fire potential into mature fuel-supported dry windows.
+
+    Low and moderate fire opportunity expands only when a twelve-month rain
+    reservoir, antecedent productivity, vegetation curing, and anomalous warmth
+    jointly support combustion. Already concentrated peak months receive a
+    short-drought brake instead of further amplification. Causal running means
+    conserve each independent site's available fire potential through time.
+    """
+    if "conditional_allocation" not in enabled:
+        return prediction
+    strength = float(max(p.get("conditional_allocation_w", 0.0), 0.0))
+    if strength <= 0.0:
+        return prediction
+
+    alpha_3 = 1.0 - np.exp(-1.0 / 3.0)
+    alpha_6 = 1.0 - np.exp(-1.0 / 6.0)
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_6 = _antecedent(rain, alpha_6)
+    rain_12 = _antecedent(rain, alpha_12)
+    dry_6 = np.maximum((rain_6 - rain) / (rain_6 + rain + 10.0), 0.0)
+    dry_12 = np.maximum((rain_12 - rain) / (rain_12 + rain + 10.0), 0.0)
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_3 = _antecedent(gpp, alpha_3)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fuel_bank = gpp_12 / (gpp_12 + 0.35)
+    curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    warm_departure = np.clip(
+        (temperature - temperature_12 - 3.0) / 5.0, 0.0, 1.0
+    )
+
+    baseline = np.asarray(prediction, dtype=np.float64)
+    share = np.empty_like(baseline)
+    trailing = np.zeros_like(baseline[0], dtype=np.float64)
+    history: list[np.ndarray] = []
+    for time in range(baseline.shape[0]):
+        current = baseline[time]
+        trailing += current
+        history.append(current)
+        if len(history) > 12:
+            trailing -= history.pop(0)
+        annualized = trailing * 12.0 / len(history)
+        share[time] = current / (annualized + 1e-12)
+
+    low_or_moderate = _falling(share, 1.0 / 0.025, 0.16)
+    saturated_peak = _rising(share, 1.0 / 0.025, 0.16)
+    shoulder = dry_12 * (
+        0.5 * fuel_bank + 0.3 * curing + 0.2 * warm_departure
+    )
+    signal = low_or_moderate * shoulder - 0.5 * saturated_peak * dry_6
+    factor = np.exp(np.clip(strength * signal, -4.0, 4.0))
+    adjusted = baseline * factor
+
+    baseline_state = baseline[0].copy()
+    adjusted_state = adjusted[0].copy()
+    allocated = np.empty_like(adjusted)
+    for time in range(adjusted.shape[0]):
+        baseline_state += alpha_12 * (baseline[time] - baseline_state)
+        adjusted_state += alpha_12 * (adjusted[time] - adjusted_state)
+        allocated[time] = adjusted[time] * baseline_state / (
+            adjusted_state + 1e-12
+        )
+    return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
+
+
 
 def predict(
     data: Mapping[str, np.ndarray],
@@ -1115,6 +1192,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _dead_fuel_pool_response(
+        prediction, data, fallback, enabled
+    )
+    prediction = _conditional_fire_allocation(
         prediction, data, fallback, enabled
     )
     prediction = _live_fuel_greenup_brake(
