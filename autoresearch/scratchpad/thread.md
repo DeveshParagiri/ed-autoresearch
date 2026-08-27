@@ -4018,3 +4018,25 @@ but they no longer affect the official running-best graph. `progress.png` was
 regenerated from 61 retained evaluations. The latest eligible coupled-valid
 mechanistic evaluation is **.738** at `d540d4c`; no new official evaluation was
 run during this repair.
+
+
+### Entry 112: event-family triage yields a small conserved residue gain
+
+The .738 model has high spatial skill (.910) but only .603 of observed seasonal
+amplitude. Ungated local event clustering raised amplitude to .659 but reduced
+Overall to .7371; fuel-continuity gating remained negative. A separate boreal
+crown-event hazard correctly raised BONA annual fire from .176 to .207 against
+.225 observed and BOAS from .705 to .749 against 1.319, but leaked into cool
+temperate forest and remained globally flat. All candidates and explicit
+restores are committed through `de6db37`.
+
+The crop-by-rainfall interaction was then expressed as cultivated fuel removal
+versus residue-fire timing. Broad rainfall-conditioned fragmentation failed at
+.7373 and was pruned. Treating residue fire as a new annual source also failed,
+but conserving cultivated fire potential through a causal 12-month reference
+raised the exact proxy from .73787533 to **.73799735** at `f1e0931`, primarily
+through seasonal skill (.8656 to .8664) while holding spatial skill and annual
+area. A stronger cold-continent version failed and `c32939a` restores the small
+proxy winner. The gain is too small for official evaluation or Optuna; the next
+step must combine fuel, combustion, ignition, management, and fire-return into
+one factorized mechanistic equation rather than stack another isolated gate.
