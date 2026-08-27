@@ -5096,3 +5096,19 @@ temperate closed .965 to .978, boreal 1.054 to 1.054, tropical open 1.017 to 1.0
 productive rangeland .943 to .967, crop .912 to .918, and arid low fuel 1.255 to 1.256.
 The fixed strength-2 equation is justified for canonical installation and one clean exact
 verification before any official evaluation.
+
+
+### Entry 162: unit-consistent event scaling deepens existing underburn
+
+The pathway event-size blend is dimensionally hazard-to-hazard after conversion, but its
+global `annual_scale` has different constitutive meanings: it multiplies burned fraction
+in the legacy branch and event rate in the resolved branch. Two finite-Poisson replacements
+were tested on 768 dominant whole cells. A shared-ground rate union closes its pathway
+shares to 2e-11, while a disjoint-subgrid tile mixture closes the Poisson identity to 1e-17.
+
+Both clean equations fail in all four blocks for annual and raw-cycle error. The rate union
+worsens annual-log RMSE by .001712 and the tile mixture by .001786; both reduce the sampled
+area ratio from .7770 to about .7723 and deepen underburn in every represented ecological
+class. The incumbent convention is empirically supplying needed mass in already-underburned
+dominant cells. A unit-clean replacement would require a new physical source and coordinated
+recalibration, not a standalone repair, so neither advances to exact testing or tuning.
