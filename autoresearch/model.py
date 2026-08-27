@@ -72,8 +72,6 @@ PARAMS = {'annual_scale': 1.85,
  'k1': 0.03635503353478365,
  'k2': 0.012758211164590085,
  'pre_dampen_half': 107.40052367919465,
- 'rain_event_depth': 12.0,
- 'fuel_dry_days': 4.0,
  'cure_alpha': 1.0,
  'cure_half': 72.81247733921077,
  'cure_n': 0.7771518756969097,
@@ -134,17 +132,8 @@ def _fire_rate(
     if "precipitation" in enabled:
         annual = data["annual_precipitation"]
         monthly = data["monthly_precipitation"]
-        # Treat monthly rain as a Poisson sequence of storms with a shared
-        # mean event depth. Fine fuel can carry fire only after a rain-free
-        # drying window, whose probability is exp(-event_rate * dry_days).
-        # This turns precipitation into fire-weather duration rather than an
-        # arbitrary reciprocal multiplier while remaining monthly and local.
-        events_per_day = monthly / (
-            p["rain_event_depth"] * _MONTH_DAYS[:, None, None] + 1e-12
-        )
-        dry_window = np.exp(-p["fuel_dry_days"] * events_per_day)
         term = (annual / (annual + p["P_half"] + 1e-12)) * (
-            dry_window
+            1.0 / (1.0 + monthly / (p["pre_dampen_half"] + 1e-12))
         )
         factors.append(term)
         rate = rate * term
