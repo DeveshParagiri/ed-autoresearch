@@ -4623,3 +4623,20 @@ ubiquitously burnable in deserts, while woody shading removes genuine connected 
 Short-record and future-half perturbation tests are bit-exact. This rejects the family
 without refinement: fuel stocks alone cannot recover the missing spatial vegetation
 state from the allowed meteorology and land-use inputs.
+
+
+### Entry 135: corrected limiting-factor soft minimum is still negative
+
+The earlier soft-min rejection contained a mathematical defect: it used the sum of
+factor exponentials rather than their mean, so four ordinary positive constraints
+could produce a negative value that was clipped to the numerical floor. The corrected
+log-mean-exp form is a valid smooth limiting factor, tending toward the arithmetic mean
+at low sharpness and the minimum at high sharpness.
+
+The corrected formulation was committed before measurement and screened at sharpness
+1, 2, and 4 with product-to-soft-min blends of .03, .07, .12, and .20. Every nonzero
+blend loses. The closest is .717325 at sharpness 1 and weight .03 versus the incumbent
+**.717405**; full replacement falls to .641859 and destroys spatial skill. Increasing
+limiting-factor weight raises annual burned area but weakens RMSE and seasonality. The
+old implementation bug was real, but fixing it does not rescue the ecological family.
+The multiplicative baseline is restored explicitly without official evaluation.

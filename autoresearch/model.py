@@ -26,7 +26,7 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
-              'annual_regime_closure', 'softmin')
+              'annual_regime_closure')
 
 # Calibrate only the managed-surface temperature response after its validated step.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -238,14 +238,8 @@ def _fire_rate(
         # the product of all of them. Blend toward a smooth minimum.
         stack = np.stack(factors, axis=0)
         sharp = float(np.clip(p.get("soft_s", 4.0), 0.5, 50.0))
-        # Normalize the exponential sum. Without the factor count, four
-        # moderate positive constraints can produce a negative value that is
-        # then clipped to the numerical floor, which is not a soft minimum.
-        # The normalized form is translation invariant and tends smoothly to
-        # the arithmetic mean as sharpness tends to zero and to the limiting
-        # factor as sharpness grows.
         softmin = -np.log(
-            np.exp(-sharp * np.clip(stack, 1e-6, None)).mean(axis=0) + 1e-12
+            np.exp(-sharp * np.clip(stack, 1e-6, None)).sum(axis=0) + 1e-12
         ) / sharp
         softmin = np.clip(softmin, 1e-6, None)
         rate = np.power(np.clip(rate, 1e-9, None), 1.0 - weight) * np.power(softmin, weight)
