@@ -103,8 +103,8 @@ def main() -> int:
     original = subset_inputs(data, rows[chosen], columns[chosen], 1.0)
     perturbed = subset_inputs(data, rows[chosen], columns[chosen], 1.5)
     for insertion in ("transform", "pathway_event_scaling"):
-        base = predict_at_stage(original, insertion)
-        changed = predict_at_stage(perturbed, insertion)
+        base = predict_at_stage(original, insertion, validate=False)
+        changed = predict_at_stage(perturbed, insertion, validate=False)
         print(
             f"PREFIX insertion={insertion} "
             f"max_abs={float(np.max(np.abs(base[:96]-changed[:96]))):.9e}",

@@ -46,6 +46,7 @@ INSERTIONS = (
 def predict_at_stage(
     data: dict[str, np.ndarray],
     insertion: str,
+    validate: bool = True,
 ) -> np.ndarray:
     params = dict(model.PARAMS)
     enabled = set(model.COMPONENTS)
@@ -75,7 +76,8 @@ def predict_at_stage(
         inserted = True
     if not inserted:
         raise ValueError(f"unknown insertion stage {insertion}")
-    return validate_prediction(np.asarray(prediction, dtype=np.float32))
+    prediction = np.asarray(prediction, dtype=np.float32)
+    return validate_prediction(prediction) if validate else prediction
 
 
 def main() -> int:
