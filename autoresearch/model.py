@@ -38,7 +38,7 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 PARAMS = {'annual_scale': 1.73,
  'event_scale_half': 0.003,
  'pathway_mix_w': 0.35,
- 'surface_bank_w': 0.6,
+ 'surface_bank_w': 1.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -1159,7 +1159,6 @@ def _surface_fire_opportunity_bank(
     gpp_12 = _antecedent(gpp, alpha_12)
     fine_fuel = gpp_12 / (gpp_12 + 0.35)
     curing = np.maximum((gpp_3 - gpp) / (gpp_3 + gpp + 0.2), 0.0)
-    curing_bank = _antecedent(curing, alpha_6)
 
     rain = np.clip(
         np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
@@ -1211,7 +1210,7 @@ def _surface_fire_opportunity_bank(
     allocated = np.empty_like(hazard)
     for time in range(hazard.shape[0]):
         relative_opportunity = hazard[time] / (
-            hazard[time] + hazard_state + 1e-12
+            hazard[time] + hazard_state + 1e-8
         )
         physical_window = np.sqrt(
             np.clip(
@@ -1222,12 +1221,12 @@ def _surface_fire_opportunity_bank(
                 1.0,
             )
         )
-        physical_window *= 0.25 + 0.75 * curing_bank[time] / (
-            curing_bank[time] + 0.05
+        physical_window *= 0.25 + 0.75 * curing[time] / (
+            curing[time] + 0.05
         )
         release_opportunity = relative_opportunity * physical_window
         release_fraction = 1.0 - np.exp(
-            -(1.0 / 12.0 + 8.0 * release_opportunity)
+            -(1.0 / 24.0 + 8.0 * release_opportunity)
         )
         stored = strength * surface_share[time] * hazard[time]
         bank += stored
@@ -1293,13 +1292,13 @@ def predict(
     prediction = _dead_fuel_pool_response(
         prediction, data, fallback, enabled
     )
-    prediction = _surface_fire_opportunity_bank(
-        prediction, data, fallback, enabled
-    )
     prediction = _conditional_fire_allocation(
         prediction, data, fallback, enabled
     )
     prediction = _live_fuel_greenup_brake(
+        prediction, data, fallback, enabled
+    )
+    prediction = _surface_fire_opportunity_bank(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
