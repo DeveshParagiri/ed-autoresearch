@@ -82,16 +82,27 @@ def running(values: np.ndarray, months: float) -> np.ndarray:
 
 def expanding_climatology(
     values: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     """Return causal long-run and calendar-month state for cell x time data."""
     mean = np.empty_like(values, dtype=np.float64)
     spread = np.empty_like(values, dtype=np.float64)
     seasonal_mean = np.empty_like(values, dtype=np.float64)
     seasonal_departure = np.empty_like(values, dtype=np.float64)
+    minimum = np.empty_like(values, dtype=np.float64)
+    maximum = np.empty_like(values, dtype=np.float64)
     state_mean = np.zeros(values.shape[0], dtype=np.float64)
     state_m2 = np.zeros(values.shape[0], dtype=np.float64)
     month_mean = np.zeros((12, values.shape[0]), dtype=np.float64)
     month_count = np.zeros(12, dtype=np.int64)
+    state_minimum = values[:, 0].copy()
+    state_maximum = values[:, 0].copy()
     for time in range(values.shape[1]):
         count = time + 1
         delta = values[:, time] - state_mean
@@ -106,7 +117,11 @@ def expanding_climatology(
         ) / month_count[month]
         seasonal_mean[:, time] = month_mean[month]
         seasonal_departure[:, time] = values[:, time] - month_mean[month]
-    return mean, spread, seasonal_mean, seasonal_departure
+        state_minimum = np.minimum(state_minimum, values[:, time])
+        state_maximum = np.maximum(state_maximum, values[:, time])
+        minimum[:, time] = state_minimum
+        maximum[:, time] = state_maximum
+    return mean, spread, seasonal_mean, seasonal_departure, minimum, maximum
 
 
 def sigmoid(values: np.ndarray) -> np.ndarray:
@@ -436,16 +451,35 @@ def main() -> int:
                 "lightning_flash_rate",
             ):
                 raw = raw_fields[name]
-                mean, spread, seasonal_mean, seasonal_departure = (
-                    expanding_climatology(raw)
-                )
+                (
+                    mean,
+                    spread,
+                    seasonal_mean,
+                    seasonal_departure,
+                    expanding_minimum,
+                    expanding_maximum,
+                ) = expanding_climatology(raw)
                 previous_year = np.empty_like(raw)
                 previous_year[:, :12] = raw[:, :1]
                 previous_year[:, 12:] = raw[:, :-12]
+                trailing_minimum = np.empty_like(raw)
+                trailing_maximum = np.empty_like(raw)
+                for time in range(raw.shape[1]):
+                    start = max(0, time - 11)
+                    trailing_minimum[:, time] = raw[:, start : time + 1].min(
+                        axis=1
+                    )
+                    trailing_maximum[:, time] = raw[:, start : time + 1].max(
+                        axis=1
+                    )
                 names_list.extend(
                     (
                         f"{name}:expanding_mean",
                         f"{name}:expanding_std",
+                        f"{name}:expanding_min",
+                        f"{name}:expanding_max",
+                        f"{name}:trailing_12m_min",
+                        f"{name}:trailing_12m_max",
                         f"{name}:calendar_mean",
                         f"{name}:calendar_departure",
                         f"{name}:previous_year",
@@ -455,6 +489,10 @@ def main() -> int:
                     (
                         mean,
                         spread,
+                        expanding_minimum,
+                        expanding_maximum,
+                        trailing_minimum,
+                        trailing_maximum,
                         seasonal_mean,
                         seasonal_departure,
                         previous_year,
