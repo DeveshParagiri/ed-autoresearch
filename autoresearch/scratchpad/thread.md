@@ -3841,3 +3841,30 @@ whole-cell fit scored only .7289 at its weakest strength and declined monotonica
 All formulations and reversions are retained in commits `15c7037` through `2f91f0c`. The
 climatological gain was an averaging artifact, not deployable physics; no Optuna is justified.
 The active model is restored and reverified at proxy and official **.729**.
+
+
+### Entry 103: ecological capacity is the new coupled-ready official best
+
+Exact Shapley over 13 components was stopped after 81 of 8,192 subsets because the exhaustive
+run was disproportionate. Bounded leave-one-out checks show that spread, legacy, stubble, and
+pasture are inactive at four-decimal precision, while curing contributes about .0043, lag .0003,
+and soft-min is essential. Commit `629aa15` prunes the four inactive components with the proxy
+unchanged at .7290. A stochastic rain-event dry-window family then scored .7288 at both tested
+physical timescales and was rejected without tuning.
+
+The successful formulation uses one smooth local-state fire-capacity equation everywhere. Cold
+natural forest permits crown-fire amplification below the warm ignition threshold, antecedent
+fine fuel provides a bounded arid recovery, and productive rangeland loses contiguous fuel to
+grazing and fragmentation. Intermediate and isolated variants are preserved in `2c8c532` through
+`f8a3685`; the selected balance is `9157bba`. Official Overall is a new best **.730** (bias .774,
+RMSE .566, seasonal .835, spatial .907). Global area is 1.034 times observed, intact tropical
+closed canopy 1.074, boreal forest .508 instead of .215, and productive rangeland 1.061 instead
+of 1.840. The strong arid variant failed at .697 because the state was too spatially broad, so
+the arid term remains deliberately weak.
+
+The coupled audit passes. Halving every input after month 96 changes months 1-96 by normalized L1
+0.000000000 and maximum absolute 0.000000000. Perturbing all frozen ED state fields together by
+-50 percent changes area-weighted predictions 23.24 percent and total burned area to .8463 of
+baseline; +50 percent changes predictions 28.48 percent and total area to 1.2362. The response is
+sublinear in aggregate and finite, but materially dependent on coupled vegetation state as it
+should be. No Optuna was run because the structural gain is only one official millipoint.
