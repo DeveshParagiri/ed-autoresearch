@@ -79,9 +79,13 @@ def report(evaluator: GFED5Evaluator, label: str, prediction: np.ndarray) -> Non
 
 
 def main() -> int:
+    vpd_only = "--vpd-only" in sys.argv
     model = load_model()
     data = load_inputs(model.INPUTS)
-    incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
+    params = dict(model.PARAMS)
+    if vpd_only:
+        params["vpd_memory_w"] = 0.0
+    incumbent = validate_prediction(model.predict(data, params, None))
     cells = np.flatnonzero(load_land_mask().ravel())
     rows, cols = cells // 360, cells % 360
 
@@ -95,6 +99,8 @@ def main() -> int:
     lai = extract("leaf_area_index")
     annual_rain = extract("annual_precipitation")
     rangeland = extract("luh2_rangeland_fraction")
+    cropland = extract("luh2_cropland_fraction")
+    vpd = extract("vapor_pressure_deficit_mean")
     baseline = np.asarray(incumbent[:, rows, cols].T, dtype=np.float64)
 
     rain_memory = {months: running(rain, months) for months in (6.0, 12.0, 24.0)}
@@ -139,6 +145,7 @@ def main() -> int:
     opportunity_003 = sigmoid((share - 0.03) / 0.025)
     opportunity_008 = sigmoid((share - 0.08) / 0.025)
 
+    names = NAMES
     feature_fields = (
         dryness_departure[6.0],
         np.minimum(temperature_departure_6m, 0.0),
@@ -161,6 +168,36 @@ def main() -> int:
         opportunity_003 * rain_departure[12.0],
         opportunity_008,
     )
+    if vpd_only:
+        vpd_3m = running(vpd, 3.0)
+        vpd_24m = running(vpd, 24.0)
+        departure_3m = (vpd - vpd_3m) / (vpd + vpd_3m + 0.2)
+        departure_24m = (vpd - vpd_24m) / (vpd + vpd_24m + 0.2)
+        pulse = np.maximum(departure_3m, 0.0)
+        background = vpd_24m / (vpd_24m + 0.7)
+        seasonal_climate = sigmoid((annual_rain - 400.0) / 150.0) * sigmoid(
+            (1700.0 - annual_rain) / 250.0
+        )
+        names = (
+            "vpd_departure_3m",
+            "vpd_departure_3m_positive",
+            "vpd_departure_24m_negative",
+            "vpd_pulse_3m_x_fuel_bank",
+            "vpd_pulse_3m_x_seasonal_climate",
+            "vpd_pulse_3m_x_cropland",
+            "vpd_pulse_3m_x_opportunity",
+            "vpd_background_x_fuel_bank",
+        )
+        feature_fields = (
+            departure_3m,
+            pulse,
+            np.minimum(departure_24m, 0.0),
+            pulse * fuel_bank[12.0],
+            pulse * seasonal_climate,
+            pulse * cropland,
+            pulse * sigmoid((share - 0.05) / 0.025),
+            background * fuel_bank[12.0],
+        )
     x = np.column_stack([field.reshape(-1) for field in feature_fields]).astype(
         np.float32
     )
@@ -210,7 +247,7 @@ def main() -> int:
 
     regressor = PoissonRegressor(alpha=0.001, max_iter=1500, tol=1e-8)
     regressor.fit(standardized, y, sample_weight=weights)
-    print(f"ONLINE_GLM_NAMES={NAMES!r}", flush=True)
+    print(f"ONLINE_GLM_NAMES={names!r}", flush=True)
     print(f"ONLINE_GLM_INTERCEPT={regressor.intercept_!r}", flush=True)
     print(f"ONLINE_GLM_COEFFICIENTS={tuple(regressor.coef_)!r}", flush=True)
     print(f"ONLINE_GLM_CENTER={tuple(x_mean)!r}", flush=True)
