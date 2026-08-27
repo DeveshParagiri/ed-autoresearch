@@ -68,6 +68,7 @@ PARAMS = {'annual_scale': 1.73,
  'secondary_open_litter_release': 36.0,
  'secondary_woody_litter_store': 0.6,
  'secondary_woody_litter_release': 24.0,
+ 'fragmented_managed_recurrence_brake': 2.0,
  'conditional_allocation_w': 1.0,
  'cool_crop_brake': 4.5,
  'wet_forest_brake': 3.0,
@@ -2204,6 +2205,57 @@ def _secondary_fuel_litter_banks(
     )
 
 
+def _fragmented_managed_recurrence_brake(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Suppress recurrent fire in disconnected managed fuel.
+
+    Crop and urban fragmentation interrupt fire spread where a secondary-open
+    matrix does not reconnect the managed landscape. Suppression increases only
+    with trailing realized fire, so the term cannot deepen a zero-fire lock or
+    create a new fire source.
+    """
+    if "pathway_hazards" not in enabled:
+        return prediction
+    strength = float(
+        max(p.get("fragmented_managed_recurrence_brake", 0.0), 0.0)
+    )
+    if strength <= 0.0:
+        return prediction
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    trailing_hazard = _antecedent(hazard, alpha_12)
+    recurrence = trailing_hazard / (trailing_hazard + 0.01)
+
+    crop = np.clip(data["luh2_cropland_fraction"], 0.0, 1.0)
+    rangeland = np.clip(data["luh2_rangeland_fraction"], 0.0, 1.0)
+    pasture = np.clip(data["luh2_pasture_fraction"], 0.0, 1.0)
+    urban = np.clip(data["luh2_urban_fraction"], 0.0, 1.0)
+    managed = np.clip(rangeland + pasture + crop, 0.0, 1.0)
+    continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
+    fragmented = 1.0 - continuity
+
+    secondary = np.clip(data["secondary_vegetation_fraction"], 0.0, 1.0)
+    secondary_canopy = np.clip(data["secondary_canopy_height"], 0.0, None)
+    secondary_open = secondary * 8.0 / (secondary_canopy + 8.0)
+    absent_secondary_matrix = _falling(secondary_open, 30.0, 0.03)
+    suppression = (
+        fragmented
+        * managed
+        * recurrence
+        * absent_secondary_matrix
+    )
+    adjusted_hazard = hazard * np.exp(-strength * suppression)
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
 def predict(
     data: Mapping[str, np.ndarray],
     params: Mapping[str, float] | None = None,
@@ -2278,6 +2330,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _secondary_fuel_litter_banks(
+        prediction, data, fallback, enabled
+    )
+    prediction = _fragmented_managed_recurrence_brake(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
