@@ -169,6 +169,7 @@ def main() -> int:
     bin_top = "--bin-top" in sys.argv
     physical_tree = "--physical-tree" in sys.argv
     physical_ebm = "--physical-ebm" in sys.argv
+    causal_ebm = "--causal-ebm" in sys.argv
     annual_target_tree = "--annual-target-tree" in sys.argv
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     causal_climate_tree = "--causal-climate-tree" in sys.argv
@@ -395,6 +396,7 @@ def main() -> int:
         or bin_top
         or physical_tree
         or physical_ebm
+        or causal_ebm
         or annual_target_tree
         or seasonal_target_tree
         or causal_climate_tree
@@ -733,7 +735,7 @@ def main() -> int:
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
             report(evaluator, f"tensor GAM OOF strength={strength}", candidate)
         return 0
-    if physical_ebm:
+    if physical_ebm or causal_ebm:
         from interpret.glassbox import ExplainableBoostingRegressor
 
         out_of_fold = np.zeros_like(y)
@@ -742,23 +744,24 @@ def main() -> int:
         for fold in range(3):
             train = np.flatnonzero(folds != fold)
             held = np.flatnonzero(folds == fold)
-            if train.size > 200_000:
-                train = rng.choice(train, size=200_000, replace=False)
+            train_limit = 500_000 if causal_ebm else 200_000
+            if train.size > train_limit:
+                train = rng.choice(train, size=train_limit, replace=False)
             learner = ExplainableBoostingRegressor(
                 feature_names=list(names),
-                max_bins=64,
-                max_interaction_bins=24,
-                interactions=24,
+                max_bins=128 if causal_ebm else 64,
+                max_interaction_bins=32 if causal_ebm else 24,
+                interactions=96 if causal_ebm else 24,
                 validation_size=0.15,
-                outer_bags=2,
+                outer_bags=3 if causal_ebm else 2,
                 inner_bags=0,
                 learning_rate=0.04,
                 smoothing_rounds=100,
                 interaction_smoothing_rounds=50,
-                max_rounds=1200,
+                max_rounds=1800 if causal_ebm else 1200,
                 early_stopping_rounds=60,
                 min_samples_leaf=100,
-                max_leaves=3,
+                max_leaves=5 if causal_ebm else 3,
                 objective="rmse",
                 n_jobs=-2,
                 random_state=811 + fold,
