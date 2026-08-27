@@ -40,10 +40,10 @@ Repeat indefinitely:
 2. Use global metrics, regional, maps, seasonal cycles, ablations to identify physical weaknesses.
 3. Form hypotheses based on thinking about fire from first principles in relation to the inputs available, along with your inputs on ablations, figures and past evals to modify `model.py`.
 4. Run Optuna only after a new mechanism produces a meaningful model-level step, then copy its winning coefficients into `PARAMS`. Do not use tuning to rescue a structurally flat or physically rejected formulation.
-5. Commit `model.py` with a concise message, then run evaluation once with a concise, concrete description of the hypothesis.
+5. Commit a mechanistic `model.py` with a concise message, then run evaluation once with a concise, concrete description of the hypothesis. Official evaluation is reserved for mechanistic candidates; never run it on an ML, tree, fitted GAM, benchmark-calibration, or other diagnostic intermediate because it would write a non-candidate into `results.tsv` and `progress.png`.
 6. Inspect all returned evidence, decide whether to continue, revise, combine, or abandon the line, and begin the next experiment. To restore any recorded one-file model, run `git restore --source COMMIT -- model.py` from this directory.
 
-Every distinct `model.py` formulation that reaches a proxy score is an experiment and must be committed, including intermediate and non-improving results. Restore the objective-best formulation in a later explicit commit rather than erasing a rejected experiment from history.
+Every distinct mechanistic `model.py` formulation that reaches a proxy score is an experiment and must be committed, including intermediate and non-improving results. Restore the mechanistic objective-best formulation in a later explicit commit rather than erasing a rejected experiment from history. Keep ML and GAM work in `scratchpad/` as diagnostic evidence only: it may identify response shapes and interactions, but its fitted surface must never be installed or committed as canonical `model.py` and must never receive an official evaluation.
 
 ## Scientific judgment
 

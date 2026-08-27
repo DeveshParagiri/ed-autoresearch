@@ -3989,3 +3989,21 @@ of observed and intact tropical closed canopy is a plausible .931, but Morocco i
 Commit `9a4a7cc` therefore restores the exact .738 mechanistic model. Subsequent ML is
 restricted to diagnosis and distillation; only interpretable ecological equations may
 enter `model.py`.
+
+
+### Entry 110: filtered GAM crosses .8 diagnostically; official boundary tightened
+
+A wide causal GAM using the 19 coupled-valid pointwise inputs and causal local state
+reached proxy .8063. Removing every interaction containing urban fraction retained
+proxy **.8017** with 130 smooth one-variable curves and 160 pair surfaces. This is a
+useful map of missing conditional physics, but it is still a benchmark-fitted surface,
+not the ED fire mechanism. Its temporary checkpoint `2023d7e` received no official
+evaluation, and `fdfe0f9` restores the exact .738 mechanistic model.
+
+The research boundary is now explicit. ML, trees, and fitted GAMs remain diagnostic
+scratch work and may not enter canonical `model.py` or receive `ar evaluate`. Every
+mechanistic candidate that reaches a proxy, including an intermediate or non-improving
+one, is still committed and restored explicitly if rejected. Official evaluation is
+run only on those mechanistic commits so `results.tsv` and `progress.png` represent
+actual ED-fire candidates. The next step is to compress the GAM's repeated patterns
+into globally shared fuel, curing, ignition, management, and fire-return equations.
