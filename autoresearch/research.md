@@ -6,6 +6,8 @@ Improve `model.py` as a mechanistic model of monthly burned area for fire. Your 
 
 Coupled-ready candidates must be pointwise across grid cells because ED sites run independently: do not use neighbour or other cross-cell operations. Use only predictors marked coupled-valid in `inputs/README.md`.
 
+They must also be prefix-invariant in time: changing any future input must not change an earlier prediction. Full-period climatologies, future-normalized seasonal cycles, and initial states computed from the completed record are offline diagnostics only, not coupled-ready mechanisms.
+
 Official Overall is necessary but not sufficient evidence of a better model. Before promoting a candidate, inspect regional breadth, spatial maps, seasonal cycles, global burned area, and ecological plausibility across high- and low-fire land-cover regimes. Reject gains that depend on implausible regional compensation, such as severe false burning in closed-canopy forest, even when the global scalar improves; diagnose such failures by general biome or observable land state rather than adding a geographic mask or region-specific correction.
 
 Distinct regional ecology may use distinct mechanisms, but they must be smooth mathematical functions of local observable state with globally shared coefficients. Do not dispatch on region labels or coordinate boxes, use region-specific coefficient tables, or implement geographic `if`/`else` branches.
@@ -37,7 +39,7 @@ Repeat indefinitely:
 1. Read `results.tsv` and inspect the current model. The highest recorded three-decimal Overall is the "objective best" so far, but the current model may be exploring a different line. You are free to try any other model directions from first-principles thinking.
 2. Use global metrics, regional, maps, seasonal cycles, ablations to identify physical weaknesses.
 3. Form hypotheses based on thinking about fire from first principles in relation to the inputs available, along with your inputs on ablations, figures and past evals to modify `model.py`.
-4. Run Optuna and copy its winning coefficients into `PARAMS` .
+4. Run Optuna only after a new mechanism produces a meaningful model-level step, then copy its winning coefficients into `PARAMS`. Do not use tuning to rescue a structurally flat or physically rejected formulation.
 5. Commit `model.py` with a concise message, then run evaluation once with a concise, concrete description of the hypothesis.
 6. Inspect all returned evidence, decide whether to continue, revise, combine, or abandon the line, and begin the next experiment. To restore any recorded one-file model, run `git restore --source COMMIT -- model.py` from this directory.
 

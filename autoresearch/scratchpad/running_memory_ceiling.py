@@ -203,14 +203,18 @@ def main() -> int:
         candidate = np.tile(candidate_cycle, (16, 1, 1)).astype(np.float32)
         report(evaluator, f"running-memory HGB blend={blend:.2f}", candidate)
 
+    rng = np.random.default_rng(469)
+    importance_rows = rng.choice(
+        x.shape[0], size=min(30000, x.shape[0]), replace=False
+    )
     importance = permutation_importance(
         learner,
-        x,
-        y,
+        x[importance_rows],
+        y[importance_rows],
         scoring="neg_mean_squared_error",
         n_repeats=2,
         random_state=469,
-        sample_weight=weights,
+        sample_weight=weights[importance_rows],
     )
     print("top running-memory features", flush=True)
     for index in np.argsort(importance.importances_mean)[::-1][:40]:

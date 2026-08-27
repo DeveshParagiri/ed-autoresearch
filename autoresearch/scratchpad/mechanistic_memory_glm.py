@@ -58,7 +58,13 @@ def main() -> int:
     incumbent = validate_prediction(model.predict(data, dict(model.PARAMS), None))
     incumbent_cycle = incumbent.reshape(16, 12, 180, 360).mean(axis=0)
     incumbent_annual = incumbent_cycle.sum(axis=0)
-    incumbent_alloc = incumbent_cycle / (incumbent_annual[None, ...] + 1e-12)
+    incumbent_share = np.empty_like(incumbent, dtype=np.float64)
+    for time in range(incumbent.shape[0]):
+        start = max(0, time - 11)
+        trailing = incumbent[start:time + 1].sum(axis=0)
+        trailing *= 12.0 / (time - start + 1)
+        incumbent_share[time] = incumbent[time] / (trailing + 1e-12)
+    incumbent_alloc = incumbent_share.reshape(16, 12, 180, 360).mean(axis=0)
 
     with Dataset(GFED5_PATH) as dataset:
         reference = np.asarray(dataset.variables["burntArea"][:192])
@@ -102,12 +108,7 @@ def main() -> int:
         for name, states in memories.items()
     }
     static = {
-        name: np.repeat(
-            np.asarray(data[name], dtype=np.float64)
-            .reshape(16, 12, 180, 360)
-            .mean(axis=(0, 1))[cell_rows, cell_cols],
-            12,
-        )
+        name: cycle(np.asarray(data[name], dtype=np.float64))[months, rows, cols]
         for name in (
             "air_temperature",
             "annual_precipitation",
@@ -249,7 +250,8 @@ def main() -> int:
 
     rng = np.random.default_rng(479)
     folds = np.repeat(rng.integers(0, 3, size=cells.size), 12)
-    for alpha in (0.03, 0.01, 0.003, 0.001):
+    alpha_values = (0.001,) if "--reduce" in sys.argv else (0.03, 0.01, 0.003, 0.001)
+    for alpha in alpha_values:
         out_of_fold = np.zeros_like(y)
         coefficients: list[np.ndarray] = []
         for fold in range(3):
@@ -274,11 +276,60 @@ def main() -> int:
                 candidate_from(out_of_fold, strength),
             )
 
-    regressor = PoissonRegressor(alpha=0.003, max_iter=2000, tol=1e-8)
+    regressor = PoissonRegressor(alpha=0.001, max_iter=2000, tol=1e-8)
     regressor.fit(standardized, y, sample_weight=weights)
     print("top standardized coefficients", flush=True)
     for index in np.argsort(np.abs(regressor.coef_))[::-1][:60]:
         print(f"{names[index]}\t{regressor.coef_[index]:+.9f}", flush=True)
+    if "--reduce" in sys.argv:
+        ranking = np.argsort(np.abs(regressor.coef_))[::-1]
+        for count in (20, 40, 80):
+            selected = np.sort(ranking[:count])
+            out_of_fold = np.zeros_like(y)
+            for fold in range(3):
+                train = folds != fold
+                held = ~train
+                reduced = PoissonRegressor(
+                    alpha=0.001, max_iter=1500, tol=1e-8
+                )
+                reduced.fit(
+                    standardized[train][:, selected],
+                    y[train],
+                    sample_weight=weights[train],
+                )
+                out_of_fold[held] = reduced.predict(
+                    standardized[held][:, selected]
+                )
+            for strength in (0.5, 0.75):
+                report(
+                    evaluator,
+                    f"three-fold OOF reduced={count} strength={strength}",
+                    candidate_from(out_of_fold, strength),
+                )
+            if count == 20:
+                reduced = PoissonRegressor(
+                    alpha=0.001, max_iter=2000, tol=1e-8
+                )
+                reduced.fit(
+                    standardized[:, selected], y, sample_weight=weights
+                )
+                print(
+                    f"CAUSAL_GLM_NAMES={tuple(names[index] for index in selected)!r}",
+                    flush=True,
+                )
+                print(f"CAUSAL_GLM_INTERCEPT={reduced.intercept_!r}", flush=True)
+                print(
+                    f"CAUSAL_GLM_COEFFICIENTS={tuple(reduced.coef_)!r}",
+                    flush=True,
+                )
+                print(
+                    f"CAUSAL_GLM_CENTER={tuple(x_mean[selected])!r}",
+                    flush=True,
+                )
+                print(
+                    f"CAUSAL_GLM_SCALE={tuple(x_scale[selected])!r}",
+                    flush=True,
+                )
     return 0
 
 

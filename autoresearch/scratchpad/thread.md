@@ -3760,3 +3760,28 @@ ceiling remains below .8, so fitting the grid harder would not justify a target 
 dense main effects reach about .750 OOF and individual smooth tensors add at most .0006; a causal
 burn-scar reservoir also fails, dropping to .726 at its weakest setting. The next work must improve
 the causal state representation or add a defensible missing mechanism, not tune leaked heads.
+
+
+### Entry 99: compact causal interactions recover the strict baseline to .726
+
+Recalibrating the annual scale after removing future-normalized closures raises the strict model
+from .666 to official .709 at scale 1.60. Full causal memory raises it to .717, while removing the
+warm-pasture boost and strengthening the smooth cool-cropland brake yields official .718. The
+audit improves at the same time: global area is 1.078 times observed, intact tropical closed
+canopy 1.269, cropland 1.482, rangeland 1.582, and Australia peaks within one month of observed.
+
+A 150-term named multiplicative residual GLM reaches .7283 in whole-cell OOF with coefficient
+correlations .986-.998. Replacing full-period regime means with current state and climatological
+opportunity with a trailing annual share preserves the result. A compact 20-term equation retains
+.7253 OOF using rainfall, GPP, temperature and lightning reservoirs, smooth climate/land gates,
+and incumbent opportunity saturation. Its first online implementation loses annual mass despite
+raising seasonal skill, so a focused causal calibration selects annual scale 1.85 and interaction
+strength .35. Commit `47c6ebd` is official **.726** (bias .770, RMSE .564, seasonal .828, spatial
+.902), and the 50-percent future perturbation still changes prior predictions by exactly zero.
+
+The physical audit remains acceptable but incomplete: global area is 1.123, intact tropical
+closed canopy 1.276, DRC .823, and Republic of Congo .888 times observed. Australia now peaks in
+the correct month but burns only .501; boreal forest is .228 and arid low fuel .185, while crop
+and rangeland remain high at 1.561 and 1.640. These broad state-defined deficits, plus weak BONA
+and TENA seasonality, are the next mechanistic targets. Optuna remains deferred because the held-
+out causal ceiling is still about .75, not because the current scalar settings are untuned.
