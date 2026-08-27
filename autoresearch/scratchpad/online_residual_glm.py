@@ -158,6 +158,7 @@ def main() -> int:
     seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     causal_climate_tree = "--causal-climate-tree" in sys.argv
     deep_tree = "--deep-tree" in sys.argv
+    ultra_tree = "--ultra-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -832,10 +833,22 @@ def main() -> int:
                 train = rng.choice(train, size=500_000, replace=False)
             regressor = HistGradientBoostingRegressor(
                 loss="poisson",
-                learning_rate=0.06 if deep_tree else 0.08,
-                max_iter=300 if deep_tree else (250 if shallow_tree else 100),
-                max_leaf_nodes=64 if deep_tree else (4 if shallow_tree else 31),
-                min_samples_leaf=250 if deep_tree else 500,
+                learning_rate=(
+                    0.05 if ultra_tree else (0.06 if deep_tree else 0.08)
+                ),
+                max_iter=(
+                    500
+                    if ultra_tree
+                    else (300 if deep_tree else (250 if shallow_tree else 100))
+                ),
+                max_leaf_nodes=(
+                    128
+                    if ultra_tree
+                    else (64 if deep_tree else (4 if shallow_tree else 31))
+                ),
+                min_samples_leaf=(
+                    100 if ultra_tree else (250 if deep_tree else 500)
+                ),
                 l2_regularization=2.5,
                 early_stopping=True,
                 validation_fraction=0.1,
