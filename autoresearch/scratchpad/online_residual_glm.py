@@ -126,6 +126,7 @@ def main() -> int:
     physical_tree = "--physical-tree" in sys.argv
     physical_ebm = "--physical-ebm" in sys.argv
     annual_target_tree = "--annual-target-tree" in sys.argv
+    seasonal_target_tree = "--seasonal-target-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -342,6 +343,7 @@ def main() -> int:
         or physical_tree
         or physical_ebm
         or annual_target_tree
+        or seasonal_target_tree
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -382,6 +384,18 @@ def main() -> int:
         observed_annual = observed.reshape(16, 12, 180, 360).mean(axis=0).sum(axis=0)
         target = np.repeat(observed_annual[rows, cols], baseline.shape[1])
         offset = trailing.reshape(-1) + 1e-4
+    elif seasonal_target_tree:
+        observed_cells = np.asarray(
+            observed[:, rows, cols].T, dtype=np.float64
+        )
+        observed_cumulative = np.cumsum(observed_cells, axis=1)
+        observed_trailing = observed_cumulative.copy()
+        observed_trailing[:, 12:] -= observed_cumulative[:, :-12]
+        observed_trailing *= 12.0 / exposure
+        target = (
+            observed_cells / (observed_trailing + 1e-8)
+        ).reshape(-1)
+        offset = share.reshape(-1) + 1e-5
     else:
         target = np.asarray(observed[:, rows, cols].T, dtype=np.float64).reshape(-1)
         offset = baseline.reshape(-1) + 1e-4
@@ -734,7 +748,13 @@ def main() -> int:
             label = "interaction GAM" if interaction_gam else "broad GAM"
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
-    if broad_tree or shallow_tree or physical_tree or annual_target_tree:
+    if (
+        broad_tree
+        or shallow_tree
+        or physical_tree
+        or annual_target_tree
+        or seasonal_target_tree
+    ):
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
         held_for_importance: np.ndarray | None = None
@@ -773,12 +793,32 @@ def main() -> int:
                 np.clip(out_of_fold.reshape(baseline.shape), 1e-6, 1e6),
                 strength,
             )
+            if seasonal_target_tree:
+                alpha = 1.0 - np.exp(-1.0 / 12.0)
+                baseline_state = baseline[:, 0].copy()
+                corrected_state = corrected[:, 0].copy()
+                allocated = np.empty_like(corrected)
+                for time in range(corrected.shape[1]):
+                    baseline_state += alpha * (
+                        baseline[:, time] - baseline_state
+                    )
+                    corrected_state += alpha * (
+                        corrected[:, time] - corrected_state
+                    )
+                    allocated[:, time] = corrected[:, time] * baseline_state / (
+                        corrected_state + 1e-12
+                    )
+                corrected = allocated
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
             label = (
                 "annual-target HGB"
                 if annual_target_tree
-                else ("shallow HGB" if shallow_tree else "broad HGB")
+                else (
+                    "seasonal-target HGB"
+                    if seasonal_target_tree
+                    else ("shallow HGB" if shallow_tree else "broad HGB")
+                )
             )
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         assert trained is not None and held_for_importance is not None
