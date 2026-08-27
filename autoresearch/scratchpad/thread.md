@@ -4099,3 +4099,46 @@ rain departure with antecedent rain, and rain departure with lightning anomaly.
 This is diagnostic evidence for a globally shared moisture-memory combustion
 allocator, not a model candidate or official score. Optuna remains deferred until
 that explicit mechanism produces a larger step.
+
+
+### Entry 115: pathway footprint and signed annual state reach a clean official .706
+
+The surface-bank line was extended by separating the footprint of surface fire
+from woody and residue hazards. A single globally shared equation scales only the
+surface pathway by continuous open fuel and by saturating natural-lightning or
+managed-ignition access. It contains no region, coordinate, neighbour, invalid
+forcing, or fitted response surface. The broad formulation at `31bb236` raised the
+official Overall from .696 to **.702**, chiefly by lifting spatial skill from .844
+to .863 while preserving seasonal skill at .846. Focused Optuna was run only after
+that structural step and changed five footprint coefficients; `330c9ce` evaluated
+officially at **.703**, confirming that tuning was only a finishing gain.
+
+Operating-point pruning then showed that the older universal conditional allocator
+duplicated the new surface bank. Removing it in `51a23c1` improved the exact proxy,
+whereas removing the bank reduced Overall by about .003. A stronger bank-release
+rate failed and was explicitly restored in `9144ae6`.
+
+A spatial-block annual diagnostic then exposed a signed state error. Persistent
+warm, humid, natural open systems with high incumbent fire and unusually low
+lightning variability were overburned, while cold semiarid open continental systems
+with very low incumbent fire were zero-locked. The corresponding mechanistic
+closure is
+
+    h' = h exp(-5 W) + 0.10 C,
+
+where `W` is the smooth intersection of prior annual fire, warmth, annual moisture,
+open natural high-biomass fuel, and low lightning variability, and `C` is a bounded
+thaw-season source requiring low prior fire, cold semiarid climate, open fuel,
+combustibility, and a steppe or continental-litter carrier. Both use only causal
+site-local state and globally shared coefficients. The warm brake is `15e6fe8`; the
+fuel-gated cold source is `b43fee8`.
+
+The selected candidate evaluates officially at **.706** (bias .749, RMSE .535,
+seasonal .846, spatial .865). Ten of fourteen ILAMB regions improve relative to
+.703. Global burned area is 1.039 times observed; intact tropical closed canopy is
+.864, tropical open woodland .970, productive rangeland .937, cropland 1.014,
+boreal forest .824, and arid low fuel 1.318. Doubling the cold source produced only
+a negligible scalar gain while overburning Mongolia and arid land, so it was
+rejected on ecological grounds. The remaining score headroom is approximately
+equal between annual-map and seasonal-cycle structure; another scalar tune cannot
+plausibly supply the jump to .72, let alone .8.
