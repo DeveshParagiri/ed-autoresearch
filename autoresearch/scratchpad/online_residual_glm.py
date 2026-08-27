@@ -125,6 +125,7 @@ def main() -> int:
     bin_top = "--bin-top" in sys.argv
     physical_tree = "--physical-tree" in sys.argv
     physical_ebm = "--physical-ebm" in sys.argv
+    annual_target_tree = "--annual-target-tree" in sys.argv
     bin_physical = "--bin-physical" in sys.argv
     model = load_model()
     requested = list(model.INPUTS)
@@ -340,6 +341,7 @@ def main() -> int:
         or bin_top
         or physical_tree
         or physical_ebm
+        or annual_target_tree
         or bin_physical
     ):
         names_list: list[str] = ["incumbent", "trailing_annual", "fire_share"]
@@ -376,8 +378,13 @@ def main() -> int:
     with Dataset(GFED5_PATH) as dataset:
         reference = np.asarray(dataset.variables["burntArea"][:192])
     observed = reference.reshape(192, 180, 2, 360, 2).mean(axis=(2, 4)) / 100.0
-    target = np.asarray(observed[:, rows, cols].T, dtype=np.float64).reshape(-1)
-    offset = baseline.reshape(-1) + 1e-4
+    if annual_target_tree:
+        observed_annual = observed.reshape(16, 12, 180, 360).mean(axis=0).sum(axis=0)
+        target = np.repeat(observed_annual[rows, cols], baseline.shape[1])
+        offset = trailing.reshape(-1) + 1e-4
+    else:
+        target = np.asarray(observed[:, rows, cols].T, dtype=np.float64).reshape(-1)
+        offset = baseline.reshape(-1) + 1e-4
     y = target / offset
     weights = offset + float(offset.mean()) * 0.02
     x_mean = np.average(x, axis=0, weights=weights)
@@ -727,7 +734,7 @@ def main() -> int:
             label = "interaction GAM" if interaction_gam else "broad GAM"
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         return 0
-    if broad_tree or shallow_tree or physical_tree:
+    if broad_tree or shallow_tree or physical_tree or annual_target_tree:
         out_of_fold = np.zeros_like(y)
         trained: HistGradientBoostingRegressor | None = None
         held_for_importance: np.ndarray | None = None
@@ -768,7 +775,11 @@ def main() -> int:
             )
             candidate = incumbent.copy()
             candidate[:, rows, cols] = np.clip(corrected.T, 0.0, 1.0)
-            label = "shallow HGB" if shallow_tree else "broad HGB"
+            label = (
+                "annual-target HGB"
+                if annual_target_tree
+                else ("shallow HGB" if shallow_tree else "broad HGB")
+            )
             report(evaluator, f"{label} OOF strength={strength}", candidate)
         assert trained is not None and held_for_importance is not None
         importance_rows = rng.choice(
