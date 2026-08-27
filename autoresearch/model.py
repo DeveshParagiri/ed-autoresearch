@@ -40,7 +40,6 @@ SEARCH_SPACE: dict[str, dict[str, Any]] = {
 
 PARAMS = {'annual_scale': 1.85,
  'annual_residual_w': 1.0,
- 'annual_memory_months': 24.0,
  'seasonal_residual_w': 0.0,
  'annual_intact_half': 7.27782641589826,
  'annual_intact_w': 0.0,
@@ -1155,9 +1154,8 @@ def _coupled_annual_correction(
 
     coefficients = _COUPLED_ANNUAL_COEFFICIENTS
     corrected = np.empty_like(prediction, dtype=np.float64)
-    memory_months = max(int(round(p.get("annual_memory_months", 12.0))), 1)
     for time in range(prediction.shape[0]):
-        start = max(0, time - memory_months + 1)
+        start = max(0, time - 11)
         window = slice(start, time + 1)
         window_months = time - start + 1
         incumbent = np.asarray(prediction[window], dtype=np.float64).sum(axis=0)
