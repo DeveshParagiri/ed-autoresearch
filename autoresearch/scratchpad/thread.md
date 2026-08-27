@@ -5347,3 +5347,17 @@ Official evaluation remains **.719** after rounding, with bias .757, RMSE .547, 
 .862, and spatial .882. The exact gain is small but physically cleaner and improves the
 major ecological ratios documented in Entry 175 without a new pathology. The faithful
 seventh ledger row and progress figure are retained; no Optuna follows.
+
+
+### Entry 178: cold-forest and rangeland capacity cannot move downstream
+
+The unchanged cold-forest amplification and productive-rangeland brake were inserted at
+eight stages. Moving the capacity before pathway event scaling is effectively neutral at
+.719022569, only +.000000883, despite improving 10 of 14 regions. Its current position
+after event scaling and ecological brakes is therefore already optimal to numerical scale.
+
+Every downstream placement loses globally: .718057 after seasonal rain capacity, .717575
+after the local footprint, .717428 after annual closure, and .716901 at the end. Late
+capacity substantially improves BONA and the tropical Americas but costs Australia,
+NHAF, and SHAF, revealing a strong geographic compensation rather than a better global
+mechanism. No canonical edit, tuning, or official evaluation follows.
