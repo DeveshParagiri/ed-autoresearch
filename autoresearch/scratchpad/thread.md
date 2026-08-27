@@ -4320,3 +4320,31 @@ moved bounded incumbent hazard into smooth one-to-four-month dry-age windows but
 peaked at .716760, sharpening the wrong phase. Six related pathway timing states
 were also flat. These failures, plus the African waveform audit, show that a more
 aggressive seasonal concentrator is not the missing structural step by itself.
+
+
+### Entry 122: the .8 gap requires joint map and cycle physics
+
+The pruned clean model at `de20b77` scores exact proxy **.716889**; the recorded
+official best remains **.717** at `b775a50`. A refreshed target-oracle decomposition
+shows why isolated corrections have stalled. Replacing only the normalized seasonal
+cycle while retaining the current annual map reaches .7743. Replacing only the annual
+map while retaining the current cycle reaches .7848. Correcting half of each oracle
+gap reaches .8102, so the remaining path is joint annual-propensity and monthly-cycle
+physics rather than a scalar tune. Perfect amplitude matching alone raises RMSE from
+.5456 to only .6124; 69% of the normalized centered-cycle error remains as shape.
+
+Four independent structural probes were rejected on the pinned model. A produced-fuel
+stock with explicit production, decay, consumption, ignition and humid-canopy safeguards
+peaked at .716979 (+.000091). A combustibility-times-duration-squared event footprint
+peaked at .716877, while replacing the static footprint fell to .716026 after downstream
+reservoirs. A direct pathway factorization into occurrence times spread peaked at
+.716824, and its earlier insertion reached .715612. Finally, four broad ecological
+capacity gates failed held-out sign checks: warm seasonal-open and cold low-frequency
+states were already overburned on all blocks, while the proposed managed brake targeted
+a consistently underburned state. No formulation was promoted or evaluated officially.
+
+Together these failures show that the current downstream stack already duplicates
+fuel persistence, event footprint and occurrence-spread factorization. The next change
+must replace the stage where chronic shoulder fire and muted peaks first arise, using
+one causal state that alters both annual propensity and within-year allocation. Optuna
+remains deferred because none of these families produced a meaningful structural step.
