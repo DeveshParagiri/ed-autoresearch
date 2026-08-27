@@ -4909,3 +4909,19 @@ bounded rain-built capacity only when recurrence is low. At strength .25, held a
 RMSE improves 1.34070 to 1.33115 in all four folds; .5 improves further to 1.32395, with
 small cycle gains and bounded sampled ecology. The safer .25 version is the sole candidate
 justified for exact testing on the newly pruned canonical model.
+
+
+### Entry 151: official ledger now contains only prefix-causal candidates
+
+Every retained official row was audited against its exact committed `model.py`. Fourteen
+rows, from historical Models C and D through `d62a22b`, directly consumed the packaged
+completed-calendar-year precipitation field, so their early-month predictions depended on
+later rainfall. They were mechanistic experiments, not GAM or ML surfaces, but they fail
+the current coupled prefix-causality contract and are removed from `results.tsv`.
+
+The three retained rows begin with `75fe945`, which reconstructs annual-scale moisture as
+`12*EMA12(monthly precipitation)`, followed by the rare natural-onset and pruned arid-
+capacity improvements. All commits remain in Git history. No retained row contains active
+GAM/ML residuals, geographic or regional dispatch, neighbours, invalid modern forcings,
+benchmark-derived spatial tables, or full-record reductions. `progress.png` is regenerated
+from these three faithful official evaluations.
