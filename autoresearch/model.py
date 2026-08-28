@@ -85,6 +85,8 @@ PARAMS = {'annual_scale': 1.73,
  'dead_fuel_pool_w': 1.0,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
+ 'litter_timing_strength': 0.2,
+ 'litter_timing_months': 24.0,
  'greenup_brake': 2.0,
  'rare_ignition_scale': 0.02,
  'rain_pulse_ignition_scale': 0.24,
@@ -1478,6 +1480,137 @@ def _dead_fuel_pool_response(
     return np.asarray(np.clip(allocated, 0.0, 1.0), dtype=np.float32)
 
 
+def _live_dead_litter_timing(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Allocate final hazard using a causal live-to-dead litter balance.
+
+    Fast herbaceous and slow woody live fuel turn over into separate dead
+    litter stores. Wet warmth decomposes those stores, while local combustion
+    opportunity removes the dead mass that burns. The dead-to-live balance
+    modifies only timing relative to its own causal slow state, so it cannot
+    add a persistent cell-specific capacity or use a completed-year mean.
+    Every coefficient and time constant is shared globally.
+    """
+    if "dead_fuel_pool" not in enabled:
+        return prediction
+    strength = float(max(p.get("litter_timing_strength", 0.0), 0.0))
+    if strength <= 0.0:
+        return prediction
+    timing_months = float(
+        np.clip(p.get("litter_timing_months", 24.0), 1.0, 120.0)
+    )
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    lai = np.clip(
+        np.asarray(data["leaf_area_index"], dtype=np.float64), 0.0, None
+    )
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    natural_canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    secondary_canopy = np.clip(
+        np.asarray(data["secondary_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    canopy = np.maximum(natural_canopy, secondary_canopy)
+    hazard = -np.log1p(
+        -np.clip(np.asarray(prediction, dtype=np.float64), 0.0, 1.0 - 1e-7)
+    )
+
+    productivity = gpp / (gpp + 0.35)
+    leaf_support = lai / (lai + 2.0)
+    woody_structure = (
+        canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+    )
+    open_structure = 8.0 / (canopy + 8.0)
+    fast_target = productivity * leaf_support * open_structure
+    slow_target = productivity * leaf_support * woody_structure
+    fine_share = open_structure * leaf_support / (
+        0.05 + open_structure * leaf_support + woody_structure
+    )
+
+    gpp12 = _antecedent(gpp, 1.0 - np.exp(-1.0 / 12.0))
+    old_fine = gpp12 / (gpp12 + 0.35)
+    lai3 = _antecedent(lai, 1.0 - np.exp(-1.0 / 3.0))
+    leaf_fall = np.maximum((lai3 - lai) / (lai3 + lai + 0.5), 0.0)
+    warm = _rising(temperature, 1.0 / 4.0, 10.0)
+    wet = rain / (rain + 30.0)
+    combustion = (
+        dryness / (dryness + 500.0)
+        / (1.0 + rain / 35.0)
+        * _rising(temperature, 1.0 / 3.0, 5.0)
+    )
+
+    fast_turn_base = 1.0 - np.exp(-1.0 / 3.0)
+    slow_turn_base = 1.0 - np.exp(-1.0 / 18.0)
+    timing_alpha = 1.0 - np.exp(-1.0 / timing_months)
+    live_fast = np.zeros_like(hazard[0])
+    live_slow = np.zeros_like(hazard[0])
+    dead_fast = np.zeros_like(hazard[0])
+    dead_slow = np.zeros_like(hazard[0])
+    slow_log_factor = None
+    adjusted = np.empty_like(hazard)
+
+    for time in range(hazard.shape[0]):
+        live_fast += fast_turn_base * fast_target[time]
+        live_slow += slow_turn_base * slow_target[time]
+
+        fast_turn = 1.0 - np.exp(-(1.0 / 3.0 + 1.5 * leaf_fall[time]))
+        slow_turn = 1.0 - np.exp(-(1.0 / 18.0 + 0.5 * leaf_fall[time]))
+        fast_transfer = live_fast * fast_turn
+        slow_transfer = live_slow * slow_turn
+        live_fast -= fast_transfer
+        live_slow -= slow_transfer
+
+        environment = 0.25 + 1.5 * warm[time] * wet[time]
+        fast_decay = 1.0 - np.exp(-environment / 6.0)
+        slow_decay = 1.0 - np.exp(-environment / 36.0)
+        dead_fast = dead_fast * (1.0 - fast_decay) + fast_transfer
+        dead_slow = dead_slow * (1.0 - slow_decay) + slow_transfer
+
+        fast_ready = dead_fast / (dead_fast + live_fast + 0.05)
+        slow_ready = dead_slow / (dead_slow + live_slow + 0.10)
+        litter_load = 0.75 * fast_ready + 0.25 * slow_ready
+        replacement = (litter_load + 0.05) / (old_fine[time] + 0.05)
+        factor = np.clip(
+            1.0
+            + strength * fine_share[time] * (replacement - 1.0),
+            0.25,
+            4.0,
+        )
+        log_factor = np.log(factor)
+        if slow_log_factor is None:
+            slow_log_factor = log_factor.copy()
+        slow_log_factor += timing_alpha * (log_factor - slow_log_factor)
+        timing_factor = factor / np.exp(slow_log_factor)
+        adjusted[time] = hazard[time] * timing_factor
+
+        burn_pressure = 1.0 - np.exp(
+            -2.0
+            * hazard[time]
+            / (hazard[time] + 0.04)
+            * combustion[time]
+        )
+        dead_fast *= 1.0 - burn_pressure
+        dead_slow *= np.exp(-0.35 * burn_pressure)
+
+    return np.asarray(
+        -np.expm1(-np.clip(adjusted, 0.0, 50.0)), dtype=np.float32
+    )
+
+
 def _seasonal_rainfall_capacity(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
@@ -2740,6 +2873,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _ignition_combustibility_arrival_order(
+        prediction, data, fallback, enabled
+    )
+    prediction = _live_dead_litter_timing(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
