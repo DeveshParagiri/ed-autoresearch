@@ -6444,3 +6444,22 @@ closed, boreal, and tropical-open overburn. It also recapitulates the failed Rot
 Entry 218: true fuel-bed packing requires load, bed depth, particle density, and particle geometry
 that the current aggregate inputs do not identify. No exact, canonical, official, or Optuna work
 follows.
+
+
+### Entry 234: phase-anchored depletion has the right sign but negligible leverage
+
+A causal falling-phase selector tests whether fuel consumption should suppress only the declining
+limb of an active fire season. When litter support and incumbent hazard both turn downward, a
+bounded depletion exposure accumulates prior surface burn and fuel readiness along the contiguous
+decline; hazard is multiplied by `exp(-kappa E)`, with the state reset on any rise. Rising and
+local-maximum months remain exactly unchanged, future-prefix mutation is zero, and fixed `kappa`
+values .05, .10, and .20 are tested without hazard storage or later release.
+
+All three brackets improve centered-cycle loss in every held-cell fold while preserving each fold's
+peak month. The phase-safe .10 bracket improves exact Overall only from .720105466 to
+**.720112320**, a +.000006854 change: RMSE rises .000038108 and seasonal .000005446, while spatial
+falls .000050784. Annual loss worsens in all four folds, raw-cycle loss reverses in two, and two of
+4,452 selected cell climatological peaks move. Ecology remains bounded, but the gain is far below a
+meaningful architectural step and does not clear the usual all-loss evidence. The diagnostic
+supports post-peak asymmetry but rejects this aggregate grid-cell depletion proxy for canonical,
+official, or Optuna work.
