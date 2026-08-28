@@ -6426,3 +6426,21 @@ ecology also increases boreal and tropical-open overprediction. No bracket clear
 and ecology evidence, so exact, canonical, official, and Optuna work are skipped. LAI can constrain
 exposed live area, but it does not observe dead leaf area, fuel diameter, dry matter, harvest
 removal, or rapid litter wetting; surface-area weighting alone cannot reconstruct those missing states.
+
+
+### Entry 233: a nonmonotonic fuel-bed packing proxy duplicates existing capacity
+
+A globally shared packing response tests `beta = LAI / D_eff`, with canopy-derived effective depth,
+a .30 m depth floor, fixed optimum `beta_star = 1 m-1`, and the unimodal response
+`phi_A(x) = x^A exp[A(1-x)]`. Nine fixed `A` and response-strength brackets are projected through a
+twelve-month causal capacity channel while preserving the incumbent normalized timing to 1.78e-15.
+Reconstruction closes to 1.11e-16 and future-prefix mutation is exactly zero.
+
+The best defensible broad response improves annual loss in all four held-cell folds, but allocation
+reverses in three and raw-cycle loss reverses in one. Narrower, more structurally distinct responses
+worsen annual loss in every fold. The broad response has R2 .6276 against existing capacity bases,
+raises global burned area from 1.1660 to 1.1855 times observed, and worsens existing temperate-
+closed, boreal, and tropical-open overburn. It also recapitulates the failed Rothermel closure from
+Entry 218: true fuel-bed packing requires load, bed depth, particle density, and particle geometry
+that the current aggregate inputs do not identify. No exact, canonical, official, or Optuna work
+follows.
