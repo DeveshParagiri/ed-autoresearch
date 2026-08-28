@@ -2729,6 +2729,9 @@ def predict(
     prediction = _secondary_fuel_litter_banks(
         prediction, data, fallback, enabled
     )
+    prediction = _secondary_open_footprint(
+        prediction, data, fallback, enabled
+    )
     prediction = _fragmented_managed_recurrence_brake(
         prediction, data, fallback, enabled
     )
@@ -2736,9 +2739,6 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _ignition_combustibility_arrival_order(
-        prediction, data, fallback, enabled
-    )
-    prediction = _secondary_open_footprint(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
