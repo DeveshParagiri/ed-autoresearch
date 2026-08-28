@@ -87,7 +87,10 @@ def main() -> None:
         None,
     )
     annual_rain = (12.0 * antecedent(rain, 12.0)).mean(axis=0)
-    temperature = mean("air_temperature")
+    temperature_monthly = np.asarray(
+        data["air_temperature"][:, rows, cols], dtype=np.float64
+    )
+    temperature = temperature_monthly.mean(axis=0)
     gpp = np.clip(
         np.asarray(data["gpp"][:, rows, cols], dtype=np.float64), 0.0, None
     )
@@ -192,6 +195,69 @@ def main() -> None:
             f"held={'stable' if stable else 'mixed'}:"
             + ",".join(f"{value:+.3f}" for value in held)
             + f" cells={mask.sum()}"
+        )
+
+    # Resolve the single largest stable unrepresented state into physical
+    # within-year phases before proposing a mechanism. The annual state is
+    # selected without looking at regions; phase thresholds are fixed physical
+    # temperatures and causal moisture departures.
+    range_mask = states["warm_low_productivity_range"]
+    obs_monthly = np.asarray(observed[:, rows, cols], dtype=np.float64)
+    pred_monthly = np.asarray(prediction[:, rows, cols], dtype=np.float64)
+    obs_cycle = obs_monthly.reshape(16, 12, -1).mean(axis=0)
+    pred_cycle = pred_monthly.reshape(16, 12, -1).mean(axis=0)
+    obs_alloc = obs_cycle / (obs_cycle.sum(axis=0, keepdims=True) + 1e-12)
+    pred_alloc = pred_cycle / (pred_cycle.sum(axis=0, keepdims=True) + 1e-12)
+    rain_3 = antecedent(rain, 3.0)
+    rain_deficit = np.maximum((rain_3 - rain) / (rain_3 + rain + 10.0), 0.0)
+    dryness = np.clip(
+        np.asarray(data["dryness"][:, rows, cols], dtype=np.float64), 0.0, None
+    )
+    combustion = dryness / (dryness + 500.0) / (1.0 + rain / 35.0)
+    temp_cycle = temperature_monthly.reshape(16, 12, -1).mean(axis=0)
+    deficit_cycle = rain_deficit.reshape(16, 12, -1).mean(axis=0)
+    combustion_cycle = combustion.reshape(16, 12, -1).mean(axis=0)
+    phases = {
+        "hot_dry_management_window": (
+            (temp_cycle >= 25.0)
+            & (deficit_cycle >= 0.08)
+            & (combustion_cycle >= 0.25)
+        ),
+        "very_hot_dry_window": (
+            (temp_cycle >= 30.0)
+            & (deficit_cycle >= 0.08)
+            & (combustion_cycle >= 0.25)
+        ),
+        "combustible_not_hot": (temp_cycle < 25.0) & (combustion_cycle >= 0.25),
+    }
+    cycle_weight = np.broadcast_to(
+        selected_area * obs, (12, len(selected_area))
+    )
+    cycle_folds = np.broadcast_to(folds, cycle_weight.shape)
+    print("RANGELAND_CYCLE_PHASE share residual held")
+    for name, phase in phases.items():
+        mask = phase & range_mask[None, :]
+        denominator = float(
+            np.sum(cycle_weight * mask * 0.5 * (obs_alloc + pred_alloc))
+        )
+        total = float(
+            np.sum(cycle_weight * range_mask[None, :] * 0.5 * (obs_alloc + pred_alloc))
+        )
+        values = []
+        for fold in range(4):
+            held = mask & (cycle_folds == fold)
+            numerator = float(
+                np.sum(cycle_weight * held * (obs_alloc - pred_alloc))
+            )
+            held_denominator = float(
+                np.sum(cycle_weight * held * 0.5 * (obs_alloc + pred_alloc))
+            )
+            values.append(numerator / (held_denominator + 1e-15))
+        numerator = float(np.sum(cycle_weight * mask * (obs_alloc - pred_alloc)))
+        print(
+            f"{name:30s} share={denominator/(total+1e-15):.4f} "
+            f"residual={numerator/(denominator+1e-15):+.4f} held="
+            + ",".join(f"{value:+.3f}" for value in values)
         )
 
 
