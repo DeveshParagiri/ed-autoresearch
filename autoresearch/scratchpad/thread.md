@@ -6227,3 +6227,36 @@ aggregation, pre-fire timing, and endogenous-fire ancestry. The proposed 17-chan
 2000-12--2016-12 cube is about 811 MiB raw. Until that lineage exists, current-input mechanisms may
 continue as diagnostics, but no GFED-descended state may enter the canonical model. The procurement
 gate is committed at `369f23a`.
+
+
+### Entry 221: reconstructed live-to-dead litter lacks phase information
+
+A causal two-timescale mass balance reconstructs fast herbaceous and slow woody live fuel, transfers
+turnover into dead pools, decomposes them with rain and temperature, and consumes them with local
+incumbent fire. The equation closes mass to 4.27e-16, is pointwise and globally shared, and has zero
+future-prefix mutation. Three distinct uses are tested: direct fuel-load replacement, relative
+seasonal allocation, and finite hazard release.
+
+Direct replacement improves annual and allocation losses in all four held blocks but reverses raw
+cycle in two. Relative allocation improves annual loss in all four but reverses allocation in two
+and raw cycle in one; finite release improves allocation everywhere while worsening annual and raw
+cycle everywhere. Stronger fixed blends do not repair the signs, and the aggregate-best relative
+form worsens boreal burning from 1.632 to 1.769 times observed. Exact and canonical evaluation are
+skipped. Aggregate GPP, LAI, biomass, and canopy can reconstruct fuel quantity, but not the actual
+live-to-dead transfer phase; the scratch experiment is committed at `e5adba5`.
+
+
+### Entry 222: every current physical component remains load-bearing
+
+An exact operating-point leave-one-out audit at .719892388 finds positive contributions from all
+fifteen declared components. The weakest are arrival order +.000072621, dead fuel +.000136019,
+phenology +.000564385, and the secondary-open footprint +.000722572. Temperature remains dominant
+at +.068631785; the other broad fire controls contribute about .0031 to .0118 each. The weak terms
+earn mostly through seasonal or spatial structure, explaining why scalar pruning is deceptive.
+
+Exact pair removal among the four weakest terms and rare ignition also yields no improvement. All
+ten pairs lose .000239 to .003933; most interactions are complementary, and the sole positive pair
+interaction is far smaller than the terms' joint contribution. The exhaustive 32,768-subset Shapley
+enumeration was stopped after 93 subsets because measured throughput implied roughly a day of
+compute; no partial Shapley value is claimed. The reproducible targeted audits are committed at
+`25373f5` and `04fc164`, with the pair outcome recorded in the following commit.
