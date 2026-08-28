@@ -5827,3 +5827,29 @@ supported law in Entry 199 is strictly better at .719646904 while nearly elimina
 and arid spillover, so saturation is recorded as a successful robustness control but is not
 the preferred canonical formulation. No official, canonical, results, or progress artifact
 is changed.
+
+
+### Entry 202: supported footprint makes the dead-fuel pool and arrival order stale
+
+An exact operating-point leave-one-component-out audit evaluates all 15 components on the
+fixed 9f957d7 model. This is a pruning diagnostic, not Shapley attribution: each removal
+retains every other component and parameter. The largest positive contributions are
+temperature .069090, cropland .012239, precipitation .011754, regime capacity .011043,
+dryness .010968, fuel .008311, annual closure .007552, surface banks .007497, pathway
+hazards .006603, curing .004668, and rare ignition .003033. The new supported secondary-open
+footprint contributes .000539. Phenology remains weak but positive at .000111.
+
+Two components are negative at the new operating point. Removing the dead-fuel pool raises
+Overall from .719646904 to **.719748275** (+.000101372): bias, RMSE, and spatial skill rise,
+seasonal skill falls .001935, and 10 of 14 regions improve. The ecological changes are
+bounded; intact tropical and arid ratios move slightly toward one, tropical open falls
+1.072 to 1.058, while productive rangeland falls .989 to .976 and crop .944 to .941. This
+is the credible next prune experiment after the supported footprint.
+
+Removing arrival order also raises Overall, but only to .719663070 (+.000016167). Eleven
+regions improve, yet intact tropical falls .980 to .972, boreal rises 1.052 to 1.059, crop
+falls .944 to .942, and arid rises slightly. Arrival order should therefore be cross-tested
+after the dead-fuel prune or moved relative to the new footprint rather than deleted on this
+tiny scalar alone. Removing phenology loses .000111 and .002681 seasonal skill and lowers
+fire broadly across all audited classes, so it is not a credible prune. No canonical,
+official, results, or progress artifact is changed.
