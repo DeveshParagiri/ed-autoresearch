@@ -6260,3 +6260,53 @@ interaction is far smaller than the terms' joint contribution. The exhaustive 32
 enumeration was stopped after 93 subsets because measured throughput implied roughly a day of
 compute; no partial Shapley value is claimed. The reproducible targeted audits are committed at
 `25373f5` and `04fc164`, with the pair outcome recorded in the following commit.
+
+
+### Entry 223: stronger clean learners confirm a sub-.724 annual ceiling
+
+A strict-clean annual-ranking audit removes incumbent prediction, GFED-descended frozen ED state,
+unresolved GPP, completed-year rain, geography, calendar labels, and target-selected carriers from
+the predictors. Deeper HGB, ExtraTrees, and random forest use 47 current or local prefix-causal
+climate, LUH2, and lightning features over 18,316 land cells in four disjoint whole-cell folds.
+Their best OOF Overall scores are **.723734682**, .723106053, and .723207650 respectively, only
+.0032--.0038 above the .719892388 mechanistic incumbent. Every fold improves annual loss, but the
+learned corrections do not improve allocation and raw-cycle losses everywhere.
+
+All twelve fold-models agree on a negative primary-cover by twelve-month temperature-variability
+interaction. Its fixed smooth translation raises primary-land capacity only under a coherent
+thermal season, using the existing 4 C physical scale. The primary and pasture forms both fail the
+same held block at every strength despite exact prefix causality. Stronger clean learning therefore
+does not uncover a hidden current-input step, and no learned surface, exact candidate, canonical,
+official, or Optuna work follows. Evidence is committed at `beca8b8`.
+
+
+### Entry 224: inferred submonthly dry spells improve timing but lose fire mass
+
+A compound-Poisson precipitation model derives expected storm count from monthly rain and fixed
+5, 10, or 20 mm event depth, then exactly computes the probability of at least one seven-day
+event-free run. A causal 30 mm moisture bucket and current dryness condition that latent window.
+This reconstructs submonthly intermittency without using the unavailable wet-day or dry-spell
+inputs. Prefix mutation is zero and the conserved-release form closes hazard to 1.36e-15.
+
+Eighteen fixed brackets test latent-window occurrence and mass-conserving hazard storage/release.
+No bracket clears all held metrics. Occurrence worsens annual loss in every fold even at .10 blend.
+The best conserved release improves normalized allocation in all four folds but worsens annual and
+raw-cycle loss in all four, so exact scoring is skipped. Monthly precipitation can approximate a
+dry window, but not the event intensity needed to preserve raw burned area. The family is committed
+and rejected at `d86162e`.
+
+
+### Entry 225: local land-cover interfaces carry annual signal but not timing
+
+Pointwise natural-managed co-occurrence is tested as anthropogenic ignition access, separately from
+a crop/urban mosaic spread brake. Pairwise edge and Simpson-diversity formulations use only current
+local cover fractions with global coefficients; they contain no neighbour, coordinate, region, or
+target term and are prefix exact. Existing footprint and fragmentation equations do not already
+require a natural-managed interface, so the test is structurally distinct.
+
+Both access-only forms improve annual-log loss in all four whole-cell folds. Neither improves
+normalized allocation and raw cycle everywhere, and the separate spread brake worsens annual fit
+without repairing timing. The mechanism cannot be promoted alone; it may only be revisited if an
+independently validated temporal allocator resolves its held waveform cost. Exact, ecology,
+canonical, official, and Optuna work are skipped. Audit and experiments are committed at `054ebb7`,
+`30bde50`, and `6160a68`.
