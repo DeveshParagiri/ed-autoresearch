@@ -6003,3 +6003,28 @@ exact Overall is **.719756369**, +.000008094 over the dead-fuel-pruned incumbent
 inputs, and coefficients are unchanged, and prefix causality remains exact. Official evaluation
 records **.720** with bias .758, RMSE .548, seasonal .860, and spatial .884. The gain is
 numerical-scale but the stage semantics are cleaner; no tuning follows.
+
+
+### Entry 210: a weak dead-fuel timing allocator survives after reservoir placement
+
+The unchanged causal dead-fuel function is restored at its original stage immediately before
+conditional fire allocation while retaining the supported secondary footprint after the fuel
+reservoirs. A fixed, predeclared bracket tests strengths 0, .25, .5, 1, and 1.5; this is not an
+Optuna search. Strength zero exactly reproduces the pinned `75fc017` incumbent at
+**.719756369**.
+
+Every positive bracket beats absence. Strengths .25, .5, 1, and 1.5 score .719784529,
+.719890503, **.719892388**, and .719851752 respectively. The strength-1 survivor gains
+.000136019 Overall, almost entirely by restoring .000965621 seasonal skill; RMSE also rises
+.000009403, while bias falls .000208385 and spatial skill falls only .000058335. The broad
+.5-to-1 plateau and decline at 1.5 support a weak timing role rather than restoration of the
+former strength 3 allocator.
+
+Five of fourteen regions improve at strength 1, including SHAF +.000855, AUST +.000564, and
+NHAF +.000308. The largest costs are NHSA -.002340 and SHSA -.002100, with every other loss
+below .000624. Ecological shifts are bounded and phases are unchanged: tropical-open fire
+moves from 1.058 to 1.063 times observed, productive rangeland from .976 to .980, crop from
+.941 to .942, arid from 1.2560 to 1.2565, and boreal remains 1.052. Future-forcing mutation is
+bit-exact through month 96 at every strength. Full removal is therefore falsified; the
+globally shared timing-only allocator at fixed strength 1 is eligible for canonical replay,
+but the scratch experiment makes no canonical, official, results, or progress change.
