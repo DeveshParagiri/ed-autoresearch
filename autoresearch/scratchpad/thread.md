@@ -6104,3 +6104,15 @@ sign reversal rather than a poorly chosen scalar. No formulation clears the pred
 all-block cycle gate, so exact evaluation is deliberately skipped. The interaction is useful
 as a residual description but not as a globally shared mechanism; this family is falsified
 without a canonical, official, results, or progress change.
+
+
+### Entry 214: weak dead-fuel timing is restored officially
+
+The globally shared dead-fuel timing response from Entry 210 is restored at strength 1,
+immediately before conditional fire allocation. This reinstates one causal state equation
+without changing its decay or consumption physics, while retaining the reservoir-stage
+secondary footprint. Exact Overall is **.719892388**, +.000136019 over the prior incumbent;
+the gain is primarily seasonal and its ecological shifts and prefix-causality audit remain
+bounded as recorded in Entry 210. Official evaluation records **.720** with bias .758, RMSE
+.548, seasonal .861, and spatial .884. The result is faithful but still only a small recovery,
+so it does not justify Optuna and does not resolve the architecture-level ceiling.
