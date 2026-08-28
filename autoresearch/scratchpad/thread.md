@@ -6361,7 +6361,25 @@ it reduces but does not remove the annual-versus-waveform conflict, confirming t
 cannot manufacture the missing local annual ordering. No canonical, official, or Optuna work follows.
 
 
-### Entry 229: exposed surface-area fuel physics retains the same timing conflict
+### Entry 229: exact causal factorization isolates a fold-stable litter timing law
+
+The final incumbent hazard and each ecological multiplier are factored identically into causal slow
+capacity and fast timing channels: `h=C*T`, `q=Q*U`, with `C=EMA_tau(h)` and
+`Q=exp(EMA_tau(log(q)))`. Reconstruction is exact to 5.55e-17 for hazard and 2.22e-16 for the
+multiplier, every update is one-sided, and a future perturbation produces zero prefix mutation.
+The diagnostic covers all 18,316 input-derived land cells in four disjoint whole-cell folds.
+
+This reveals that direct live-to-dead litter replacement is mainly a timing law. For strengths .05,
+.10, and .20 at both twelve- and twenty-four-month horizons, removing its slow-capacity part improves
+annual, normalized-allocation, and raw-cycle loss in every fold. At .10 and twenty-four months, the
+annual gains are +.000852, +.001019, +.000930, and +.000438, while every timing gate is also positive.
+The full litter multiplier fails two raw-cycle folds and its capacity-only part is unstable. Simpson
+interface access behaves oppositely as a capacity law but retains a tiny allocation reversal. The
+litter timing-only form is therefore advanced to exact full-grid and ecological replay; nothing is
+yet canonical or official and Optuna remains unjustified.
+
+
+### Entry 230: exposed surface-area fuel physics retains the same timing conflict
 
 A genuinely distinct fuel-bed proxy keeps LAI in its native one-sided surface-area units rather
 than turning GPP or biomass into pseudo-mass. Fixed global turnover moves exposed live leaf area
