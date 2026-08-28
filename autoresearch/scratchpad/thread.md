@@ -5636,3 +5636,25 @@ aggregate sign. Fire-weighted signal quintiles are also nonmonotone: model/obser
 from .663 to 1.067 before falling to .861 in the highest quintile, so a monotone vertical-fuel
 multiplier cannot safely recover the remaining annual deficit. No variant passes the joint
 held gate, and none receives exact, canonical, official, or Optuna evaluation.
+
+
+### Entry 194: exact recoverable opportunity confirms the fold warning
+
+The rain-supported relative-opportunity form from Entry 192 receives one requested full-grid
+diagnostic because its aggregate held annual and centered-cycle losses both improved despite
+only two of four timing folds. The equation remains globally shared, pointwise, finite-budget,
+and prefix-exact; no coefficient or formulation is changed before replay.
+
+Exact Overall falls from .719107756 to **.716981590**, a -.002126166 loss. Bias drops from
+.756910 to .754137, RMSE from .547460 to .545293, seasonal skill from .861418 to .861117,
+and spatial skill from .882290 to .879068. Only 4 of 14 regions improve. NHAF gains .006268,
+but CEAM, EURO, NHSA, SHSA, and TENA lose .017083, .016300, .017876, .016116, and .012089.
+The annual-map diagnostic still improves by .008825 in three folds and centered-cycle loss
+by .000045 in two, showing why the sampled aggregate looked promising, but those summaries
+do not preserve the evaluator's spatial structure.
+
+Ecological ratios move upward across every audited class: intact tropical .972 to 1.038,
+temperate closed .990 to 1.062, boreal 1.050 to 1.082, tropical open 1.057 to 1.150,
+productive rangeland .978 to 1.049, crop .931 to .995, and arid low fuel 1.257 to 1.265.
+Prefix mutation remains bit-exact. The full replay validates the held breadth guardrail and
+closes recoverable-opportunity factorization without canonical or official promotion.
