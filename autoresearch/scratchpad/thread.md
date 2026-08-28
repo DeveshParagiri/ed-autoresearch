@@ -5779,3 +5779,24 @@ strictly reducing the requested boreal, arid, TENA, and CEAM costs. Further inte
 would be an unjustified micro-tune rather than a new mechanism. This is the scientifically
 preferred formulation despite its nearly identical scalar; no canonical, official, results,
 or progress artifact is changed here.
+
+
+### Entry 200: canopy and biomass succession cannot improve secondary footprint
+
+The fixed .5 secondary-open footprint is refined with a continuous succession state rather
+than a generic multiplier. Secondary canopy height is compared smoothly with natural canopy
+height on the incumbent 8 m structural scale, and low woody biomass is defined as the
+complement of the incumbent `B/(B+1)` woody-capacity response. Height contrast, biomass
+youth, and their geometric and harmonic combinations amplify young open regrowth while
+damping mature closed secondary vegetation. All equations are global, pointwise,
+prefix-exact, and use no target, geography, neighbour, future state, or new input.
+
+None improves the .719645835 structural candidate stably. Height contrast loses annual
+skill in all four held whole-cell blocks. Biomass youth has the largest aggregate signal,
+with annual gains of +.001428 and +.005593 in two folds, but loses -.001290 and -.000213 in
+the others and worsens aggregate cycle allocation. The geometric form is nearly neutral in
+aggregate but improves annual loss in only one fold; the harmonic form is negative overall.
+The current secondary and natural canopy/biomass fields therefore do not identify a broadly
+transferable successional age correction beyond the existing open-canopy share. No form
+qualifies for exact, canonical, official, or Optuna evaluation, and this orthogonal
+succession refinement is closed.
