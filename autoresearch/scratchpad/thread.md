@@ -6509,3 +6509,22 @@ targets, although individual predictions are whole-cell held and coordinate free
 canonical or official. The corrected result redirects mechanism search from scalar seasonal
 amplitude alone toward missing monthly waveform geometry in the high-fire cells, without proving
 that .750 is impossible from current inputs.
+
+
+### Entry 237: waveform geometry localizes to broad peaks and post-peak tails
+
+Evaluator-correct whole-cell diagnostics separate phase, RMS anomaly amplitude, and phase-aligned
+shape across four spatial folds. Phase alignment alone leaves 94.9% to 97.7% of normalized centered
+squared error, so peak month is not the main deficit. After phase alignment and day-weighted RMS
+amplitude matching, 4.1% to 9.1% remains as pure geometry error. This does not contradict the larger
+shape-direction oracle in Entry 236, which substitutes the complete observed anomaly direction and
+therefore includes phase and geometry as well as nonlinear per-cell score effects.
+
+Within the phase-aligned geometry residual, peak and shoulder months contribute 37.2% to 47.4%,
+post-peak tails 25.0% to 34.1%, early onset 16.9% to 23.6%, and secondary seasons only 7.7% to 9.0%.
+Modeled half-width is too broad by .50, .95, .94, and .87 months in the four folds, and post-peak
+residuals are positive everywhere. Boreal and tropical-open strata share the broad-peak sign;
+crop and arid-low-fuel strata show extra secondary modes but not a stable signed sector correction.
+The obvious causal refractory/depletion response is already covered by Entries 221, 232, and 234,
+where it improves centered timing but loses annual or raw-cycle evidence. This entry diagnoses the
+remaining target without inventing another duplicate mechanism.
