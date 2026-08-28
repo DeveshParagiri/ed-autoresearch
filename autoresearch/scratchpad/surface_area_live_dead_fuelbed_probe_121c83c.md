@@ -1,0 +1,25 @@
+# Surface-area live/dead fuel-bed probe at `121c83c`
+
+This fallback is genuinely different from the two failed mass constructions. The Rothermel scratch law makes reaction intensity from `0.65*f(GPP)+0.35*f(biomass)` and uses LAI only as a packing proxy. The live/dead litter law creates fast and slow pseudo-mass pools from GPP, LAI, biomass, and canopy, then weights their dead-to-total mass fractions. The standing-dead grass law similarly creates stock from a productivity proxy. This probe instead treats LAI in its native units of one-sided leaf surface area per ground area, never converts GPP or biomass into load, and weights live and dead responses by their exposed areas.
+
+The only forcing fields are current valid `121c83c` inputs: leaf area index, monthly precipitation, air temperature, dryness, natural and secondary vegetation fractions, natural and secondary canopy heights, cropland, pasture, rangeland, and urban fractions. The open fine-fuel support is
+
+`S=(1-urban)*clip(natural*8/(h_n+8)+secondary*8/(h_s+8)+range+pasture+crop,0,1)`,
+
+and live surface area is `A_L=LAI*S`. With `E3(A_L)` denoting the causal three-month exponential mean, dead-surface deposition is
+
+`I=min(A_L,(1-exp(-1/6))*A_L+0.75*max(E3(A_L)-A_L,0))`.
+
+The dead area obeys `A_D(t)=A_D(t-1)*exp(-k_t)+I_t`, starting at zero, where `k_t=ln(2)/9*(0.25+1.75*wet_t*warm_t)`, `wet=rain/(rain+30)`, and `warm=logistic((T-10)/4)`. The exact integrated deposition-minus-decay-minus-terminal-area closure error is `1.25865760296e-16`. The nine-month reference half-life, six-month turnover, three-month phenology memory, moisture scales, and temperature scales are fixed globally shared ecological constants; nothing changes by region or cell identity.
+
+Dead readiness uses `eta_D=sqrt(dryness/(dryness+350)/(1+rain/35)*logistic((T-5)/3))`. Live readiness uses the stronger green-fuel damping `eta_L=eta_D^2*(0.10+0.90*cure)`, with `cure=clip(max(E3(A_L)-A_L,0)/(E3(A_L)+A_L+0.25),0,1)`. The exposed-area denominator is `A_0+A_L+A_D`, with `A_0=0.25*S`. This gives dead-ready area `Q_D=A_D*eta_D/(A_0+A_L+A_D)`, live-green area `Q_G=A_L*(1-eta_L)/(A_0+A_L+A_D)`, and total reactive area `Q_R=(A_D*eta_D+A_L*eta_L)/(A_0+A_L+A_D)`.
+
+Two predeclared globally shared applications were tested at strengths 0.05, 0.10, and 0.20. The signed form uses `H'=H*exp(a*(Q_D-Q_G))`. The relative form uses `H'=H*exp(a*clip((Q_R+0.05)/(E12(Q_R)+0.05)-1,-1,1))`. Neither equation contains coordinates, region labels, GFED values, learned coefficients, residuals, or a geography-specific switch. Coordinates only assign the same four disjoint held spatial folds as the earlier litter test, and GFED only supplies held losses after prediction.
+
+The probe used 4,463 whole cells, covering 92.5147% of observed-area weight and 90.4223% of incumbent excess-area weight. No bracket cleared all four annual-log, normalised-allocation, and raw-cycle gates. The weakest signed form improved annual loss in all folds by `+0.000953494,+0.000999233,+0.000419717,+0.000790762`, but allocation reversed in fold 0 and raw cycle reversed in folds 1 and 2. Its stronger brackets worsened those timing reversals. The best aggregate bracket was relative reactive area at 0.10. Its annual gains were large and positive in all folds, `+0.011130952,+0.013033084,+0.005647501,+0.005594184`, but allocation worsened in every fold and raw cycle worsened in folds 0 and 3. The exact prefix perturbation test changed pre-month-96 output by `0`.
+
+The held ecology check also argues against rescue by relaxing only the sign gate. For relative 0.10, intact tropical closed rises from `0.821131` to `0.885544`, temperate closed from `0.875169` to `0.922030`, boreal from `1.631611` to `1.726561`, tropical open from `1.021301` to `1.084300`, productive rangeland from `0.667207` to `0.697394`, cropland from `0.957262` to `1.005932`, and arid low fuel from `1.155972` to `1.185730`. Several low ratios improve, but boreal and tropical-open overprediction both worsen, so the annual gain is not ecologically neutral.
+
+The primary structural failure is that LAI supplies exposed live area but does not observe dead leaf area, leaf dry-matter content, fuel diameter, or harvest removal. The fixed turnover law can therefore retain crop leaf area as dead surface when the real material was harvested, and zero initialization creates an early spin-up. The use of canopy height to identify open exposure does not measure within-canopy vertical placement, while monthly precipitation and dryness cannot resolve rapid wetting and drying of high-surface-area litter. Those limitations are precisely where an ED export of live and dead fine-fuel surface area by size class would add new state; further retuning the current constants would only fit an unobserved pool.
+
+The strict held decision is `reject`: the state is causal and distinct, but there is no all-fold, all-metric survivor and no exact evaluation is justified. The uncommitted implementation is `autoresearch/scratchpad/surface_area_live_dead_fuelbed_probe_121c83c.py`.

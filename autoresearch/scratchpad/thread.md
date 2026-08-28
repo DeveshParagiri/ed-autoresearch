@@ -6359,3 +6359,20 @@ bias, RMSE, seasonal, area-calibration, and eleven-of-fourteen regional gains ar
 combined Congo at .8027 times observed. The two-channel filter is rejected as a standalone model;
 it reduces but does not remove the annual-versus-waveform conflict, confirming that slow filtering
 cannot manufacture the missing local annual ordering. No canonical, official, or Optuna work follows.
+
+
+### Entry 229: exposed surface-area fuel physics retains the same timing conflict
+
+A genuinely distinct fuel-bed proxy keeps LAI in its native one-sided surface-area units rather
+than turning GPP or biomass into pseudo-mass. Fixed global turnover moves exposed live leaf area
+into a dead-surface pool, wet warmth controls decay, and separate live-green and dead-ready moisture
+responses are combined by exposed area. The balance closes to 1.26e-16, the equation is pointwise
+and region blind, and future-prefix mutation is exactly zero.
+
+The weakest signed live/dead contrast improves annual loss in all four held blocks, but allocation
+reverses in one and raw cycle in two. A relative reactive-area form produces much larger annual
+gains in all four blocks but worsens allocation everywhere and raw cycle in two blocks; its held
+ecology also increases boreal and tropical-open overprediction. No bracket clears the coupled score
+and ecology evidence, so exact, canonical, official, and Optuna work are skipped. LAI can constrain
+exposed live area, but it does not observe dead leaf area, fuel diameter, dry matter, harvest
+removal, or rapid litter wetting; surface-area weighting alone cannot reconstruct those missing states.
