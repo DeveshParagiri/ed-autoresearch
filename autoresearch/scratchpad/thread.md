@@ -5445,3 +5445,20 @@ temperate closed, productive-rangeland, and crop ratios become 2.77, 6.82, 2.53,
 Soft readiness is similarly negative, and all variants are prefix-exact. The incumbent's
 downstream states carry essential monthly allocation that four simple additive pathways do
 not recover. The replacement is rejected without exact, canonical, official, or Optuna use.
+
+
+### Entry 184: holdover ignition arrival order is real but geographically narrow
+
+A causal signed cross-lag compares `EMA12(I_t C_{t-1})` with `EMA12(I_{t-1} C_t)`, where
+`I` is bounded lightning and `C` is dry, rain-free thermal combustibility. The expected
+positive sign improves only one held block; the opposite sign improves three, consistent
+with holdover ignition preceding peak combustibility. A strength of -.25 redistributes only
+the incumbent surface and woody hazard around its causal local mean and is prefix-exact.
+
+Exact Overall rises from .719021686 to **.719059397**, a +.000037710 gain. Bias and RMSE
+fall slightly, seasonal skill loses .000156, and spatial skill gains .000634. Only AUST,
+NHAF, and SHAF improve; NHSA, SHSA, and CEAM lose .00468, .00374, and .00135. Major
+ecological ratios remain bounded and mostly move toward one, although tropical open rises
+from 1.049 to 1.059. The equation is honest but too narrow for immediate promotion. One
+state-based refinement will test whether persistent desiccation can retain the African
+signal without the American losses; no tuning or official evaluation is warranted yet.
