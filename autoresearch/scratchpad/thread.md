@@ -6157,3 +6157,38 @@ outweigh small RMSE and spatial gains. The mechanism is rejected. Together with 
 diagnostic ceiling of .722807, this says the remaining current-input signal is only a few
 thousandths; a step change needs clean pre-fire fuel, moisture, snow, cohort, or management state,
 not scalar tuning.
+
+
+### Entry 217: deeper reverse ML finds signal but no transferable temperature law
+
+A depth-four held-whole-cell diagnostic widens the earlier shallow audit to 48 valid current or
+causal local-state features. The annual learner reaches OOF R2 .62649 and an annual-only Overall
+of **.725454849** at a fixed .25 blend, +.005562461 over the incumbent. The normalized-cycle
+learner reaches OOF R2 .30584 and **.721929910** at a .5 blend, +.002037522; its corrections
+improve annual and cycle held losses in every block through that strength. These learned outputs
+remain diagnostic and never enter the scientific model.
+
+Stable interactions include trailing lightning by temperature variability for the annual map
+and relative incumbent opportunity by absolute temperature for the cycle. The latter is distilled
+once into a globally shared union of relative hazard saturation and warm state, followed by a
+causal mean-neutral brake. It uses fixed physical thresholds rather than learned values and is
+prefix exact. Strengths .05 through .4 worsen annual error in all four folds and cycle error in
+three folds, monotonically. The descriptive interaction does not transfer as a mechanism, so exact,
+canonical, official, and Optuna work are skipped. Scratch evidence is committed at `4fc1b6e`.
+
+
+### Entry 218: an explicit Rothermel event closure also fails held gates
+
+A separate event-size architecture factorizes reaction intensity, fuel-bed density, moisture of
+extinction, ignition energy, occurrence, squared spread, finite extinction duration, and Poisson
+footprint overlap. GPP and biomass supply fuel and heat proxies; LAI and canopy height supply
+packing; dryness, rain, and temperature supply moisture and ignition-energy constraints; lightning
+and managed cover supply occurrence. This is structurally richer than the earlier marginal
+duration or footprint multipliers and remains pointwise and prefix causal.
+
+All 27 fixed brackets over three moisture-of-extinction levels, three footprint scales, and three
+weak blend strengths fail the four-block joint annual, allocation, and raw-cycle gate. The best
+compromise improves raw cycle in every block but worsens annual and allocation error in two blocks;
+ecological shifts remain bounded and the prefix mutation is exactly zero. No exact or official
+evaluation is justified. The physical family is falsified at `5804a38`, so greater spread-model
+detail cannot substitute for the missing native fuel and moisture state.
