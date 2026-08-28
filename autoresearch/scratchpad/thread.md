@@ -5379,3 +5379,18 @@ covered by active mechanisms. Stable seasonal interactions reduce to post-growth
 rain deficit, and ignition-limited surface fire; their causal centered corrections lower
 exact Overall to .718577 or worse. ML therefore identifies no new high-leverage mechanism
 and remains diagnostic only; Optuna and official evaluation are not justified.
+
+
+### Entry 180: rain-built seasonal capacity is already at its only viable stage
+
+The unchanged seasonal rain-capacity equation was inserted at nine stages. Its installed
+position immediately after ecological regime capacity remains exact best at **.719021686**.
+Moving it before pathway scaling falls to .715698; after pathway scaling but before regime
+capacity reaches .717261; immediately after rare ignition or green-up reaches .718830 and
+.718808. All placements after the footprint are below .71771.
+
+Several late variants improve 8 or 9 regions by reallocating capacity toward the tropical
+Americas, but they lose NHAF by .007-.008 and reduce global spatial skill by roughly .005.
+The term must see resolved regime capacity before it expands a rain-built fire season, yet
+must precede ignition and storage states. No canonical edit, tuning, or official evaluation
+follows.
