@@ -5752,3 +5752,30 @@ known costs are moderate increases in boreal and arid fire. Prefix causality is 
 Official evaluation records a new rounded best of **.720** with bias .757, RMSE .548,
 seasonal .861, and spatial .884. The strong-footprint bracket and its overlapping vertical
 propagation family remain rejected, so this step does not justify Optuna.
+
+
+### Entry 199: fuel and climate support remove secondary-footprint spillover
+
+The held-positive supported state from Entry 196 is replayed exactly at fixed strengths .5,
+1, 2, and 4 on the pinned ignition-arrival incumbent. It retains the same open-secondary
+capacity share but requires causal trailing GPP fuel, warm trailing temperature, and a
+smooth intermediate-moisture window before expanding event footprint. The equation remains
+global, pointwise, prefix-exact, target-independent, and uses no region, coordinate, neighbour,
+future value, learned coefficient, or new input.
+
+Strength 1 is the exact peak at **.719646904**, +.000539148 over the pinned incumbent and
++.000001069 over the ungated structural result. Its metrics are bias .757419, RMSE .547702,
+seasonal .861438, and spatial .883973, with 6 of 14 regions improving. More importantly,
+the physical support gates reduce the structural spillover: TENA loss contracts from -.01684
+to -.01323 and CEAM from -.00892 to -.00768. Boreal changes only 1.050 to 1.052 instead of
+1.090, and arid 1.200 to 1.201 instead of 1.269. Intact tropical closed improves .962 to
+.970, temperate closed reaches 1.000, tropical open 1.032, rangeland .973, and crop .944.
+Future-input mutation leaves the first 96 months bit-exact.
+
+The fixed dose response is sharply bounded: strength .5 reaches .719467343, strength 2
+.719541000, and strength 4 falls to .717642527. A partial-support interpolation is not run
+because the fully supported strength-1 equation already retains the best scalar while
+strictly reducing the requested boreal, arid, TENA, and CEAM costs. Further interpolation
+would be an unjustified micro-tune rather than a new mechanism. This is the scientifically
+preferred formulation despite its nearly identical scalar; no canonical, official, results,
+or progress artifact is changed here.
