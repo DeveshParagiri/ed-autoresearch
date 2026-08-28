@@ -5732,3 +5732,23 @@ spatial .883867. The combination is nevertheless .000101289 below the secondary-
 stronger research direction is the .5 secondary footprint on the ignition-arrival incumbent,
 not stacking both. This cross-test changes no canonical, official, results, or progress
 artifact.
+
+
+### Entry 198: secondary-open footprint replaces the weaker vertical gate
+
+The secondary-open structural footprint from Entries 196--197 replaces cross-stratum
+propagation rather than stacking with it. The canonical equation uses the globally shared
+share `q2 = S2 / (.05 + S2 + Sn + Wn + crop)` and applies `h' = h (1 + .5 q2)` after the
+causal arrival-order redistribution. Existing fuel, ignition, combustion, and storage
+mechanisms still determine whether monthly hazard exists; this term supplies only the
+missing event-size capacity of connected open secondary regrowth. It has no target-derived
+runtime, learned surface, region, coordinate, neighbour, future value, or new input.
+
+Canonical exact Overall is **.719645858**, +.000538102 over the ignition-arrival incumbent
+and +.000497699 over the weaker cross-stratum candidate. Bias is .757488774, RMSE .547594344,
+seasonal .861421047, and spatial .884130779. Six of fourteen regions improve and the exact
+ecological ratios remain bounded; Congo/intact tropical moves closer to observed, while the
+known costs are moderate increases in boreal and arid fire. Prefix causality is exact.
+Official evaluation records a new rounded best of **.720** with bias .757, RMSE .548,
+seasonal .861, and spatial .884. The strong-footprint bracket and its overlapping vertical
+propagation family remain rejected, so this step does not justify Optuna.
