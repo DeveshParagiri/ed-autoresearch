@@ -5800,3 +5800,30 @@ The current secondary and natural canopy/biomass fields therefore do not identif
 transferable successional age correction beyond the existing open-canopy share. No form
 qualifies for exact, canonical, official, or Optuna evaluation, and this orthogonal
 succession refinement is closed.
+
+
+### Entry 201: footprint saturation reduces spillover but is dominated by physical support
+
+The regional failure is diagnosed without using region in the candidate equation. TENA is
+already at 3.864 times observed and CEAM at 2.810, yet their observed-fire-weighted secondary
+structural shares are .102 and .095. Underburned NHAF has an indistinguishable share of .101.
+BOAS has the largest share at .281 while burning only .484 times observed. A structural-share-
+only law therefore cannot distinguish desired northern fire recovery from existing American
+overburn; arid cells are additionally exposed because the structural share contains no fuel
+or climate establishment requirement.
+
+A finite-patch saturation law preserves the linear footprint's initial slope but caps its
+extra event size: `f = 1 + .25(1 - exp(-2 q2))`, so `.25 * 2 = .5` as `q2` approaches zero.
+It improves held annual loss in all four whole-cell blocks with a bounded cycle trade and is
+prefix-exact. Exact Overall reaches **.719601153**, +.000493398 over the pinned incumbent and
+only -.000044682 below the linear footprint. Six of fourteen regions improve. Relative to the
+linear form, TENA loss contracts from -.016835 to -.011483 and CEAM from -.008918 to -.007329;
+boreal fire falls from 1.090 to 1.084 times observed and arid from 1.269 to 1.242. The cost is
+smaller recovery in high-share underburned BOAS.
+
+Saturation retains 92% of the structural gain and makes every requested penalty shallower,
+but it neither changes the 6-of-14 breadth nor separates NHAF from TENA. The physically
+supported law in Entry 199 is strictly better at .719646904 while nearly eliminating boreal
+and arid spillover, so saturation is recorded as a successful robustness control but is not
+the preferred canonical formulation. No official, canonical, results, or progress artifact
+is changed.
