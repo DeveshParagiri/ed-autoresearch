@@ -5713,3 +5713,22 @@ to .702617 through spatial overexpansion, so amplification is closed and no tuni
 justified. The weak .5 equation is an honest mechanistic candidate for canonical cross-test,
 not an ML fit or a regional correction; no canonical, official, results, or progress artifact
 is changed here.
+
+
+### Entry 197: secondary footprint dominates cross-stratum propagation
+
+The weak secondary-regrowth footprint is cross-tested without refitting on the newly promoted
+cross-stratum incumbent. Its structural share is
+`q2 = S2 / (.05 + S2 + Sn + Wn + crop)`, where `S2` is open secondary cover times
+crop/urban continuity, `Sn` is continuous natural-plus-managed open structure, and `Wn` is
+natural woody structure. The fixed equation `h' = h (1 + .5 q2)` changes only the event-size
+capacity of hazard that the incumbent weather, fuel, and ignition equations already create.
+
+Strengths .25 and .5 both retain positive annual-log gains in all four held blocks with a
+bounded cycle trade. Strength .5 raises the cross-stratum exact Overall from .719148159 to
+**.719544546**, a +.000396387 gain, with bias .757385, RMSE .547460, seasonal .861552, and
+spatial .883867. The combination is nevertheless .000101289 below the secondary-only
+.719645835 result. The two annual footprint corrections overlap destructively, so the
+stronger research direction is the .5 secondary footprint on the ignition-arrival incumbent,
+not stacking both. This cross-test changes no canonical, official, results, or progress
+artifact.
