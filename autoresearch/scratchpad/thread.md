@@ -6395,7 +6395,23 @@ advance that qualifies for canonical reproduction and one official evaluation; O
 unjustified.
 
 
-### Entry 231: exposed surface-area fuel physics retains the same timing conflict
+### Entry 231: isolated litter timing is promoted and verified officially
+
+The exact timing-only litter law is reproduced inside `model.py` as a final pointwise allocation
+stage under the existing dead-fuel component. It integrates globally shared fast herbaceous and
+slow woody live-to-dead stores, wet-warm decomposition, fire consumption, and a twenty-four-month
+causal log-factor state; only the fast residual changes final hazard. The canonical implementation
+scores **.720105466** exactly, slightly above the scratch replay because it avoids a redundant hazard
+divide/multiply, and preserves the zero-prefix and ecological audits.
+
+Official evaluation at model commit `2dd6d61` records **.720**, with bias .758, RMSE .549, seasonal
+.861, and spatial .885. The three-decimal headline is unchanged, but the exact mechanistic frontier
+moves by +.000213078 from .719892388. This is a lawful incremental gain, not a step change, and it
+does not justify Optuna. The next architecture must address missing annual cell ordering rather than
+further tuning this timing coefficient.
+
+
+### Entry 232: exposed surface-area fuel physics retains the same timing conflict
 
 A genuinely distinct fuel-bed proxy keeps LAI in its native one-sided surface-area units rather
 than turning GPP or biomass into pseudo-mass. Fixed global turnover moves exposed live leaf area
