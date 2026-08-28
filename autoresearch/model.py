@@ -77,7 +77,7 @@ PARAMS = {'annual_scale': 1.73,
  'productive_range_brake': 6.5,
  'surface_seasonality_capacity': 4.0,
  'arrival_order_strength': -0.25,
- 'secondary_open_footprint_strength': 0.5,
+ 'secondary_open_footprint_strength': 1.0,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
@@ -872,9 +872,9 @@ def _secondary_open_footprint(
     Existing secondary-litter stores redistribute incumbent hazard through
     time but do not give regrowth mosaics their own annual event-size capacity.
     Open secondary cover therefore receives a bounded share of the footprint,
-    relative to competing open, woody, crop, and background structure. Fuel,
-    weather, and ignition terms still decide whether monthly hazard exists;
-    this state only changes how much connected secondary cover it can burn.
+    relative to competing open, woody, crop, and background fuel. Antecedent
+    productivity, rain support, and warmth prevent structurally open but arid
+    or boreal secondary land from acquiring a false spreading capacity.
     """
     if "secondary_open_footprint" not in enabled:
         return prediction
@@ -884,6 +884,10 @@ def _secondary_open_footprint(
     if strength <= 0.0:
         return prediction
 
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
     secondary = np.clip(
         np.asarray(data["secondary_vegetation_fraction"], dtype=np.float64),
         0.0,
@@ -900,7 +904,7 @@ def _secondary_open_footprint(
     )
     secondary_open = secondary * 8.0 / (secondary_canopy + 8.0)
     continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
-    secondary_structure = secondary_open * continuity
+    secondary_capacity = secondary_open * fine_fuel * continuity
 
     natural = np.clip(
         np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
@@ -919,29 +923,44 @@ def _secondary_open_footprint(
     natural_open = np.clip(
         rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
     )
-    surface_structure = (1.0 - crop) * natural_open * continuity
+    surface_capacity = (
+        (1.0 - crop) * fine_fuel * natural_open * continuity
+    )
     biomass = np.clip(
         np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
     )
-    woody_structure = (
+    woody_capacity = (
         natural
         * canopy
         / (canopy + 8.0)
         * biomass
         / (biomass + 1.0)
     )
+    crop_capacity = crop * fine_fuel
     secondary_share = np.clip(
-        secondary_structure
+        secondary_capacity
         / (
             0.05
-            + secondary_structure
-            + surface_structure
-            + woody_structure
-            + crop
+            + secondary_capacity
+            + surface_capacity
+            + woody_capacity
+            + crop_capacity
         ),
         0.0,
         1.0,
     )
+    annual_rain = np.clip(
+        np.asarray(data["annual_precipitation"], dtype=np.float64), 0.0, None
+    )
+    rain_support = (
+        _rising(annual_rain, 0.01, 300.0)
+        * annual_rain / (annual_rain + 500.0)
+        * np.exp(-annual_rain / 3000.0)
+    )
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    warm_support = _rising(temperature_12, 1.0 / 3.0, 10.0)
+    secondary_share *= rain_support * warm_support
 
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     adjusted_hazard = hazard * (1.0 + strength * secondary_share)
