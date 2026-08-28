@@ -6593,3 +6593,89 @@ a canonical prediction.
 The user-requested research pause interrupted the run before its evidence could be reviewed. The
 reproducer is preserved as an intermediate commit, but no result, mechanistic translation, exact
 candidate, official evaluation, or Optuna claim is made.
+
+
+### Entry 242: consolidated research state at the close of the run
+
+The authoritative canonical model remains commit `2dd6d61`; the working `model.py` has the same
+Git blob `0d05b1c75489fbdde6a1996aa993ed1e67657c71`. Its exact fast-ILAMB score is
+**.720105466**, with bias .757826197, RMSE .548783038, seasonal .860630117, and spatial
+.884504940. Official evaluation records the rounded result **.720 / .758 / .549 / .861 / .885**
+as the final row of `results.tsv`, and `progress.png` represents the eligible mechanistic ledger.
+The active path is globally parameterized, pointwise across ED sites, prefix causal, and contains no
+learned surface, region or coordinate dispatch, neighbour exchange, invalid modern forcing, or
+benchmark-derived runtime field. Later commits are scratch diagnostics and documentation only.
+
+The research had two distinct eras. The early line discovered real ideas, including the output-
+transform ceiling, one-month flammability lag, limiting-factor structure, land-use fire pathways,
+multi-year fuel memory, and the value of seasonal allocation. It also reached historical official
+.776 and diagnostic scores above .8, but forensic replay showed that those scores depended on some
+combination of neighbour coupling, wind/VPD/dry-spell fields without an 1850 route, regional or
+coordinate coefficients, completed-period reductions, and fitted Ridge/GAM/tree residual closures.
+Those records were removed from the official ledger and progress plot rather than presented as ED
+fire physics. The .776 artifact is recoverable history, not a lawful model to restore.
+
+The transitive audit then removed every fitted ancestor and reset the surface-free official line to
+.546. The clean rebuild progressed through global ecological brakes and event-pathway scaling,
+finite surface and pathway opportunity banks, pathway-specific fuel recovery, separate managed-
+surface combustion temperatures, secondary litter and recurrence fragmentation, rainfall-
+seasonality capacity, rare natural onset, coherent surface-season capacity, persistent-desiccation
+support, ignition arrival order, and a reservoir-stage secondary-open event footprint. That sequence
+raised the mechanistic official line through .691, .696, .702, .706, .709, .710, .715, .716, .717,
+.718, .719, and .720. All fifteen current components remain load-bearing under exact leave-one-out
+and focused pair-pruning audits. The final accepted step isolates a causal live-to-dead litter timing
+residual from its slow capacity channel; it adds .000213078 exact Overall over .719892388 without
+adding geography, ML, or future information.
+
+The evaluator diagnosis is now settled. Official Overall is
+`(bias + 2*RMSE + seasonal + spatial) / 5`, so centered monthly-cycle RMSE is the dominant weak
+component and receives double weight. The empirical repeated-GFED5 climatology scores .873649519
+and is a diagnostic oracle, not a theoretical ceiling. At the final model, reaching .750 requires
+.14947267 more weighted numerator; RMSE alone would have to rise from .548783 to about .623519.
+Correcting only absolute anomaly amplitude reaches .738695951 mathematically and .734091888 after
+a mean-preserving [0,1] projection, so amplitude alone does not clear .75. Replacing the complete
+monthly anomaly direction reaches .771301543, while annual-map rank correction also has large
+headroom. The remaining problem is therefore joint local annual ordering and monthly waveform
+geometry, not global scale, peak month alone, or interannual variability. Phase alignment leaves
+94.9% to 97.7% of centered squared error; after phase and RMS-amplitude matching, the residual is
+concentrated in broad peak shoulders and excessive post-peak tails.
+
+The final official regional pattern is uneven but not produced by geographic coefficients. SHAF,
+NHAF, BONA, Australia, and SEAS are the strongest official regions; TENA, CEAM, MIDE, SHSA, and
+NHSA remain weakest. Annual spatial ordering is especially poor in BOAS, EQAS, CEAS, and MIDE even
+when their peak timing is reasonable. The final exact ecological replay remains bounded: intact
+tropical closed canopy is about .986 times observed, boreal 1.052, arid low fuel 1.259, and combined
+Congo .821. Seven of fourteen official regions improve in the final litter-timing step and seven
+decline, an accepted bounded trade rather than a claim that every region can improve simultaneously.
+The modified `country_ecological_audit.tsv` is not pinned to `2dd6d61` and must not be treated as a
+current canonical country result; regenerate it from the final model before any country-level claim.
+
+The major closed families are also clear. Global sharpening, per-cell mean preservation, generic
+depletion, post-peak depletion, inferred monthly dry-window occupancy, corrected soft minima,
+Rothermel-style event closure, LAI/canopy packing, surface-area fuel proxies, local land-cover
+interfaces, additional lightning/temperature capacity, canopy/biomass succession, land-transition
+residue, and numerous pruning/reordering variants all failed held waveform, exact weighting, or
+ecological checks. Optuna repeatedly failed to improve the early structural candidates and was not
+run on the clean late line because no mechanism-level step justified coefficient search. This does
+not make Optuna a gimmick; it means parameter tuning could not repair missing state or a wrong
+architecture.
+
+Input and coupling conclusions remain authoritative in `inputs/README.md`. Population is neither
+needed nor coupled-valid. The installed wind, VPD, wet-day, and dry-spell fields do not cover an
+1850 start and remain excluded. A physical daily-VPD-duration route is validated through NOAA
+20CRv3 to 2015 with an NCEP 2016 bridge, but the complete field is not installed. Daily precipitation
+event diagnostics have a route but weak held evidence. The frozen non-GPP `ed.nc` states descend
+from an EDv3 run with prescribed GFED4 fire, and GPP ancestry is unresolved; they are legitimate
+online ED prognostic variables but do not provide leakage-free offline validation. Earlier clean
+candidates showed a finite, sublinear but material response to a plus or minus 50 percent joint ED-
+state perturbation, roughly 23% to 28% in area-weighted predictions; that sensitivity must be rerun
+on `2dd6d61` before coupled deployment and should not be interpreted as a fitting target.
+
+Three unfinished scratch directions are preserved without claims. Signed fuel-production versus
+combustibility circulation has a weak direction-specific held signal but needs the queued exact
+Overall replay. The rare-natural lightning-pulse thermal-union replacement has a complete runner but
+was paused before execution. The strict target-independent anomaly-amplitude reverse-ML diagnostic
+was also paused before its evidence was reviewed. If research resumes, those are the only immediate
+continuations. A real step toward .75 or .8 is more likely to require clean pre-fire ED fuel,
+moisture, snow, patch/cohort, or submonthly fire-weather state than another scalar multiplier. No
+canonical change, official evaluation, Optuna run, or push follows this synthesis.
