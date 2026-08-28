@@ -5516,3 +5516,22 @@ post-fire feedback is active, and prefix causality is exact. Connectivity contai
 temporal information, but its present cover/moisture capacity cannot replace the incumbent
 mean footprint structure. One weak centered-anomaly formulation will test that narrower
 role before the family is closed; no tuning or official evaluation follows this failure.
+
+
+### Entry 188: centered connectivity anomalies are consistently adverse
+
+The incumbent static footprint was retained while a prefix-causal prognostic connectivity
+state weakly modulated only surface-event size relative to its own trailing 12-month state.
+Fixed positive strengths .05, .10, and .20 were tested for bounded log-ratio and normalized-
+difference anomalies. Every formulation worsens both annual-map and cycle loss in all four
+held whole-cell blocks, so none qualifies for a full exact replay.
+
+The least harmful screen is the normalized-difference anomaly at strength .05. Its proxy
+Overall is **.718888241**, -.000133446 from the .719021686 incumbent: bias -.000063, RMSE
++.000010, seasonal -.000687, and spatial +.000062. Only AUST, BOAS, BONA, and NHAF improve.
+Ecological ratio changes are small but uniformly upward, including intact tropical +.00293,
+temperate closed +.00217, boreal +.00102, tropical open +.00311, rangeland +.00367, crop
++.00041, and arid +.00025. Future-input mutation leaves the first 96 months bit-exact.
+The observed connectivity association is real, but both its strict footprint replacement
+and its weaker causal temporal role fail translation; the family is closed without canonical
+code, exact candidate evaluation, Optuna, or official evaluation.
