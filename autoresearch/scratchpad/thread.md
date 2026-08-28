@@ -5682,3 +5682,34 @@ to .998, boreal 1.050 to 1.042, tropical open 1.057 to 1.082, productive rangela
 first 96 months by exactly zero. The .125 form therefore clears an overall-first mechanistic
 promotion bar despite narrow breadth; the gain is too small to justify Optuna. The stronger
 form and further monotone amplification are closed.
+
+
+### Entry 196: open secondary regrowth supplies missing event footprint
+
+A weighted ecological phase-space audit of the ignition-arrival incumbent retains 2,923
+whole cells carrying 90.00% of observed fire and uses coordinates only to assign four held
+blocks. The dominant broad errors are not new mechanisms: humid warm surface fire is
+overpredicted in all four blocks but already has an active persistent-warm brake, while cold,
+rare-lightning and rangeland underburn are already targeted by explicit sources or capacity.
+Open secondary vegetation is the clean exception. It carries 3.86% of observed fire and is
+underpredicted in every block by signed residuals +.934, +.723, +.434, and +.411. The active
+secondary litter banks only redistribute incumbent hazard in time, and the local event-size
+footprint omits secondary vegetation, leaving annual regrowth-mosaic footprint unrepresented.
+
+A globally shared footprint state uses open secondary cover, crop/urban continuity, and its
+share of competing surface, woody, crop, and background structure. Existing fuel, weather,
+and ignition equations retain control of whether any monthly hazard exists. Every fixed
+strength from .5 through 4 improves held annual-log loss in all four blocks; the smallest .5
+strength has a negligible aggregate cycle cost relative to that annual gain and is selected
+as the ecologically conservative survivor. Its exact Overall is **.719645835**, a
++.000538079 gain, with bias .757489, RMSE .547594, seasonal .861421, and spatial .884131.
+Six of fourteen regions improve. The largest losses are TENA -.01684 and CEAM -.00892.
+
+The exact ecology remains bounded but exposes the cost: intact tropical closed moves .962 to
+.972, tropical closed .959 to .969, temperate closed .990 to 1.006, boreal 1.050 to 1.090,
+tropical open 1.018 to 1.034, rangeland .963 to .985, crop .931 to .950, and arid low fuel
+1.200 to 1.269 under this audit definition. Prefix mutation is bit-exact. Strength 4 collapses
+to .702617 through spatial overexpansion, so amplification is closed and no tuning is
+justified. The weak .5 equation is an honest mechanistic candidate for canonical cross-test,
+not an ML fit or a regional correction; no canonical, official, results, or progress artifact
+is changed here.
