@@ -5884,3 +5884,31 @@ change is small and prefix mutation is bit-exact. The held annual state is real,
 global evaluator values the displaced seasonal and spatial structure more. No stronger exact
 replay, tuning, canonical, official, results, or progress change follows; the low-biomass
 rangeland-opportunity family is closed.
+
+
+### Entry 204: supported secondary footprint is the ecological canonical
+
+The fuel-, rain-, and warmth-supported footprint from Entry 199 replaces the generic
+secondary structural share in `model.py`. Its exact Overall is **.719646904**, marginally
+above the structural candidate while sharply reducing boreal, arid, TENA, and CEAM spillover.
+The implementation uses only current coupled-valid inputs and causal local memories with one
+global coefficient; no region, coordinate, neighbour, future value, or learned surface enters
+the prediction path. Official evaluation remains **.720** with bias .757, RMSE .548,
+seasonal .861, and spatial .884. The faithful ledger row is retained because the ecological
+improvement is material even though the scalar difference is numerical-scale.
+
+
+### Entry 205: pruning redundant dead-fuel timing raises the incumbent
+
+The negative operating-point result from Entry 202 is installed by removing the old
+dead-fuel allocator from the active component stack. Conserved surface and pathway reservoirs,
+secondary litter, recovery, green-up allocation, and the supported secondary footprint now
+cover its useful storage role; retaining the extra allocator double-counted timing. The
+function remains mechanistic but is inactive and no replacement coefficient is introduced.
+
+Canonical exact Overall rises to **.719748275**, with bias .758082320, RMSE .548445941,
+seasonal .859502991, and spatial .884264183. Ten of fourteen regions improve and ecological
+ratios remain bounded; the explicit cost is a .001935 seasonal-score loss. Official evaluation
+records **.720** with bias .758, RMSE .548, seasonal .860, and spatial .884. This simplification
+is accepted on overall score, regional breadth, and reduced redundancy; it does not justify
+Optuna.
