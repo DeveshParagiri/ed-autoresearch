@@ -6116,3 +6116,44 @@ the gain is primarily seasonal and its ecological shifts and prefix-causality au
 bounded as recorded in Entry 210. Official evaluation records **.720** with bias .758, RMSE
 .548, seasonal .861, and spatial .884. The result is faithful but still only a small recovery,
 so it does not justify Optuna and does not resolve the architecture-level ceiling.
+
+
+### Entry 215: the historical .776 line contains no lawful hidden step
+
+Forensic replay separates the old .743, .751, .768, and .776 staircase from the current
+frontier. The .743 parent still used coordinate-box parameter tables, neighbour exchange,
+completed-period reductions, and disallowed modern weather. The later gains came from a fitted
+conditional allocation surface, annual residual Ridge/GAM, and seasonal residual GAM. Removing
+modern forcing and neighbours while refitting retained .7648 only because regional dispatch and
+learned closures remained; deleting geographic dispatch collapsed that lineage from about .765
+to .588. The current surface-free, pointwise, prefix-causal model has instead rebuilt from .546
+to .719892. There is no comparable lawful .776 checkpoint to restore.
+
+The strongest transferable physical idea was tested as a three-cohort within-site patch mosaic.
+Young, recovering, and mature surface fuel age on fixed timescales, combustion and ignition set
+event opportunity, and burned mature patches return to the young cohort. Fixed tile fractions
+.05 through .35 improve annual, allocation, and raw-cycle losses in three of four held blocks,
+but monotonically worsen all three in the same fourth block. Prefix causality is exact. The family
+is rejected without exact or official evaluation; its scratch implementation is committed at
+`a1017ee`.
+
+
+### Entry 216: score headroom is local rank plus waveform geometry
+
+The current exact Overall is **.719892388**. The repeated-GFED5 empirical climatology oracle is
+.873649519, leaving .153757 diagnostic headroom; it is not a theoretical maximum. RMSE accounts
+for 56.63% of that gap, bias 17.62%, spatial distribution 12.94%, and seasonal phase 12.80%.
+Global rescaling loses .004856 and perfect amplitude adds only .001425. Correcting annual cell
+rank while preserving the incumbent magnitude distribution adds .057840, recovering 89% of the
+full annual-map oracle gain. Correct phase adds .021668, while waveform geometry beyond phase and
+amplitude adds another .034393. A successful step must therefore correct both local annual
+ordering and within-cell waveform shape.
+
+A distinct compound-duration mechanism uses the effective number of months in which lightning
+and combustion coincide to expand natural event footprint. It is globally shared and prefix
+causal, and every fixed strength improves annual loss in all four held blocks. Exact deltas are
+nevertheless -.000070, -.000224, -.000684, and -.002326 as strength rises because bias losses
+outweigh small RMSE and spatial gains. The mechanism is rejected. Together with the held shallow
+diagnostic ceiling of .722807, this says the remaining current-input signal is only a few
+thousandths; a step change needs clean pre-fire fuel, moisture, snow, cohort, or management state,
+not scalar tuning.
