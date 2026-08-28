@@ -1,0 +1,254 @@
+I have everything I need. Here is my review.
+
+---
+
+# External review: why ED-Fire is stuck at 0.719, and four structural directions
+
+## 0. What I read and verified
+
+`research.md`, `inputs/README.md`, all 2,467 lines of `model.py`, and `thread.md` Entries 95–173. I also pulled the current regional table from `results.tsv` at `bf42d58`. I edited nothing.
+
+Current exact: **0.718995** = bias 0.756759 / RMSE 0.547519 / seasonal 0.861676 / spatial 0.881504.
+
+---
+
+## 1. Diagnosis: why the stack is flat
+
+### 1.1 The architecture is one rate followed by eighteen hazard rescalers
+
+`predict` computes `rate = _fire_rate(...)`, applies `_transform` once, then runs **19 sequential stages**, essentially all of which have the form
+
+```
+h ← -log1p(-p);  h' = h · f(local state);  p ← 1 - exp(-h')
+```
+
+or the multiplicative variant with a causal-EMA renormalizer (`allocated = adjusted · EMA₁₂(baseline)/EMA₁₂(adjusted)`, which appears **four separate times**: green-up, dead-fuel pool, crop residue, conditional allocation).
+
+This is not a fire model with stages. It is a **single scalar field multiplied by ~19 bounded gain functions of the same eight or nine underlying states** (GPP EMAs, rain EMAs, dryness EMA, temperature EMA, open_cover, canopy, biomass, crop/pasture/rangeland). I counted the recomputation: `fine_fuel = gpp_12/(gpp_12+0.35)` is recomputed **nine times**; `open_cover = clip(rangeland+pasture+natural·8/(canopy+8))` appears **eight times**; the four-way capacity share `(0.05 + surface + woody + crop)` is recomputed **six times** in six different stages.
+
+**Consequence.** Because all stages multiply, the composite is `h₀ · exp(Σᵢ log fᵢ)`. Any new stage is another term in that sum. If the sum is already near its constrained optimum in the directions the existing states span — and Entries 158, 164, 165, 169 all say it is, with drop-one and add-one both bounded at ±0.0005 — then a 20th multiplicative gate cannot move more than ~10⁻⁴. That is exactly what Entries 161 (+0.00034), 168 (+0.00018), 169 (+0.00011), 172 (+0.00011) report. **The gains are decaying geometrically. This is the signature of a saturated basis, not of a difficult search.**
+
+### 1.2 The four EMA "conservation" renormalizers destroy the thing they claim to conserve
+
+Each of those four stages does `p' = p·g / [EMA₁₂(p·g)/EMA₁₂(p)]`. That is not conservation of a fuel stock. It is **division by a running mean of the modifier**, which forces the *modifier's* trailing mean toward 1 — locally, per cell, per month, with a 12-month lag. Three problems:
+
+1. It is **not mass-conserving in any physical sense.** Real conservation would be a stock ODE: `S(t+1) = S(t) + P(t) − C(t) − D(t)`, with burn drawing from `S`. The EMA form has no stock; it has a ratio. It happens to have the right sign for seasonal reallocation and the wrong dynamics for interannual carryover.
+2. It **cancels annual-map information.** Any part of the modifier that is *persistent* at a site (i.e. the annual-propensity signal) is divided out by its own EMA. Entries 122, 124, 145, 158 all independently converge on the same finding — the residual headroom is *predominantly annual/spatial allocation* (Entry 158: "predominantly spatial allocation"; Entry 124: high-weight cells have annual model/obs ratio **0.554**). The architecture has four stages whose explicit mathematical job is to **remove exactly the signal that the score needs.**
+3. Composing four of them makes the effective transfer function of a persistent input essentially zero, while its seasonal component passes at ~full gain. This is why every attempted annual-propensity mechanism (Entry 146 recurrence equilibrium, Entry 159 turnover, Entry 165 multi-year memory) fails *in the full stack* but succeeds in isolation. Entry 146 measured this directly: the mechanism gains +0.00048 without annual closure and loses −0.00186 with it — a **−0.00234 destructive interaction**. That is not a duplicate-mechanism problem. That is the renormalizers eating the signal.
+
+### 1.3 The base rate is malformed and the stack is a compensator
+
+Entry 123 is the most important entry in the log and I think it has been under-weighted. Immediately after `_transform`:
+
+- peak/shoulder capacity is **0.103, 0.148, 0.009, 0.024** of observed in NHAF, SHAF, CEAS, AUS;
+- annual fire is already **2.20–4.23×** observed in every chronic-overburn regime.
+
+The 19 downstream stages then carry Overall from 0.6477 to 0.7169. **The stack is not adding physics; it is a 19-term correction series for a base equation that is wrong in both amplitude and phase simultaneously.** A correction series converges to whatever it converges to; you cannot get a step change by adding a 20th term. That is precisely what the log has been demonstrating for ~50 entries.
+
+The base rate's specific defect is that `_fire_rate` is a **product of independent marginal responses** — dryness × precip × GPP-hump × temperature — softened by a `softmin` blend. A product of marginals asserts that fuel load, fuel moisture, and ignition are *separable*. They are not. The savanna signal is that fuel load is a *lagged integral of the same rainfall* whose *current* value sets moisture, so the dryness and precipitation factors are strongly negatively coupled at the annual scale and positively coupled at the seasonal scale. A product of marginals cannot represent a variable whose two roles have opposite signs at two timescales. That is the mechanism behind both the "August instead of December" phase error (Entry 145) and the 0.554 high-weight annual ratio (Entry 124).
+
+### 1.4 The score decomposition tells you where the mass is
+
+| component | value | what limits it |
+|---|---|---|
+| RMSE | **0.548** | worst by far; Entry 122: 69% of normalized-cycle error is *shape*, not amplitude |
+| bias | 0.757 | Entry 124: annual ratio 0.554 in the 1,753 cells holding 80% of fire |
+| seasonal | 0.862 | near the oracle-half point already |
+| spatial | 0.882 | high, and Entry 89's 0.93 peak/mean collinearity means it is coupled to RMSE |
+
+Entry 122's oracle split: cycle-oracle → 0.7743, map-oracle → 0.7848, half-and-half → **0.8102**. So 0.8 requires **roughly half the annual-map error and half the cycle error removed jointly**. The regional table makes the target concrete: `tena 0.462`, `ceam 0.493`, `mide 0.500`, `shsa 0.503`, `nhsa 0.518` are all bias/RMSE/spatial failures with *acceptable* seasonal scores (0.86, 0.90, 0.78). Meanwhile `boas` spatial is **0.120** and `eqas` spatial **0.188**. Those are not timing problems. **The dominant deficit is where fire is, not when.**
+
+### 1.5 Candid statement on feasibility
+
+I will separate two claims the log sometimes conflates.
+
+**Claim A — the frozen inputs bound honest skill near 0.72.** This is Entry 124's conclusion and it is well-executed: a 45-feature causal-memory learner on whole-held blocks reaches ~0.7214–0.7234. Entry 158 puts remaining honest pathway headroom at **+0.00482**. That is a serious result and it is the right kind of evidence.
+
+**But I do not think it establishes the ceiling it claims,** for one structural reason: every one of those held-out learners was fit **as a correction to the incumbent**, i.e. on `residual(incumbent)` or as a blended cycle/annual correction on top of it. A correction learner inherits the incumbent's *factorization*. If the incumbent's error is dominated by a mis-specified functional form — a separable product where the truth is non-separable, and four renormalizers that zero the annual channel — then a residual learner over the same states will find little, because the residual is what remains *after* the wrong basis has absorbed the variance in a distorted way. Entry 96's number is the tell: a **standalone** causal-memory learner (not a residual correction) reached **0.7672 whole-cell held-out**, and Entry 98's reached **0.7514** at strict causality. Those are 0.03–0.05 above the residual-correction ceiling on the *same inputs and same holdout discipline*. That gap is not input information; it is **model-form loss**.
+
+My honest read: **0.8 is probably out of reach on these inputs** — the standalone causal held-out numbers (0.75–0.77) are the more credible bound, and they sit below 0.8. But **0.74–0.76 should be reachable mechanistically**, and the log has been leaving ~0.03–0.05 on the table for fifty entries by treating a form problem as an information problem. That is a large step, it is defensible, and it is worth pursuing before declaring the inputs exhausted.
+
+---
+
+## 2. Four families
+
+Ordered by expected magnitude. All are changes to **factorization, conservation, or state architecture** — none is a new multiplicative modifier.
+
+---
+
+### Family A — Replace the four EMA renormalizers with one explicit two-pool fuel mass balance
+
+**The genuinely new object: a conserved carbon stock with units, from which burning subtracts, and whose steady state sets annual propensity. Not a ratio.**
+
+Currently `_dead_fuel_pool_response` has stocks but then **throws away their level information** through the EMA renormalizer at its end (lines ~1175–1195). The stock is computed and then normalized out. That is the single most wasteful line in the file.
+
+**Pseudomath.** Two pools per cell, gC m⁻², prognostic, prefix-causal:
+
+```
+# production: GPP partitioned to fine vs coarse by canopy structure
+φ_fine(t)   = 8/(canopy+8)                       # herbaceous allocation share
+NPP(t)      = κ · GPP(t)                          # κ global
+P_f(t)      = φ_fine · NPP(t)
+P_c(t)      = (1-φ_fine) · NPP(t) · biomass/(biomass+B₀)
+
+# turnover to litter (senescence, moisture- and thermally-driven)
+τ_f(t)      = τ_f0 · (1 + a·max(0, EMA₃(GPP)-GPP)/(EMA₃(GPP)+GPP+ε))
+L_f(t+1)    = L_f + τ_f·Live_f - (k_d·q10(T)·w(rain) + C_f)·L_f
+L_c(t+1)    = L_c + τ_c·Live_c - (0.25·k_d·q10(T)·w(rain) + C_c)·L_c
+
+# decomposition: Q10 thermal, moisture-limited
+q10(T)      = Q^((T-25)/10)
+w(rain)     = EMA₃(rain)/(EMA₃(rain)+r₀)
+
+# COMBUSTION: hazard consumes stock, stock limits hazard
+h(t)        = h_weather(t) · Σ_j  σ_j · L_j(t)/(L_j(t)+L_j*)      # j ∈ {fine, coarse}
+C_j(t)      = c_j · (1 - exp(-h(t)))                               # fraction consumed
+```
+
+`h_weather` is the *existing* fire rate with the fuel-hump term **removed** — that is the key: fuel load stops being a static marginal response to GPP and becomes a **prognostic level**. `L_j*` are global half-saturation constants.
+
+**Inputs / state.** `gpp`, `monthly_precipitation`, `air_temperature`, `natural_canopy_height`, `aboveground_biomass`. All present, all coupled-valid, all pointwise, all prefix-causal (the recursion only reads `t` and state from `t-1`).
+
+**Score targets.** Primarily **bias and spatial** (`tena 0.583/0.417`, `mide 0.580/0.296`, `ceam 0.536/0.354`, `boas 0.798/0.120`). The stock's *equilibrium* `L̄ ≈ P̄/(k_d·q̄ + C̄)` is a nonlinear function of the production/decomposition ratio, which varies by an order of magnitude more across biomes than GPP itself. This is a genuine annual-map mechanism: humid tropics get high `P` but also high `k_d·q10·w`, so equilibrium litter stays modest — automatically producing the closed-canopy brake that is currently three separate hand-tuned gates. Semi-arid savanna gets moderate `P` and very low `w`, so litter accumulates. Boreal gets low `P` and very low `q10`, so litter accumulates over years — which is the physically correct reason boreal burns, and would attack `boas spatial 0.120` without a cold-boost gate.
+
+**Why not a duplicate.** Entry 143's note explicitly says a fuel-depletion state was tested and removed because "Optuna drove its consumption coefficient to the floor." That test, and Entry 165's, and Entry 144's grass stocks, all shared one property: **the stock modulated hazard multiplicatively while a separate GPP-hump term still supplied the fuel response, and a renormalizer removed the level.** The stock was redundant *by construction*. Here the GPP marginal is **deleted** and the stock is the sole fuel channel, with no renormalizer. Entry 123's "unified live/dead fuel state reaches .705654" is the closest prior — but that was a *replacement of the whole downstream stack*, testing stock+rebuild simultaneously and confounding the two. This changes one thing.
+
+Entry 144 closed "grass clocks" on the grounds that they duplicate the surface bank's *timing*. Correct — and this family is not a timing mechanism. It is an **annual-equilibrium** mechanism. Different score component, different failure mode.
+
+**Cheapest falsifier.** On the 2,235 held cells at 85% fire weight, do **not** run the model. Just compute the two-pool equilibrium `L̄_f, L̄_c` offline from the causal recursion, and regress `log(observed annual burned fraction)` on `log(L̄_f)`, `log(L̄_c)` and the incumbent's `log` annual prediction, four-fold by spatial block. **Falsifier: if `L̄` adds < 0.02 to held-out annual-log R² over the incumbent's annual prediction, the stock carries no annual information the current basis lacks — abandon before touching `model.py`.** Cost: minutes, no canonical edit.
+
+**Ecological failure mode / guardrail.** Runaway accumulation in cold-dry cells: with `q10` small and `w` small, `L` grows without bound over 192 months and boreal/arid fire explodes. Entry 160's warning (boreal 1.054 → 1.380, arid 1.255 → 1.592) is exactly this. **Guardrail:** cap `L_j` by a structurally-implied maximum, `L_j ≤ L_max · biomass/(biomass+B₀)` — a cell cannot hold more litter than its standing biomass can produce. Audit boreal and arid-low-fuel ratios before and after; reject if either moves > 0.10.
+
+---
+
+### Family B — Factor the rate into occurrence × size, with a size distribution whose scale is a conserved landscape-connectivity state
+
+**The genuinely new object: burned area as `N_fires × E[area | fire]` where `E[area]` is set by a prognostic *connectivity* state, and the observable is the product — so the model has two degrees of freedom where it currently has one.**
+
+Today, one scalar `rate` is squeezed through `1-exp(-r)` and then multiplied by footprint factors. That means **occurrence frequency and event size are algebraically inseparable** — every gate that raises one raises the other. This is the mathematical root of Entry 89's 0.93 peak/mean collinearity, which the log has correctly identified as blocking seven mechanisms but has treated as a *constraint of nature* rather than **an artifact of the single-scalar factorization**. It is the latter.
+
+**Pseudomath.**
+
+```
+# Occurrence: ignitions that survive to become fires. Poisson, per unit area.
+λ(t) = [ λ_L · lightning(t) · dry_window(t) + λ_H · human(t) ] · ignitable(t)
+       human(t)     = crop + pasture + rangeland   (no population)
+       ignitable(t) = fine-fuel-moisture gate from Family A's L_f
+
+# Size: heavy-tailed, scale set by connectivity
+#   Pareto-like with shape ξ; mean area diverges as connectivity → percolation
+Ā(t) = A₀ · [ ρ(t) / (ρ_c - ρ(t))_+ ]^ν     smoothed:  A₀ · ρ/( (ρ_c-ρ)² + δ )^(ν/2)
+
+# ρ = burnable-patch fraction, a CONSERVED state depleted by fire, restored by growth
+ρ(t+1) = ρ(t) + g(t)·(ρ_max(t) - ρ(t)) - ρ(t)·(1 - exp(-λ·Ā))
+       ρ_max(t) = open_cover · L_f/(L_f+L*) · (1 - fragmentation)
+       g(t)     = 1 - exp(-GPP_growth/ recovery_scale)
+
+BA(t) = 1 - exp( -λ(t) · Ā(t) )
+```
+
+`ρ_c` is a **single global percolation threshold** — this is a genuine universality constant, not a fitted region parameter.
+
+**Inputs / state.** `lightning_flash_rate`, `luh2_*` fractions, `gpp`, `monthly_precipitation`, `dryness`, `natural_canopy_height`, `luh2_urban_fraction`. All coupled-valid.
+
+**Score targets.** **RMSE (0.548) and spatial jointly** — this is the only family here that can move both, because it breaks the collinearity that couples them. `eqas spatial 0.188` and `boas spatial 0.120` are regimes with rare, very large events: a heavy-tailed size distribution is the right object and a mean-rate model cannot represent them. `shaf/nhaf` (spatial 0.945/0.898, seasonal 0.928/0.894, but bias only 0.801/0.808) are the opposite: frequent small-to-moderate fires where `λ` is high and `ρ` is near `ρ_c` — the model should be limited by occurrence, not size.
+
+**Why not a duplicate.** Entry 122: "a direct pathway factorization into occurrence times spread peaked at .716824." Entry 123: "nonlinear subgrid tile union reaches .714648." Entry 162: "shared-ground rate union" and "disjoint-subgrid tile mixture" both failed. **All four of these factored occurrence × size with a *diagnostic* size** — a size that is an instantaneous function of current state. None of them made the size scale a **conserved, fire-depleted, regrowth-restored state with a percolation singularity.** That is the structural difference and it is not cosmetic: a diagnostic size is just another multiplicative gate (which is why they all landed at ±0.002), whereas a depleted `ρ` gives **negative feedback on recurrence and positive feedback on size in low-recurrence cells simultaneously** — the exact asymmetry Entry 145's recurrence-equilibrium equation `exp[k·M·(1-2R)·F·W]` was hand-crafted to imitate and Entry 146 then found collided with the annual closure. Here it emerges from a conservation law rather than being pasted on, and the annual closure is the stage this family would *replace*, not sit beside.
+
+The generic "sharpening/percolation" exclusion refers to `f4bb98c`/`e558f1c`-era **spread-percolation on the rate** (a static exponent). This is percolation on a **prognostic patch-fraction state**. Different object.
+
+**Cheapest falsifier.** Two-parameter check, no model edit. On the 2,235 held cells, estimate empirical `E[area|fire] ∝ BA/λ̂` using GFED5 monthly BA and a crude `λ̂` from lightning + managed cover, then test whether `log(BA/λ̂)` is monotone in the causal `ρ` recursion computed from inputs alone, four-fold by block. **Falsifier: if the sign of `∂log(size)/∂ρ` is not positive in at least 3 of 4 held blocks, the percolation state is not identified — stop.** Entry 148's "opposite residual sign in every fold" is the template for this test and it correctly killed a family; use it here.
+
+**Ecological failure mode / guardrail.** The `(ρ_c - ρ)` denominator is a **singularity** — cells that sit near `ρ_c` will produce unbounded burned area, most likely productive rangeland (already 0.943–1.075 across recent entries) and tropical open woodland (1.017–1.053). **Guardrail:** hard-cap `Ā ≤ A_max` at a physically defensible maximum single-fire area, and audit the top-percentile of `Ā` for geographic clustering. If `Ā` saturates in a coherent region, the threshold is acting as a region label and the family is disqualified.
+
+---
+
+### Family C — Make dryness's dual role explicit: split the water balance into a fuel-*production* integral and a fuel-*moisture* level, with opposite signs
+
+**The genuinely new object: one input entering the equation twice with opposite sign and different timescale, through two states that are coupled by an explicit hydrological budget rather than two independent EMA gates.**
+
+Today `_fire_rate` multiplies `dryness_response × precipitation_response × gpp_hump`. Because these are independent marginals in a product, the model **cannot** encode "more rain last year → more fuel → more fire" and "more rain this month → wetter fuel → less fire" as a single coherent response. It approximates it with `annual_precipitation` (12·EMA₁₂) in the numerator of one factor and `monthly_precipitation` in the denominator of another. That is a linear-in-logs approximation to a strongly non-separable surface.
+
+**Pseudomath.** A single-bucket water balance whose *drawdown history* drives production and whose *current level* drives moisture:
+
+```
+# Bucket (mm), capacity set by rooting depth ~ vegetation structure
+W_max      = W₀ + W₁ · canopy/(canopy+8) + W₂ · biomass/(biomass+1)
+PET(t)     ∝ dryness(t)                            # dryness is already a demand proxy
+W(t+1)     = clip( W(t) + rain(t) - E(t), 0, W_max )
+E(t)       = PET(t) · W(t)/W_max                    # supply-limited evaporation
+
+# CHANNEL 1 (slow, positive): cumulative transpired water → fuel produced
+#   this is water actually USED, not water that fell
+Ψ(t+1)     = Ψ(t)·exp(-1/T_ψ) + E(t)               # T_ψ ~ 12-24 months, global
+fuel_built = Ψ/(Ψ + Ψ*)
+
+# CHANNEL 2 (fast, negative): fuel moisture equilibrates to bucket deficit
+θ(t)       = θ_eq(W/W_max) + (θ(t-1) - θ_eq)·exp(-1/T_θ)     # T_θ ~ 0.3-1 month
+flammable  = falling(θ, k_θ, θ_crit)
+
+rate = fuel_built · flammable · thermal(T) · ignition(...)
+```
+
+`E(t)` — actual evapotranspiration — is the physically correct fuel-production driver, and it is **not** `rain`, and **not** `dryness`, and **not** their product. It is `min(supply, demand)`, which is why the two channels decouple: in a wet month `E ≈ PET` (demand-limited, production high, moisture high → low fire); in a dry month after a wet season `E` is small but `Ψ` is large and `θ` is low → **high fire**. That is the December-peak savanna signal, produced by construction rather than by a lag or a bank.
+
+**Inputs / state.** `monthly_precipitation`, `dryness`, `air_temperature`, `natural_canopy_height`, `aboveground_biomass`. Replaces the current dryness × precipitation × GPP-hump product.
+
+**Score targets.** **Seasonal phase and RMSE shape** — Entry 122's "69% of centered-cycle error is shape." Entry 145's finding that the base rate peaks in August in NHAF (observed December) and that *no* within-cell clock fixes it is precisely what a separable product predicts: the phase is set by whichever marginal peaks first. A `Ψ`/`θ` split moves the phase **without a lag parameter**, because `Ψ` peaks at end-of-wet-season and `θ` bottoms two to four months later, and their product peaks in between — with a delay that is *emergent and cell-specific* rather than the global `lag_w = 0.189` currently in use.
+
+**Why not a duplicate.** The exclusion list names "simple finite moisture buckets" and `_fuel_moisture_bucket` already exists in the file (lines ~1858–1884). But look at what that function does: it returns **a gate**, `falling(state/capacity, 10, threshold)`, used only to modulate `managed_readiness` inside one bank. It is a bucket used as **one more multiplicative modifier**. The new content here is (a) **`E(t)`, actual evapotranspiration, as the production driver** — this quantity does not appear anywhere in `model.py` and is not any EMA of any input; (b) the **two channels being driven by the same bucket with opposite sign**, which is what makes it non-separable; (c) `W_max` as a function of vegetation structure, giving deep-rooted forest a genuinely different hydrological response from grassland — this is the physically correct version of the closed-canopy brake that is currently three hand-set gates (`wet_forest_brake`, `humid_closed`, `canopy_access`).
+
+Entry 148 tested "finite-root-water-by-primary shield" and it failed — but as a *suppressive shield added on top of* the existing wet-forest gates, and it "worsened held annual-log RMSE by .0386 because only two of four folds improve." That is a redundancy result against the existing brakes. This family **deletes** those brakes rather than adding to them.
+
+Entry 137: "a base causal rain hump is redundant." Agreed — a hump is a marginal. This is not a marginal.
+
+**Cheapest falsifier.** Compute `E(t)`, `Ψ(t)`, `θ(t)` from inputs alone. On held cells, check whether the **observed** GFED5 climatological peak month is better predicted by `argmax(Ψ·flammable(θ))` than by `argmax(incumbent)`, scored as circular phase error in months, four-fold. **Falsifier: if median absolute phase error does not improve by ≥ 0.5 months in ≥ 3 of 4 blocks, the two-channel split does not carry the phase — stop.** Entry 145 already established that the aggregate NHAF phase error is a *between-cell mixture*, so score this **per-cell**, not on the regional aggregate; that is the test Entry 145's aggregate diagnostic could not perform.
+
+**Ecological failure mode / guardrail.** `W_max` scaling with `canopy` and `biomass` means the tropics get a large bucket that rarely empties → tropical fire collapses toward zero, and `nhsa/shsa/ceam` (already bias 0.536–0.570) get worse, not better. **Guardrail:** monitor intact-tropical-closed ratio (currently ~0.895–0.902, already underburning) and reject any variant that drops it below 0.85. Also monitor global burned area — the log's 1.7771% figure is the reference; a bucket that never empties will contract it.
+
+---
+
+### Family D — Move to a hazard *sum* over resolved fuel classes instead of a hazard *product* over gates
+
+**The genuinely new object: additive combination of independent fire pathways at the hazard level, so pathways cannot veto one another — replacing the multiplicative-veto topology.**
+
+This is a factorization change, not a new term, and it is the cheapest of the four to test.
+
+Today: `BA = 1 - exp(-h₀·∏ᵢ fᵢ)`. Every gate multiplies every pathway. A brake designed for closed canopy also suppresses the crop-residue pathway in the same cell; the managed-open temperature gate also modulates woody fire. The `_pathway_event_scaling` stage *partially* addresses this by mixing hazards, but it does so with `mix = 0.35` on top of a still-multiplicative `old_hazard`, so 65% of the signal is still veto-topology.
+
+**Pseudomath.** Fully resolve to a sum:
+
+```
+BA(t) = 1 - exp( - Σ_j  h_j(t) )       j ∈ {surface, woody, crop-residue, background}
+
+h_j(t) = a_j · S_j(t) · λ_j(t) · m_j(t) · d_j
+   S_j  = fuel stock of class j        (from Family A, or current capacity proxies)
+   λ_j  = ignition access for class j  (lightning / managed / both)
+   m_j  = moisture-readiness of class j (each class has its OWN drying timescale)
+   d_j  = month-duration exposure
+```
+
+Crucially the **gates become class-scoped**: the humid-canopy brake enters only `h_woody`; the crop fragmentation brake enters only `h_crop`; the managed-open temperature relaxation enters only `h_surface`. Each is applied once, in one place, instead of being replicated across six stages that each recompute the same `surface_share`.
+
+**Inputs / state.** Same inputs as now. This is a pure reorganization of existing physics — which is why it is cheap and why it is worth doing **first** even though its standalone gain may be modest.
+
+**Score targets.** **Bias and RMSE.** In a product topology, `BA → 0` whenever *any* gate → 0, so cells with one weak pathway and one strong pathway are systematically underpredicted. Entry 124's central number — high-weight cells at annual ratio **0.554**, with 24.19% of reference fire in cells that are *both* annual-underpredicted and cycle-bad — is the fingerprint of a multiplicative veto. A sum cannot produce that failure. `tena (bias 0.583, burns 3.79× observed per Entry 171)` and `ceam/mide/nhsa/shsa (bias 0.536–0.580)` are the regions where a wrong pathway currently dominates the product.
+
+**Why not a duplicate.** Entries 116, 117, 119, 156, 157 built the pathway **banks** — those redistribute a *single* hazard across time by pathway share. They never made the pathways **additive sources**. Entry 156 found "managed pathway is double-stored across consecutive banks" and Entry 157 found the duplicate could not be pruned — that is a direct symptom of the pathway decomposition being bolted onto a scalar hazard rather than being the generating structure. Entry 162's finite-Poisson replacements were tested on **only 768 cells** and, critically, "the incumbent convention is empirically supplying needed mass in already-underburned dominant cells" — i.e. they failed because they *removed* mass that the multiplicative form was over-supplying elsewhere. An additive-source rebuild with per-class coefficients re-allocated, rather than a unit-clean swap holding all else fixed, is the version that was not tested. Entry 162 itself says as much: "a unit-clean replacement would require a new physical source and coordinated recalibration, not a standalone repair."
+
+**Cheapest falsifier.** No new physics needed. Take the current model's four capacity shares and four readiness terms, form `Σ_j h_j` with four free scalars, fit those **four scalars only** on 3 held blocks and score on the 4th, four-fold. Compare against the incumbent's exact score on the same held cells. **Falsifier: if a 4-parameter additive form does not beat the incumbent's held-cell annual-log error, the veto topology is not the binding constraint — drop this family.** This costs one afternoon and is the highest information-per-unit-effort test in this review. Four fitted scalars are a *diagnostic* here, not an installed surface; the canonical version would set them by hand or by Optuna after the family clears.
+
+**Ecological failure mode / guardrail.** A sum removes all vetoes, including the ones doing real work: closed-canopy suppression currently depends on the humid gate multiplying *everything*. Scope it to `h_woody` and the surface pathway will burn rainforest. **Guardrail:** the humid-closed-canopy state must enter `S_surface` (as a fuel-continuity limit) as well as `h_woody` (as a moisture limit) — physically correct, since closed canopy genuinely removes surface fuel continuity. Audit intact-tropical-closed ratio; reject above 1.3 (Entry 96's failure mode was exactly this at 2.012).
+
+---
+
+## 3. Sequencing and one process recommendation
+
+Run **D's falsifier first** (cheapest, and its answer conditions the others: if the veto topology is not binding, A and B lose much of their motivation). Then **A's** (equilibrium regression, minutes). Then **C's** (phase test). **B** last — it is the highest-ceiling and highest-risk, and it composes naturally on top of A (which supplies `L_f` for `ρ_max`).
+
+One process note, offered as an outside reader. Entries 161→163→168→169→172 record gains of +0.00034, +0.00018, +0.00011, +0.00011 — four consecutive commits, each requiring a full held-cell audit, a prefix-invariance check, and an official evaluation, to move the third decimal zero times. Meanwhile the four EMA renormalizers that Entry 146 measured as a −0.00234 destructive interaction have never been removed or replaced. **I would trade all four of those entries for one clean test of Family D.** The log's discipline is excellent; its search is over-exploiting a basis it has already established is saturated.
+
+## 4. Guardrail I would add across all four
+
+Every family above changes the **base equation**, which means every downstream stage's tuned coefficient becomes stale — STATE.md's own note ("adding a mechanism can de-tune the ones already there") applies at full force. Do not judge any of these on a single-strength sampled run with `PARAMS` held fixed; that would reproduce Entry 123's confounded "compact replacement architectures" results (0.705, 0.710, 0.624), which measured *de-tuning*, not the architecture. Score each family on **held cells with its own directly affected coefficients re-fit on the training blocks only** — that is not reward-hacking, it is the minimum fair test of a form change, and it is what distinguishes a real form comparison from a de-tuning artifact.
+

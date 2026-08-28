@@ -1,0 +1,39 @@
+I've verified all four corrections against the primary sources and audited the active stack. Here is the revision.
+
+---
+
+# ED-Fire architecture review, revised
+
+## Concessions
+
+All four contradictions are confirmed against the sources. I accept them.
+
+**B withdrawn.** `unified_live_dead_fuel_02dc5d5.py:107-180` is exactly the live/dead/moisture budget I re-proposed — production `L*=cover·GPP/(GPP+g)·rain/(rain+r)`, relaxation at cover-weighted τ, GPP-decline senescence transfer, rain-modulated dead decay, and fire consumption `1-exp(-c·emitted/(cover+.05))` — with the four banks removed and only footprint/closure/brake retained. `finite_fuel_event_rebuild_02dc5d5.py:75-145` is the standalone version. Entry 122 (produced-fuel stock, +.000091) and Entry 134 (self-organizing prognostic fuel, .552251, deserts at 15.14× observed) close it. I have no untested state or conservation coupling, so B is withdrawn without replacement of its kind.
+
+**D withdrawn.** `model.py:2347-2366` is already `fragmented · managed · recurrence · absent_secondary_matrix` with `recurrence = EMA12(hazard)/(EMA12(hazard)+.01)`. Entry 146 measured the broader form at -.001857 with a -.002336 destructive interaction against annual closure and spatial -.006306. Withdrawn.
+
+**A withdrawn — beyond your correction.** Your objection was that trailing 12-month variance is inter-month seasonal variability, so a lognormal sub-monthly exceedance reading is unjustified. Correct, and re-reading `model.py:607-618` shows something stronger that I missed: **the second moment is already in the model.** `dryness_second_moment = _antecedent(dryness², α12)` yields `dryness_variability`, used via `reliable_dryness` and `coherent_surface` as a *coherence attenuator* on capacity — Entries 166–169, +.000342 then +.000176. Entry 160 further identifies prior-year temperature variability × connected surface combustion as the dominant learned interaction, already installed. My "two independent moments" axis is occupied, and the recast you offered would land on the same state with a different coefficientization. Withdrawn.
+
+**C withdrawn.** I cannot state a falsifiable prediction that separates it. Entry 31(b) rejected rainfall-dependent lag monotonically (.7165→.6926) and established the lag reshapes shoulders rather than moving argmax; Entry 94 showed any falling-limb suppression moves peak month (seasonal .8679→.7877); Entry 145 attributed the aggregate phase error to annual-map mixture, with a mass-conserving learned cycle correction moving allocation RMSE only .077414→.076959. `unified_live_dead_fuel_02dc5d5.py:75-105` already blends cover-weighted recovery times. A local moisture τ predicts a within-cell clock change — the object Entry 145 showed is mostly absent. Withdrawn.
+
+## Replacements
+
+**I cannot find two replacements that survive.** I offer one, and I flag it as weaker than the families it replaces.
+
+### E — Ignition-limited vs. fuel-limited *arrival order* within the month
+
+**State/factorization.** Not a new pool and not a gate. The model computes ignition opportunity and combustion state at the same monthly instant and multiplies them. The new object is a causal scalar `φ ∈ [0,1]` measuring the *lead-lag alignment* between the ignition series and the combustibility series over trailing 12 months, built from cross-products already in the code: `EMA12(ignition·combustion_{t-1})` vs `EMA12(ignition_{t-1}·combustion)`, normalized by `EMA12(ignition)·EMA12(combustion)`. Where ignition *leads* combustibility, monthly burned area is ignition-limited and the product overstates it; where combustibility leads, fuel arrives pre-ignited and the product understates. `φ` re-weights the existing surface/woody split in `_pathway_event_scaling`, changing no capacity magnitude.
+
+**Why prior experiments do not cover it.** `combustion_temperature_alignment` (`model.py:615-618`) is a *contemporaneous* alignment of combustion with temperature, not a signed lead-lag between ignition and combustibility. Entry 122's occurrence×spread factorization is same-month. Entry 31 rejected a fixed uniform lag on the *rate*; this changes no timing, only pathway share. Entry 94's phase coupling does not bind because argmax is untouched.
+
+**Cheapest held-cell falsifier.** Compute `φ` on the four held blocks of Entry 145's 1,207 warm seasonal-open cells; require the sign of `φ`-residual correlation to be consistent in all four folds *before* any full-grid run. If fewer than four folds agree, stop — that is the Entry 146 failure signature.
+
+**Expected score component.** Spatial and RMSE via annual-map redistribution; bias approximately neutral by construction (share re-weighting, not magnitude). Realistically +.0003 or less, i.e. Entry 161/168 scale, not a structural step.
+
+**Guardrail.** Bound `φ` multiplicatively in [0.75, 1.25] and require ecological ratios to stay inside the Entry 161 envelope — intact tropical ≥.89, boreal ≤1.06, arid low fuel ≤1.26. Abandon on the first destructive-interaction test against `_annual_regime_closure` (operating-point removal, per Entry 146).
+
+## Honest bottom line
+
+Three of four original families are dead and I have one thin replacement. That is consistent with what the journal already says: Entry 124 puts the present-input ceiling near .72 on high-weight holdout, Entry 132 puts clean held-block capacity ~.005 above current, and Entry 128 identifies the actual blocker as missing ED state — pre-fire ground litter, patch moisture, and a separable snow diagnostic — that no rearrangement of the installed fields recovers. Entry 95 reached the same attribution independently. The .8 target is an input-procurement and provenance problem, not an architecture-search problem; E is a rounding-error candidate offered because you asked for replacements, not because I think it changes that conclusion.
+
+I made no file edits.

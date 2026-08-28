@@ -5394,3 +5394,22 @@ Americas, but they lose NHAF by .007-.008 and reduce global spatial skill by rou
 The term must see resolved regime capacity before it expands a rain-built fire season, yet
 must precede ignition and storage states. No canonical edit, tuning, or official evaluation
 follows.
+
+
+### Entry 181: external architecture review points to prognostic connectivity
+
+A two-pass Claude review was preserved verbatim and then checked against the repository
+rather than accepted at face value. Generic fuel pools, recurrence suppression, annual
+weather occupancy, moisture timescales, and an actual-evapotranspiration bucket are rejected
+as duplicates or physically unidentified from the current inputs.
+
+The strongest surviving family is a pointwise prognostic burnable-patch connectivity state
+that recovers from cover and productivity, is depleted by realized fire, and controls mean
+event footprint separately from ignition occurrence. Existing banks store fuel or deferred
+hazard; they do not make subgrid connectivity the sole event-size state. A held-block test
+must first show that observed burn per crude ignition opportunity rises monotonically with
+input-driven connectivity in at least three of four folds. A full additive surface/woody/
+crop/background hazard replacement is the second, higher-risk option, but only if all
+subsumed legacy stages are removed together. A signed ignition-combustibility arrival-order
+state is genuinely new but expected to have only sub-.001 leverage. None yet justifies
+canonical code, official evaluation, or Optuna.
