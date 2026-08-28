@@ -6379,7 +6379,23 @@ litter timing-only form is therefore advanced to exact full-grid and ecological 
 yet canonical or official and Optuna remains unjustified.
 
 
-### Entry 230: exposed surface-area fuel physics retains the same timing conflict
+### Entry 230: isolated litter timing produces a reproducible exact gain
+
+All six litter timing-only laws that improve every held annual, allocation, and raw-cycle fold are
+replayed exactly. Every bracket improves Overall. The best predeclared form removes a twenty-four-
+month slow mean from the .20 live-to-dead litter multiplier and applies only the residual timing
+response. Exact Overall reaches **.720099688**, +.000207300: RMSE, seasonal, and spatial scores rise,
+while bias falls slightly and global area moves from 1.1585 to 1.1660 times observed.
+
+Seven of fourteen regions improve, led by NHAF, BONA, Australia, and BOAS; CEAM, SHSA, EURO, and
+NHSA carry the largest bounded losses. No severe ecology appears: intact tropical closed remains
+.9856, boreal 1.0524, arid low fuel 1.2589, and combined Congo .8214 times observed. Prefix mutation
+is zero and the litter mass balance closes within 7.69e-16. This is a modest but faithful mechanistic
+advance that qualifies for canonical reproduction and one official evaluation; Optuna remains
+unjustified.
+
+
+### Entry 231: exposed surface-area fuel physics retains the same timing conflict
 
 A genuinely distinct fuel-bed proxy keeps LAI in its native one-sided surface-area units rather
 than turning GPP or biomass into pseudo-mass. Fixed global turnover moves exposed live leaf area
