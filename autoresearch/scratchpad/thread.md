@@ -6463,3 +6463,29 @@ falls .000050784. Annual loss worsens in all four folds, raw-cycle loss reverses
 meaningful architectural step and does not clear the usual all-loss evidence. The diagnostic
 supports post-peak asymmetry but rejects this aggregate grid-cell depletion proxy for canonical,
 official, or Optuna work.
+
+
+### Entry 235: EMA-relative burn-window sharpening is neither neutral nor new
+
+An external review attributes the remaining double-weighted RMSE deficit to insufficient seasonal
+amplitude and proposes a causal monthly burn-window response from positive dryness and temperature
+departures relative to twelve-month EMAs. The literal law multiplies hazard by
+`[W / EMA12(W)]^gamma`, with `W = sigmoid[(D-EMA12(D))/250]` times
+`sigmoid[(T-EMA12(T))/4]`; fixed strengths .15, .30, .50, and .75 are tested across all 18,316
+land cells. A separate exact log-factor decomposition removes the multiplier's slow channel.
+Both forms are future-prefix exact.
+
+The advertised EMA division is not mass neutral because the multiplier covaries with hazard. At
+.15, the literal law adds 1.074% global burned area and worsens annual, allocation, and raw-cycle
+loss in every held fold. At .50 it obtains annual gains only while adding 7.530% area; allocation
+and raw-cycle loss worsen everywhere. The .75 bracket adds 14.101% area and breaches boreal and
+arid ecology. Removing the slow log-factor is worse: even .15 adds 5.982% area, allocation reverses
+in all folds, and raw cycle reverses in three. No bracket clears the coupled evidence, so exact and
+official scoring are skipped.
+
+The equation is also structurally redundant with the active state-dependent fire-season response,
+rare dry-warm onset gates, and the closed Entry 213 EMA-relative warming family. `dryness` is an
+accumulated Thornthwaite moisture deficit, so its deviation from its own EMA is onset or acceleration,
+not an observed submonthly dry-window fraction. The diagnostic confirms the seasonal-amplitude
+shortfall but does not supply a new identified current-input mechanism; canonical and Optuna work do
+not follow.
