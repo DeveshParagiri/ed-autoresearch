@@ -24,7 +24,7 @@ INPUTS = ('dryness', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_pasture_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition',
+              'rare_ignition', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure', 'arrival_order',
               'secondary_open_footprint')
@@ -82,7 +82,7 @@ PARAMS = {'annual_scale': 1.73,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
  'fire_season_dry_half': 500.0,
- 'dead_fuel_pool_w': 3.0,
+ 'dead_fuel_pool_w': 1.0,
  'dead_fuel_decay': 0.08,
  'dead_fuel_consumption': 2.0,
  'greenup_brake': 2.0,
@@ -2705,6 +2705,7 @@ def predict(
     prediction = _rain_conditioned_crop_management(
         prediction, data, fallback, enabled
     )
+    prediction = _dead_fuel_pool_response(prediction, data, fallback, enabled)
     prediction = _conditional_fire_allocation(
         prediction, data, fallback, enabled
     )
