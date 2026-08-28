@@ -6489,3 +6489,23 @@ accumulated Thornthwaite moisture deficit, so its deviation from its own EMA is 
 not an observed submonthly dry-window fraction. The diagnostic confirms the seasonal-amplitude
 shortfall but does not supply a new identified current-input mechanism; canonical and Optuna work do
 not follow.
+
+
+### Entry 236: evaluator-correct replay overturns the amplitude-only ceiling claim
+
+An independent replay checks the external review's amplitude decomposition against the evaluator's
+actual absolute anomaly: each cell's monthly climatology is centered by its unweighted twelve-month
+mean before the day-weighted squared error is aggregated. The pure amplitude-only mathematical
+oracle scores **.738695951**, and a mean-preserving prediction constrained to [0,1] scores
+.734091888 because 72.33% of reference weight encounters a scaling cap. Amplitude alone therefore
+does not reach .750. The larger signal is cycle shape direction: its pure oracle scores
+**.771301543** with RMSE .628574 and seasonal .957029.
+
+The claimed .733371 current-input learner ceiling is not unique or a rigorous ceiling. An unchanged
+clean-feature HGB script reaches .724813329, a depth-four opportunity-factor stack reaches
+.733194948, and a direct-hazard stack reaches .736972054. These remain optimistic diagnostics:
+benchmark-derived masks select corrected cells and blend weights are chosen on the same out-of-fold
+targets, although individual predictions are whole-cell held and coordinate free. They cannot be
+canonical or official. The corrected result redirects mechanism search from scalar seasonal
+amplitude alone toward missing monthly waveform geometry in the high-fire cells, without proving
+that .750 is impossible from current inputs.
