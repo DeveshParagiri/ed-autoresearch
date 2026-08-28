@@ -5462,3 +5462,21 @@ ecological ratios remain bounded and mostly move toward one, although tropical o
 from 1.049 to 1.059. The equation is honest but too narrow for immediate promotion. One
 state-based refinement will test whether persistent desiccation can retain the African
 signal without the American losses; no tuning or official evaluation is warranted yet.
+
+
+### Entry 185: coherent gating strengthens arrival order but remains narrow
+
+The fixed -.25 arrival-order redistribution was multiplied by existing causal physical
+gates rather than retuned. Persistent desiccation and coherent surface opportunity both
+survive the held screen; the coherent gate is selected by the preregistered objective. It
+improves annual loss in three of four full blocks and four of four warm-open blocks, with
+cycle improvement in three of four held blocks and exact prefix invariance.
+
+Exact Overall reaches **.719107733**, +.000086046 over the current incumbent. Spatial skill
+rises .000685, while seasonal skill falls .000270; bias and RMSE are nearly flat. The gate
+attenuates CEAM, NHSA, and SHSA losses by roughly 31%, 9%, and 26% and preserves the NHAF
+gain, but only two of fourteen regions improve. Intact tropical, temperate closed, boreal,
+rangeland, crop, and arid ratios mostly move toward one; tropical open rises from 1.049 to
+1.057. This is the strongest honest family member and has no ecological blow-up, but its
+geographic breadth remains weak. The family is closed without tuning while the larger
+connectivity test completes.
