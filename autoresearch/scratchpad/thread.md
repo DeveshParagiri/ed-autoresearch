@@ -5556,3 +5556,15 @@ closed, boreal, rangeland, crop, and arid ratios mostly move toward one, while t
 rises modestly from 1.049 to 1.057. Official evaluation records **.719** with bias .757,
 RMSE .547, seasonal .861, and spatial .882. The gain is accepted as incremental rather than
 broad; the next architecture search must target the remaining seasonal and regional gap.
+
+
+### Entry 190: global area calibration is not the missing headroom
+
+A fixed final-hazard scaling diagnostic tests factors .70 through 1.20 around the new
+incumbent. The current factor 1.00 is the exact optimum of the coarse physical range at
+**.719107733**. Factors .90 and 1.10 fall to .716599221 and .716745073; the current annual
+burned percentage of 1.774 is therefore not a simple global over-scaling error even though it
+exceeds the benchmark mean. Lowering total area improves neither the weighted RMSE enough nor
+the spatial allocation, and scaling does not alter seasonal skill materially. The next gain
+must redistribute annual fire propensity across ecological states rather than retune a global
+normalization. No canonical or official artifact is changed.
