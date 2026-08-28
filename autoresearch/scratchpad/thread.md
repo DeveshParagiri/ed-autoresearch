@@ -5912,3 +5912,82 @@ ratios remain bounded; the explicit cost is a .001935 seasonal-score loss. Offic
 records **.720** with bias .758, RMSE .548, seasonal .860, and spatial .884. This simplification
 is accepted on overall score, regional breadth, and reduced redundancy; it does not justify
 Optuna.
+
+
+### Entry 206: dead-fuel pruning makes every weak late component load-bearing
+
+A focused exact interaction audit on the dead-fuel-pruned incumbent tests five weak or late
+components: arrival order, phenology, the supported secondary-open footprint, rare ignition,
+and curing as the next-lowest previously reported leave-one-out contributor. The base is
+.719748275. Every single removal now loses: arrival order -.000095050, phenology -.000847130,
+secondary footprint -.000831337, rare ignition -.003184553, and curing -.006326047.
+
+The dead-pool prune materially changes the operating point. Before pruning, arrival-order
+removal appeared +.000016; it is now negative by .000095. Phenology's contribution expands
+from .000111 to .000847, the secondary footprint from .000539 to .000831, rare ignition from
+.003033 to .003185, and curing from .004668 to .006326. The dead-fuel allocator had therefore
+masked useful timing and event-size contributions rather than exposing another redundant term.
+
+Six targeted pair removals all lose more than either constituent. Arrival-order pairs score
+.718639 with phenology, .718750 with the secondary footprint, .716449 with rare ignition, and
+.712479 with curing. Phenology plus secondary footprint scores .717500; phenology plus rare
+ignition .715910. Pair interactions are adverse except a small +.000194 redundancy between
+phenology and rare ignition, far too weak to offset their -.003838 joint loss. Ecological
+audits reinforce retention: removing rare ignition collapses boreal from 1.052 to .560 and
+rangeland from .961 to .606; removing phenology broadly lowers fire, including crop .941 to
+.913 and arid 1.200 to 1.158. Arrival-order removal improves 11 regions but lowers the global
+scalar and worsens boreal, while its pair removals amplify ecological and score costs. No
+weak-component prune survives, so canonical, official, results, and progress artifacts remain
+unchanged and no tuning follows.
+
+
+### Entry 206: supported secondary footprint belongs after pathway reservoirs
+
+The unchanged fuel-, rain-, and warmth-supported secondary footprint is replayed at six
+physical stages on the dead-fuel-pruned stack. Applying it after pathway event scaling falls
+to .719397572; after regime and seasonal-rain capacity reaches .719728864; after the local
+footprint reaches .719746054. The installed final position reproduces **.719748275**.
+
+Two upstream placements improve exactly. Applying the footprint after annual regime closure
+reaches .719755597 and improves 12 of 14 regions. Applying it after the multi-pathway, fuel-
+recovery, and secondary-litter reservoirs is exact best at **.719756369**, +.000008094, with
+bias .758084, RMSE .548447, seasonal .859539, spatial .884264, and 11 of 14 regions improving.
+The only regional losses are numerical-scale changes in BOAS, BONA, and CEAS; the largest is
+CEAS at -.000008846.
+
+Ecology is effectively unchanged at the winning reservoir placement: intact tropical closed
+.970601 to .970598, temperate closed 1.003272 to 1.003252, boreal 1.052204 to 1.052203,
+tropical open 1.019092 to 1.019079, rangeland .960993 to .960964, crop .941213 to .940932,
+and arid 1.199875 to 1.199872. The placement is also physically cleaner: the supported event
+capacity is resolved after finite pathway storage, while downstream fragmentation, coherent
+surface capacity, and ignition-arrival ordering can still constrain it. This no-complexity
+reorder is eligible for canonical installation, but its numerical-scale gain does not justify
+Optuna.
+
+
+### Entry 206: arrival order remains useful after the dead-fuel prune
+
+Arrival order is cross-tested exactly on pinned `7838128` after removing the stale dead-fuel
+allocator. The four predeclared structures are the current -.25 redistribution before the
+supported secondary footprint, complete removal, the same redistribution after the footprint,
+and one fixed half-strength bracket of -.125. This is a structural check, not a parameter
+search. Every formulation remains pointwise, globally shared, prefix causal, and target blind.
+
+The current ordering reproduces Overall **.719748275** with bias .758082320, RMSE .548445941,
+seasonal .859502991, and spatial .884264183. Removal falls to **.719653226** (-.000095050),
+while the weaker bracket reaches **.719707094** (-.000041182). Both alternatives improve 11
+of 14 regional scores, led by NHSA and SHSA, but lose NHAF by -.001576 and -.000778
+respectively and give up enough spatial skill to lower aggregate Overall. The selection is
+therefore driven by the declared overall objective with bounded regional tradeoffs, not by
+requiring every region to improve.
+
+Moving arrival order after the supported secondary footprint is numerically identical:
+Overall differs by less than 5e-10 and regional differences are at floating-point noise.
+Both mechanisms multiply hazard by smooth positive factors, so their ordering commutes; stage
+placement is not a distinct model family here. The current form keeps intact tropical,
+temperate closed, tropical open, productive-rangeland, crop, and arid ratios at .981, 1.003,
+1.058, .976, .941, and 1.256, with boreal at 1.052. Removal or weakening changes each by less
+than .008 and introduces no new ecological failure, but neither recovers its global loss.
+Future mutation is bit-exact through month 96 for all four formulations. Arrival order is
+retained at its current strength; removal, reordering, and weakening are closed without a
+canonical, official, results, or progress change.
