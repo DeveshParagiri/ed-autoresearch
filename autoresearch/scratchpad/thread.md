@@ -5480,3 +5480,19 @@ rangeland, crop, and arid ratios mostly move toward one; tropical open rises fro
 1.057. This is the strongest honest family member and has no ecological blow-up, but its
 geographic breadth remains weak. The family is closed without tuning while the larger
 connectivity test completes.
+
+
+### Entry 186: pairwise pruning finds no safe simplification
+
+A current-point screen tested all 78 active-component pairs and 153 named late-stage pairs
+on 768 whole cells carrying 59.52% of observed fire. It used annual-map, allocation, and
+raw-cycle loss plus pair interaction rather than average Shapley. Broad fuel and dryness
+removals were excluded as high-fire-sample artifacts before exact testing.
+
+Four narrow negative-interaction pairs reached the full grid and all fail. Removing regime
+capacity with local footprint scores .704268 and raises rangeland fire to 4.247 times
+observed. Removing dead-fuel pool with annual closure scores .713227; state fire-season with
+annual closure .713765; annual closure with surface seasonality .713395. Each loses bias,
+RMSE, and spatial skill, most lose seasonality, and only one to five regions improve. The
+stack is strongly non-additive, but no tested pair is safely redundant. Nothing is pruned,
+tuned, or officially evaluated.
