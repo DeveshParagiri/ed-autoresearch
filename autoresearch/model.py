@@ -26,7 +26,7 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
               'rare_ignition', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
-              'annual_regime_closure')
+              'annual_regime_closure', 'arrival_order')
 
 # Calibrate only the managed-surface temperature response after its validated step.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -75,6 +75,7 @@ PARAMS = {'annual_scale': 1.73,
  'cold_forest_capacity': 3.0,
  'productive_range_brake': 6.5,
  'surface_seasonality_capacity': 4.0,
+ 'arrival_order_strength': -0.25,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
@@ -690,6 +691,168 @@ def _surface_seasonality_capacity(
 
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
     adjusted_hazard = hazard * (1.0 + strength * modifier)
+    return np.asarray(
+        1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
+        dtype=np.float32,
+    )
+
+
+def _ignition_combustibility_arrival_order(
+    prediction: np.ndarray,
+    data: Mapping[str, np.ndarray],
+    p: Mapping[str, float],
+    enabled: set[str],
+) -> np.ndarray:
+    """Redistribute natural fire by causal ignition-weather arrival order.
+
+    Lightning immediately preceding peak combustibility can remain effective
+    through smouldering holdover or a continuing ignition episode, whereas
+    lightning arriving after the combustible window has less opportunity to
+    spread. A signed one-month cross-lag captures that ordering and a trailing
+    mean makes the response a temporal redistribution rather than a new source
+    of fire. The response is limited to natural surface and woody fuel and is
+    attenuated where dryness is erratic or combustion is thermally incoherent.
+    """
+    if "arrival_order" not in enabled:
+        return prediction
+    strength = float(p.get("arrival_order_strength", 0.0))
+    if strength == 0.0:
+        return prediction
+
+    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
+    lightning = np.clip(
+        np.asarray(data["lightning_flash_rate"], dtype=np.float64), 0.0, None
+    )
+    rain = np.clip(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
+    )
+    dryness = np.clip(
+        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
+    )
+    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
+    ignition = lightning / (lightning + 0.02)
+    thermal = _rising(temperature, 1.0 / 3.0, 5.0)
+    combustion = (
+        dryness / (dryness + 250.0)
+        * 1.0 / (1.0 + rain / 35.0)
+        * thermal
+    )
+    previous_ignition = np.empty_like(ignition)
+    previous_combustion = np.empty_like(combustion)
+    previous_ignition[0] = ignition[0]
+    previous_combustion[0] = combustion[0]
+    previous_ignition[1:] = ignition[:-1]
+    previous_combustion[1:] = combustion[:-1]
+    ignition_after_combustion = _antecedent(
+        ignition * previous_combustion, alpha_12
+    )
+    combustion_after_ignition = _antecedent(
+        previous_ignition * combustion, alpha_12
+    )
+    arrival_order = np.clip(
+        (ignition_after_combustion - combustion_after_ignition)
+        / (ignition_after_combustion + combustion_after_ignition + 0.02),
+        -1.0,
+        1.0,
+    )
+
+    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
+    gpp_12 = _antecedent(gpp, alpha_12)
+    fine_fuel = gpp_12 / (gpp_12 + 0.35)
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    secondary = np.clip(
+        np.asarray(data["secondary_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    secondary_canopy = np.clip(
+        np.asarray(data["secondary_canopy_height"], dtype=np.float64), 0.0, None
+    )
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
+    )
+    crop = np.clip(
+        np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    pasture = np.clip(
+        np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    rangeland = np.clip(
+        np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    urban = np.clip(
+        np.asarray(data["luh2_urban_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    open_cover = np.clip(
+        natural * 8.0 / (canopy + 8.0)
+        + secondary * 8.0 / (secondary_canopy + 8.0)
+        + pasture
+        + rangeland,
+        0.0,
+        2.0,
+    )
+    continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
+    surface_capacity = (1.0 - crop) * fine_fuel * open_cover * continuity
+    woody_capacity = (
+        natural * canopy / (canopy + 8.0) * biomass / (biomass + 1.0)
+        + secondary
+        * secondary_canopy
+        / (secondary_canopy + 8.0)
+        * biomass
+        / (biomass + 1.0)
+    )
+    crop_capacity = crop * fine_fuel
+    total_capacity = 0.05 + surface_capacity + woody_capacity + crop_capacity
+    natural_share = (surface_capacity + woody_capacity) / total_capacity
+
+    dryness_12 = _antecedent(dryness, alpha_12)
+    dryness_second_moment = _antecedent(np.square(dryness), alpha_12)
+    dryness_variability = np.sqrt(
+        np.maximum(dryness_second_moment - np.square(dryness_12), 0.0)
+    ) / (dryness_12 + 1.0)
+    combustion_without_thermal = (
+        dryness / (dryness + 250.0) / (1.0 + rain / 35.0)
+    )
+    combustion_12 = _antecedent(combustion_without_thermal, alpha_12)
+    temperature_12 = _antecedent(temperature, alpha_12)
+    temperature_std = np.empty_like(temperature)
+    for time in range(temperature.shape[0]):
+        start = max(0, time - 11)
+        temperature_std[time] = temperature[start : time + 1].std(axis=0)
+    combustion_temperature = _antecedent(
+        combustion_without_thermal * temperature, alpha_12
+    )
+    alignment = (
+        combustion_temperature / (combustion_12 + 1e-6) - temperature_12
+    ) / (temperature_std + 1.0)
+    thermal_overlap = 2.0 * _rising(alignment, 1.0, 0.0)
+    reliable_dryness = np.clip(
+        2.0 / (1.0 + dryness_variability), 0.5, 1.5
+    )
+    primary = np.clip(
+        np.asarray(data["luh2_primary_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    coherent_surface = np.clip(
+        reliable_dryness
+        * thermal_overlap
+        / np.sqrt(1.0 + primary * np.square(dryness_variability)),
+        0.5,
+        1.5,
+    )
+    signal = arrival_order * natural_share * coherent_surface
+
+    hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
+    raw_factor = np.exp(np.clip(strength * signal, -0.5, 0.5))
+    reference = _antecedent(raw_factor, alpha_12)
+    factor = np.clip(raw_factor / np.maximum(reference, 1e-6), 0.5, 2.0)
+    adjusted_hazard = hazard * factor
     return np.asarray(
         1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
         dtype=np.float32,
@@ -2462,6 +2625,9 @@ def predict(
         prediction, data, fallback, enabled
     )
     prediction = _surface_seasonality_capacity(
+        prediction, data, fallback, enabled
+    )
+    prediction = _ignition_combustibility_arrival_order(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
