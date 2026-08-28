@@ -5658,3 +5658,27 @@ temperate closed .990 to 1.062, boreal 1.050 to 1.082, tropical open 1.057 to 1.
 productive rangeland .978 to 1.049, crop .931 to .995, and arid low fuel 1.257 to 1.265.
 Prefix mutation remains bit-exact. The full replay validates the held breadth guardrail and
 closes recoverable-opportunity factorization without canonical or official promotion.
+
+
+### Entry 195: weak cross-stratum propagation survives exact weighting
+
+The annual-positive cross-stratum gate from Entry 193 receives a requested full-grid replay
+because official Overall weights RMSE twice and also scores annual spatial distribution. The
+same fixed instantaneous equation is tested at strengths .125 and .5 with no refit. It lets
+only the harmonic-mean overlap of surface and woody fuel respond to a smooth mature-drought,
+dry, rain-free, warm propagation window; the response remains global, pointwise, prefix-causal,
+and target-independent.
+
+Strength .125 raises exact Overall from .719107756 to **.719148137**, a +.000040381 step.
+Bias, seasonal, and spatial scores move from .756910, .861418, and .882290 to .756950,
+.861550, and .882452; RMSE score slips slightly from .547460 to .547394. Four of fourteen
+regions improve: Australia, central Asia, northern Africa, and southern Africa. The largest
+losses are southern South America -.003135, northern South America -.002569, and Central
+America -.002539. Strength .5 is rejected at .718919708 and amplifies those regional losses.
+
+The weak-form ecology is bounded: intact tropical closed .972 to .987, temperate closed .990
+to .998, boreal 1.050 to 1.042, tropical open 1.057 to 1.082, productive rangeland .978 to
+.983, crop .931 to .932, and arid low fuel 1.257 to 1.257. Future-input mutation changes the
+first 96 months by exactly zero. The .125 form therefore clears an overall-first mechanistic
+promotion bar despite narrow breadth; the gain is too small to justify Optuna. The stronger
+form and further monotone amplification are closed.
