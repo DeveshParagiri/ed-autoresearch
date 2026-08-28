@@ -5535,3 +5535,24 @@ temperate closed +.00217, boreal +.00102, tropical open +.00311, rangeland +.003
 The observed connectivity association is real, but both its strict footprint replacement
 and its weaker causal temporal role fail translation; the family is closed without canonical
 code, exact candidate evaluation, Optuna, or official evaluation.
+
+
+### Entry 189: causal ignition arrival order becomes the incumbent
+
+The coherent-gated cross-lag from Entry 185 is promoted because its physical scope is
+bounded and its exact gain survives direct implementation in the canonical model. The
+globally shared equation redistributes only natural surface and woody hazard according to
+whether lightning precedes or follows peak combustibility, relative to a causal local
+twelve-month reference. It uses no learned surface, future value, neighbour, coordinate,
+region label, or region-specific coefficient, and future-input mutation leaves the prefix
+unchanged.
+
+Canonical exact Overall is **.719107756**, +.000086070 over the prior .719021686 incumbent.
+Spatial skill rises to .882290219 while seasonal skill falls to .861417953; bias .756910315
+and RMSE .547460145 are essentially unchanged. Regional gains remain narrow at 2 of 14,
+led by NHAF and SHAF, while the largest losses in NHSA, SHSA, and CEAM remain below .0043.
+The exact ecological audit shows no pathological compensation: intact tropical, temperate
+closed, boreal, rangeland, crop, and arid ratios mostly move toward one, while tropical open
+rises modestly from 1.049 to 1.057. Official evaluation records **.719** with bias .757,
+RMSE .547, seasonal .861, and spatial .882. The gain is accepted as incremental rather than
+broad; the next architecture search must target the remaining seasonal and regional gap.
