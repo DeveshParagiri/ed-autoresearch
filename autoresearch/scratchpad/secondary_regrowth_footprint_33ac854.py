@@ -25,7 +25,13 @@ sys.path.insert(0, str(SCRATCH))
 
 from residual_phase_space_33ac854 import antecedent, load_pinned  # noqa: E402
 from scripts.fast_ilamb import GFED5Evaluator  # noqa: E402
-from scripts.runtime import GFED5_PATH, load_inputs, validate_prediction  # noqa: E402
+from scripts.runtime import (  # noqa: E402
+    GFED5_PATH,
+    load_inputs,
+    load_land_mask,
+    validate_prediction,
+)
+from temperature_pathway_blend import ecological_ratios  # noqa: E402
 
 
 MONTH_DAYS = np.tile(
@@ -202,12 +208,10 @@ def main() -> None:
                 + " cycle_gain="
                 + ",".join(f"{value:+.6f}" for value in cycle_gain)
             )
+            # Exact-test the weakest survivor first because this annual
+            # capacity necessarily trades against other spatial regimes.
             if held and survivor is None:
                 survivor = (name, strength, trial, annual_gain.sum() + cycle_gain.sum())
-            elif held and survivor is not None:
-                objective = annual_gain.sum() + cycle_gain.sum()
-                if objective > survivor[3]:
-                    survivor = (name, strength, trial, objective)
 
     if survivor is None:
         print("EXACT skipped: no stable held survivor")
@@ -215,11 +219,61 @@ def main() -> None:
     name, strength, trial, _ = survivor
     score = evaluator.score(validate_prediction(trial))
     global_score = score["global"]
+    incumbent_score = evaluator.score(incumbent)
+    deltas = {
+        region: score[region]["overall_score"] - incumbent_score[region]["overall_score"]
+        for region in score
+        if region != "global"
+    }
     print(
         f"EXACT variant={name} strength={strength:g} overall={global_score['overall_score']:.9f} "
         f"bias={global_score['bias_score']:.9f} rmse={global_score['rmse_score']:.9f} "
         f"seasonal={global_score['seasonal_cycle_score']:.9f} "
         f"spatial={global_score['spatial_distribution_score']:.9f}"
+    )
+    print(
+        f"REGIONS improved={sum(value > 0.0 for value in deltas.values())}/{len(deltas)} "
+        + ",".join(f"{region}:{value:+.6f}" for region, value in sorted(deltas.items()))
+    )
+
+    prepared = dict(data)
+    prepared["annual_precipitation"] = 12.0 * antecedent(
+        np.asarray(data["monthly_precipitation"], dtype=np.float64), 12.0
+    )
+    land = load_land_mask()
+    incumbent_ecology = ecological_ratios(incumbent, prepared, observed, area, land)
+    candidate_ecology = ecological_ratios(trial, prepared, observed, area, land)
+    print(
+        "ECOLOGY "
+        + ",".join(
+            f"{regime}:{incumbent_ecology[regime]:.5f}->{candidate_ecology[regime]:.5f}"
+            for regime in incumbent_ecology
+        )
+    )
+
+    prefix_cells = ranking[:64]
+    prefix_rows, prefix_cols = prefix_cells // 360, prefix_cells % 360
+    prefix_data = {
+        key: np.asarray(values[:, prefix_rows, prefix_cols])[:, None, :]
+        for key, values in data.items()
+    }
+    prefix_incumbent = model.predict(prefix_data, dict(model.PARAMS), None)
+    prefix_trial = candidate(
+        prefix_incumbent,
+        secondary_regrowth_states(prefix_data)[name],
+        strength,
+    )
+    perturbed = {key: values.copy() for key, values in prefix_data.items()}
+    for values in perturbed.values():
+        values[96:] = values[96:][::-1] * 1.37 + 0.123
+    perturbed_incumbent = model.predict(perturbed, dict(model.PARAMS), None)
+    perturbed_trial = candidate(
+        perturbed_incumbent,
+        secondary_regrowth_states(perturbed)[name],
+        strength,
+    )
+    print(
+        f"PREFIX max_abs={np.max(np.abs(prefix_trial[:96]-perturbed_trial[:96])):.12g}"
     )
 
 
