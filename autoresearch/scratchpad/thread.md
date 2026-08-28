@@ -6528,3 +6528,21 @@ crop and arid-low-fuel strata show extra secondary modes but not a stable signed
 The obvious causal refractory/depletion response is already covered by Entries 221, 232, and 234,
 where it improves centered timing but loses annual or raw-cycle evidence. This entry diagnoses the
 remaining target without inventing another duplicate mechanism.
+
+
+### Entry 238: waveform-direction ML points to ignition unions but not a stable law
+
+A diagnostic HGB targets the monthly anomaly-direction residual within 2,364 incumbent-selected
+high-fire cells containing 85.0% of modeled and 72.4% of observed fire mass. Four whole-cell folds
+explain .2600 of incumbent-weighted and .1638 of evaluator-weighted residual variance; every global
+fold R2 is positive and recession is most predictable at .1852. These fitted predictions are
+diagnostic only, and the incumbent-selected carrier mask makes their aggregate score optimistic.
+
+Fold-stable descriptions involve lightning by rangeland, persistent lightning by curing with
+negative saturation, lightning pulses by current temperature, and temperature by recent warming.
+They suggest replacing conjunctive ignition gates with globally shared probabilistic unions rather
+than multiplying another correction onto final hazard. However, the rangeland lightning-curing and
+lightning-pulse thermal limbs each retain a negative held fold when isolated. The interactions are
+therefore useful triage but do not yet justify canonical translation, exact scoring, or Optuna. A
+bounded replacement probe is warranted only if it can distinguish genuinely alternative ignition
+opportunities from another seasonal-amplitude multiplier.
