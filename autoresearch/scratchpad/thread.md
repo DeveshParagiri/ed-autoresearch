@@ -5591,3 +5591,28 @@ No formulation jointly improves annual and cycle loss, so none receives exact, c
 official, or Optuna evaluation. This factorization is closed in its present annual-capacity
 role; any successor must predict recoverable annual opportunity rather than use post-fire
 stock depletion as a monotone brake.
+
+
+### Entry 192: recoverable opportunity needs relative state but lacks fold breadth
+
+The Entry 191 stock is confined to a finite monthly allocation budget, while annual
+propensity is rebuilt from causal fuel renewal and trailing coincident ignition-combustion
+opportunity. Four fixed equations compare fuel-only and rain-supported renewal in absolute
+and locally relative forms. Monthly release is mass-conserving: candidate annual propensity
+enters a pointwise budget, burnable-stock readiness can defer or release that budget, and
+candidate fire depletes the stock only after the current event. All forms are prefix-exact
+and use only globally shared current inputs.
+
+Absolute recoverable opportunity is not a viable annual map. Fuel-only and rain-supported
+forms worsen annual loss by .146730 and .240941 in every held block. Normalizing opportunity
+against its slower causal local state removes that failure. Fuel-relative improves annual
+loss by .008451 in three of four folds but worsens aggregate cycle loss by .000094; the
+rain-supported relative form improves annual by .012998 and cycle by .000079, with three of
+four annual folds but only two of four cycle folds better. Its selected ecological movements
+are bounded but mostly increase fire in the high-weight sample.
+
+Recoverable opportunity is therefore superior to depleted remaining stock for annual
+propensity, but the compact finite allocator does not generalize monthly timing broadly
+enough for exact evaluation. No form passes the joint held gate, so none receives exact,
+canonical, official, or Optuna evaluation. The family is closed after its requested
+diagnostic evolution.
