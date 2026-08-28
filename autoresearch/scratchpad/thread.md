@@ -6028,3 +6028,30 @@ moves from 1.058 to 1.063 times observed, productive rangeland from .976 to .980
 bit-exact through month 96 at every strength. Full removal is therefore falsified; the
 globally shared timing-only allocator at fixed strength 1 is eligible for canonical replay,
 but the scratch experiment makes no canonical, official, results, or progress change.
+
+
+### Entry 211: a factorized subgrid fire tile loses raw seasonality
+
+The failed full additive-pathway replacement is relaxed into a physical within-cell mixture:
+most area retains the incumbent product-limited hazard, while fixed fractions .02, .05, .10,
+and .20 follow independently factorized surface, woody, crop-residue, and background
+occurrence-times-event pathways. The alternate tile reuses incumbent global event magnitudes;
+no mixture or pathway coefficient is fitted. The law is pointwise, target blind, globally
+shared, and prefix causal, with future-input mutation changing its first 96 months by exactly
+zero.
+
+The alternative tile alone is much too fire-limited, with held area ratio .0449 against .9005
+for the incumbent. Small mixtures therefore improve normalized seasonal-cycle RMSE in all four
+coordinate-held folds only by reducing magnitude. Every bracket loses raw seasonal RMSE in
+all four folds. Fractions .02 and .05 improve aggregate annual log RMSE from 1.507384 to
+1.494015 and 1.497269 respectively, but each wins annual error in only two of four held folds;
+their raw seasonal RMSE rises from .151928 to .152356 and .153165. Fractions .10 and .20 are
+worse still, with area ratios .8149 and .7294.
+
+Ecological displacement is bounded at the smallest fraction, with maximum audited ratio shift
+.0155, but it cannot rescue the unstable annual breadth or unanimous raw-seasonal loss. No
+bracket clears the predeclared whole-cell gate, so exact evaluation is deliberately skipped.
+The result rejects this simple fixed-area subgrid mixture: a credible heterogeneous pathway
+tile would first need its own finite fuel accumulation and event-capacity physics, not a larger
+mixing fraction or tuned empirical weight. Canonical, official, results, and progress artifacts
+remain unchanged.
