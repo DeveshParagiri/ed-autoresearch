@@ -6546,3 +6546,20 @@ lightning-pulse thermal limbs each retain a negative held fold when isolated. Th
 therefore useful triage but do not yet justify canonical translation, exact scoring, or Optuna. A
 bounded replacement probe is warranted only if it can distinguish genuinely alternative ignition
 opportunities from another seasonal-amplitude multiplier.
+
+
+### Entry 239: fuel-combustibility circulation carries a weak directional signal
+
+A pointwise trajectory state tests whether fine-fuel production leads combustibility or follows it:
+`J_t = P_(t-1) C_t - C_(t-1) P_t`, with `P = GPP/(GPP+.35)` and the existing dry-warm
+combustibility `C`. Signed, unsigned, and reversed controls weakly modulate the existing surface-bank
+release selector at fixed strengths .10, .25, and .50. All nine forms are future-prefix exact and
+their held ecological changes are negligible.
+
+Signed circulation beats reversed sign decisively and exceeds unsigned aggregate normalized-shape
+gain at every strength, reaching .004462 versus .004311 at .50. The effect is not robustly specific:
+unsigned retains 96% to 97% of the gain, while signed annual and allocation losses reverse in fold 2
+at every strength. Aggregate annual, allocation, and raw-cycle evidence is positive and ecology is
+benign, so an Overall-first exact replay was queued, but the research pause interrupted it before a
+result. Nothing is promoted or officially evaluated; the held probe and overlap audit are preserved
+as an intermediate checkpoint.
