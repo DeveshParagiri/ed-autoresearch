@@ -5428,3 +5428,20 @@ Early footprint application improves BONA and the tropical Americas but costs NH
 interpretation is consistent: the footprint should scale realized surface events only after
 the opportunity bank releases stored hazard, but before annual regime closure observes the
 result. No canonical edit, tuning, or official evaluation follows.
+
+
+### Entry 183: fully additive pathway replacement loses monthly allocation
+
+A complete replacement was tested as `BA = 1-exp[-(h_surface+h_woody+h_crop+
+h_background)]` with only four nonnegative globally shared source scales. On 2,235 whole
+held cells carrying 85.0% of observed fire, the direct form improves annual-log error in
+three of four folds but worsens normalized and raw cycle error in every fold. It raises the
+area ratio from .880 to 1.390 and degenerates to a background scale near 23.65 while the
+surface scale collapses nearly to zero.
+
+A causal relative-readiness version improves annual error in all four folds but still loses
+both cycle objectives in every fold and raises total area to 1.493. Selected intact tropical,
+temperate closed, productive-rangeland, and crop ratios become 2.77, 6.82, 2.53, and 1.73.
+Soft readiness is similarly negative, and all variants are prefix-exact. The incumbent's
+downstream states carry essential monthly allocation that four simple additive pathways do
+not recover. The replacement is rejected without exact, canonical, official, or Optuna use.
