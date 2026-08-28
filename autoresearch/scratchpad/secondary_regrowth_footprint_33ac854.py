@@ -5,7 +5,9 @@ while the active secondary litter banks only redistribute incumbent hazard in
 time and the local event footprint omits secondary vegetation. This script
 tests a slow, pointwise capacity multiplier with fixed strengths. A full-grid
 exact score is computed only if a formulation improves annual loss in all four
-held spatial blocks without degrading aggregate cycle allocation.
+held spatial blocks and its aggregate cycle cost is below five percent of the
+annual gain. This allows a bounded annual-map trade rather than demanding an
+unrelated cycle Pareto improvement.
 """
 
 from __future__ import annotations
@@ -190,7 +192,10 @@ def main() -> None:
             annual, cycle = losses(trial, observed, area, cells, folds)
             annual_gain = base_annual - annual
             cycle_gain = base_cycle - cycle
-            held = bool(np.all(annual_gain > 0.0) and cycle_gain.sum() >= 0.0)
+            held = bool(
+                np.all(annual_gain > 0.0)
+                and -cycle_gain.sum() <= 0.05 * annual_gain.sum()
+            )
             print(
                 f"variant={name} strength={strength:g} held={held} annual_gain="
                 + ",".join(f"{value:+.6f}" for value in annual_gain)
