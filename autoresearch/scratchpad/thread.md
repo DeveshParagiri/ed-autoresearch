@@ -5853,3 +5853,34 @@ after the dead-fuel prune or moved relative to the new footprint rather than del
 tiny scalar alone. Removing phenology loses .000111 and .002681 seasonal skill and lowers
 fire broadly across all audited classes, so it is not a credible prune. No canonical,
 official, results, or progress artifact is changed.
+
+
+### Entry 203: low-woody rangeland underburn does not survive exact weighting
+
+The weighted phase-space audit is refreshed on the supported secondary-footprint incumbent,
+retaining 2,923 whole cells that carry 90.00% of observed fire. Most stable residuals are
+already explicitly represented: humid warm surface overburn has the persistent-warm brake;
+cold, rare-lightning and aseasonal cold underburn has the thaw source; secondary-open underburn
+has the new supported footprint; and the stable lightning-arrival cycle residual has rare
+ignition plus arrival order. The largest distinct interaction is warm low-biomass rangeland.
+It carries 16.96% of observed fire and is underpredicted in all four held blocks by signed
+residuals +.742, +.405, +.157, and +.244. Generic managed access is active, but its interaction
+with low woody biomass is absent; the current rangeland-specific capacity instead brakes
+productive high-biomass range.
+
+The monthly audit rules out another hot-season calendar term: 56.61% of this state's cycle
+already lies in the hot-dry management window and is slightly overallocated, while the very
+hot-dry subset is overallocated in every block. The tested equation therefore changes annual
+opportunity without imposing new timing. It multiplies incumbent hazard by a smooth share of
+rangeland, low woody biomass, trailing GPP fuel, landscape continuity, warm trailing
+temperature, and intermediate causal annual moisture. Strengths .25, .5, and 1 improve held
+annual-log loss in all four blocks with negligible cycle cost; strength 2 reverses one fold.
+
+The weakest stable survivor fails exactly. Strength .25 falls from .719646904 to
+**.719522243**: bias .757309, RMSE .547596, seasonal .861245, and spatial .883864. Seven of
+fourteen regions improve, but southern South America loses .001214 and northern South America
+.000721. Rangeland ratio moves toward observed from .973 to .982, while every other ecology
+change is small and prefix mutation is bit-exact. The held annual state is real, but the
+global evaluator values the displaced seasonal and spatial structure more. No stronger exact
+replay, tuning, canonical, official, results, or progress change follows; the low-biomass
+rangeland-opportunity family is closed.
