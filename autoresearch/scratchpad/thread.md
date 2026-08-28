@@ -6563,3 +6563,19 @@ at every strength. Aggregate annual, allocation, and raw-cycle evidence is posit
 benign, so an Overall-first exact replay was queued, but the research pause interrupted it before a
 result. Nothing is promoted or officially evaluated; the held probe and overlap audit are preserved
 as an intermediate checkpoint.
+
+
+### Entry 240: rare-onset thermal-union replacement is paused before evidence
+
+Reverse-ML interactions suggest that absolute warmth and recent warming may be substitutable rather
+than conjunctive controls on a lightning-pulse onset pathway. A scratch formulation preserves the
+actual incumbent rare-onset source at zero blend, then replaces only its active timing factor with
+`P [A + W - A W]`, where `P` is a causal lightning-pulse gate, `A` is absolute warmth, and `W` is
+three-month warming. This corrects an initial code-path assumption: the canonical onset source does
+not contain the broader `thermal_window`, so the probe blends from the exact implemented timing
+factor rather than a reconstructed triple product.
+
+The fixed .10, .25, .50, and 1.0 replacement runner was prepared with held, exact-proxy, prefix,
+area, regional-breadth, and ecology checks. The user-requested research pause interrupted execution
+before a result was produced. The formulation is committed only as a queued intermediate; it has no
+scientific result, canonical change, official evaluation, or Optuna implication.
