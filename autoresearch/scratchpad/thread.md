@@ -5413,3 +5413,18 @@ crop/background hazard replacement is the second, higher-risk option, but only i
 subsumed legacy stages are removed together. A signed ignition-combustibility arrival-order
 state is genuinely new but expected to have only sub-.001 leverage. None yet justifies
 canonical code, official evaluation, or Optuna.
+
+
+### Entry 182: the local event footprint is correctly downstream of storage
+
+The unchanged local footprint was inserted at ten stages. Its installed position after
+the surface opportunity bank remains exact best at **.719021686**. Placing it immediately
+after seasonal rain capacity reaches .718902, after rare ignition or green-up about .71890,
+and after annual closure or the multipath bank about .71896. Earlier event-scale placements
+fall to .71788-.71793; final placements reach .718869.
+
+Early footprint application improves BONA and the tropical Americas but costs NHAF up to
+.00766, repeating the same compensation seen in other late-capacity moves. The physical
+interpretation is consistent: the footprint should scale realized surface events only after
+the opportunity bank releases stored hazard, but before annual regime closure observes the
+result. No canonical edit, tuning, or official evaluation follows.
