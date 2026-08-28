@@ -5941,7 +5941,7 @@ weak-component prune survives, so canonical, official, results, and progress art
 unchanged and no tuning follows.
 
 
-### Entry 206: supported secondary footprint belongs after pathway reservoirs
+### Entry 207: supported secondary footprint belongs after pathway reservoirs
 
 The unchanged fuel-, rain-, and warmth-supported secondary footprint is replayed at six
 physical stages on the dead-fuel-pruned stack. Applying it after pathway event scaling falls
@@ -5965,7 +5965,7 @@ reorder is eligible for canonical installation, but its numerical-scale gain doe
 Optuna.
 
 
-### Entry 206: arrival order remains useful after the dead-fuel prune
+### Entry 208: arrival order remains useful after the dead-fuel prune
 
 Arrival order is cross-tested exactly on pinned `7838128` after removing the stale dead-fuel
 allocator. The four predeclared structures are the current -.25 redistribution before the
