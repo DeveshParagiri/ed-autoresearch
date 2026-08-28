@@ -24,7 +24,7 @@ INPUTS = ('dryness', 'monthly_precipitation', 'air_temperature', 'gpp',
           'luh2_pasture_fraction', 'luh2_urban_fraction')
 COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'cropland', 'phenology', 'regime_capacity',
-              'rare_ignition', 'dead_fuel_pool',
+              'rare_ignition',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure', 'arrival_order',
               'secondary_open_footprint')
@@ -2703,9 +2703,6 @@ def predict(
     )
     prediction = _rare_lightning_ignition(prediction, data, fallback, enabled)
     prediction = _rain_conditioned_crop_management(
-        prediction, data, fallback, enabled
-    )
-    prediction = _dead_fuel_pool_response(
         prediction, data, fallback, enabled
     )
     prediction = _conditional_fire_allocation(
