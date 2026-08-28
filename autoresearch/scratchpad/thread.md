@@ -5496,3 +5496,23 @@ annual closure .713765; annual closure with surface seasonality .713395. Each lo
 RMSE, and spatial skill, most lose seasonality, and only one to five regions improve. The
 stack is strongly non-additive, but no tested pair is safely redundant. Nothing is pruned,
 tuned, or officially evaluated.
+
+
+### Entry 187: prognostic connectivity is informative but cannot own footprint
+
+A pointwise connectivity state recovers toward cover- and GPP-supported capacity and is
+depleted by the candidate's own realized surface burning. On whole held cells, observed
+burn per crude ignition opportunity increases with this input-driven state in all four
+blocks for every tested recovery and depletion configuration; held connectivity quintiles
+are strictly monotone in three of four blocks. The new state therefore carries a real
+conditional event-size signal rather than merely reproducing geography.
+
+Making that state the sole variable surface-footprint control fails exactly. Across bounded
+saturation, recovery, depletion, and percolation forms, the best reaches **.712786397**,
+-.006235289 from the incumbent. Spatial skill falls .881606 to .870739, only 3 of 14
+regions improve, and intact tropical, temperate closed, boreal, tropical-open, rangeland,
+crop, and arid ratios all move toward overburn. A no-depletion control confirms that
+post-fire feedback is active, and prefix causality is exact. Connectivity contains useful
+temporal information, but its present cover/moisture capacity cannot replace the incumbent
+mean footprint structure. One weak centered-anomaly formulation will test that narrower
+role before the family is closed; no tuning or official evaluation follows this failure.
