@@ -6342,3 +6342,20 @@ Overall-first full-grid replay confirms the conflict. Full beta-25 and beta-8 fo
 ecologically and Congo safe but lose .000195 and .000243 because bias, RMSE, and spatial costs exceed
 their timing benefit. The mathematically correct limiting-factor architecture is therefore rejected;
 the historical buggy offset is not restored. Evidence is committed at `c4ed8f4` and `6d13efd`.
+
+
+### Entry 228: causal capacity/timing separation does not unlock the litter signal
+
+The strongest annual-stable litter correction is split in log-hazard space into a slow causal
+fuel-capacity state and a fast timing anomaly. Six-, twelve-, and twenty-four-month globally fixed
+time constants, two fixed litter blends, and zero or one-quarter timing retention are tested without
+future normalization, target-derived prediction terms, geography, or neighbour state. Prefix
+mutation is exactly zero for all twelve brackets.
+
+Only the six-month, .10-blend, one-quarter-timing form improves annual loss in all four held blocks,
+but raw-cycle loss still reverses in two. Exact Overall is **.719846352**, a -.000046036 loss: small
+bias, RMSE, seasonal, area-calibration, and eleven-of-fourteen regional gains are outweighed by a
+-.000655983 spatial-score loss. Ecology remains bounded, including arid low fuel at 1.2552 and
+combined Congo at .8027 times observed. The two-channel filter is rejected as a standalone model;
+it reduces but does not remove the annual-versus-waveform conflict, confirming that slow filtering
+cannot manufacture the missing local annual ordering. No canonical, official, or Optuna work follows.
