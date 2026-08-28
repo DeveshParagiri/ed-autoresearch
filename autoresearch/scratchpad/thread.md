@@ -6579,3 +6579,17 @@ The fixed .10, .25, .50, and 1.0 replacement runner was prepared with held, exac
 area, regional-breadth, and ecology checks. The user-requested research pause interrupted execution
 before a result was produced. The formulation is committed only as a queued intermediate; it has no
 scientific result, canonical change, official evaluation, or Optuna implication.
+
+
+### Entry 241: strict anomaly-amplitude reverse ML is paused before evidence
+
+A strict whole-cell diagnostic was prepared to predict the evaluator-correct per-cell anomaly-
+amplitude ratio without a benchmark-selected carrier mask. The high-fire population and training
+weights come only from the incumbent; GFED supplies labels and separate evaluation weights, while
+features remain current or point-local causal state. The script reports foldwise fire-weighted R2,
+intensity-stratified residuals, stable interactions, and amplitude-ratio headroom without producing
+a canonical prediction.
+
+The user-requested research pause interrupted the run before its evidence could be reviewed. The
+reproducer is preserved as an intermediate commit, but no result, mechanistic translation, exact
+candidate, official evaluation, or Optuna claim is made.
