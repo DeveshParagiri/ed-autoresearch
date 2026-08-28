@@ -5991,3 +5991,15 @@ than .008 and introduces no new ecological failure, but neither recovers its glo
 Future mutation is bit-exact through month 96 for all four formulations. Arrival order is
 retained at its current strength; removal, reordering, and weakening are closed without a
 canonical, official, results, or progress change.
+
+
+### Entry 209: reservoir-stage footprint is the exact incumbent
+
+The no-complexity placement from Entry 207 is installed: supported secondary-regrowth
+footprint is resolved after the finite pathway recovery and litter reservoirs, before
+fragmentation, coherent surface capacity, and ignition-arrival redistribution. Canonical
+exact Overall is **.719756369**, +.000008094 over the dead-fuel-pruned incumbent, with 11 of
+14 regions improving and ecological changes below .0004 in every audited class. The equation,
+inputs, and coefficients are unchanged, and prefix causality remains exact. Official evaluation
+records **.720** with bias .758, RMSE .548, seasonal .860, and spatial .884. The gain is
+numerical-scale but the stage semantics are cleaner; no tuning follows.
