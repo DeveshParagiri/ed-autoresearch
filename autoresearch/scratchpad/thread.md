@@ -5568,3 +5568,26 @@ exceeds the benchmark mean. Lowering total area improves neither the weighted RM
 the spatial allocation, and scaling does not alter seasonal skill materially. The next gain
 must redistribute annual fire propensity across ecological states rather than retune a global
 normalization. No canonical or official artifact is changed.
+
+
+### Entry 191: prognostic burnable fraction improves timing but not annual propensity
+
+A pointwise burnable fraction recovers toward globally shared surface, crop-residue, and
+woody fuel capacities on the incumbent 6-, 24-, and 120-month timescales, then is depleted
+only after candidate fire. Incumbent hazard is explicitly factorized into a causal trailing
+annual propensity and monthly allocation. Four fixed formulations test remaining stock as
+the annual control, with no allocator, combustion allocation, ignition-combustion allocation,
+and a stronger structural bracket. All are prefix-exact and use no target, geography,
+neighbour, future value, or new input in their equations.
+
+The state contains timing information but has the wrong annual role. Stock-only improves
+centered-cycle loss in all four held whole-cell blocks by .000482, yet worsens annual-map loss
+by .056879 in all four. Adding a weak combustion allocator reduces the annual penalty to
+.006775 and improves cycle loss by .000246 in all four; adding ignition gives +.006633 annual
+and -.000177 cycle with three of four timing folds better. The stronger formulation loses
+both objectives. Depleting remaining burnable stock therefore removes annual fire from cells
+the incumbent already underburns, even though its relative readiness helps monthly timing.
+No formulation jointly improves annual and cycle loss, so none receives exact, canonical,
+official, or Optuna evaluation. This factorization is closed in its present annual-capacity
+role; any successor must predict recoverable annual opportunity rather than use post-fire
+stock depletion as a monotone brake.
