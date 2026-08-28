@@ -6310,3 +6310,35 @@ without repairing timing. The mechanism cannot be promoted alone; it may only be
 independently validated temporal allocator resolves its held waveform cost. Exact, ecology,
 canonical, official, and Optuna work are skipped. Audit and experiments are committed at `054ebb7`,
 `30bde50`, and `6160a68`.
+
+
+### Entry 226: Overall-first replay admits only a microscopic interface gain
+
+The strongest annual-stable land-interface signal is reopened because the project objective is
+Overall first, not simultaneous improvement of every metric and spatial fold. Exact pairwise and
+Simpson access-only forms at .05, .10, and .20 are evaluated with all regions, global area, Congo,
+ecological regimes, and prefix causality. Only Simpson access at .05 improves Overall, from
+.719892388 to **.719911197**, a +.000018809 spatial-only gain. Prefix mutation is zero and no severe
+ecological pathology appears; intact tropical moves .9805 to .9834 and combined Congo .8159 to
+.8232 times observed.
+
+The trade is too thin for immediate canonical complexity. Bias, RMSE, and seasonal skill all fall,
+global area rises from 1.1585 to 1.1730 times observed, arid overburn rises 1.2565 to 1.2690, and
+only six of fourteen regions improve. The equation remains a cross-test candidate rather than an
+official promotion. Exact evidence is committed at `a6437e5` and `3b9e2fe`.
+
+
+### Entry 227: a correct limiting-factor soft minimum fails exact weighting
+
+The dormant softmin idea is re-tested on the current lawful stack rather than inferred from its old
+invalid lineage. Correct mean log-sum-exp soft minima at sharpness 2, 8, 25, and the hard-min limit,
+plus a homogeneous harmonic generalized mean, are geometrically blended with the four base
+dryness, precipitation, fuel, and temperature factors. Equal-factor normalization and future-prefix
+causality are exact. Every one of twenty held brackets improves annual loss in all four folds, but
+each worsens raw-cycle loss in the same fold.
+
+Overall-first full-grid replay confirms the conflict. Full beta-25 and beta-8 forms lose .006371 and
+.017466 Overall and create severe boreal/arid inflation. Weak hard-min and harmonic blends remain
+ecologically and Congo safe but lose .000195 and .000243 because bias, RMSE, and spatial costs exceed
+their timing benefit. The mathematically correct limiting-factor architecture is therefore rejected;
+the historical buggy offset is not restored. Evidence is committed at `c4ed8f4` and `6d13efd`.
