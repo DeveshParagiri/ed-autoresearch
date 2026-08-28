@@ -27,7 +27,7 @@ COMPONENTS = ('dryness', 'precipitation', 'fuel', 'temperature', 'curing',
               'rare_ignition', 'dead_fuel_pool',
               'pathway_hazards', 'surface_opportunity_bank',
               'annual_regime_closure', 'arrival_order',
-              'cross_stratum_propagation')
+              'secondary_open_footprint')
 
 # Calibrate only the managed-surface temperature response after its validated step.
 SEARCH_SPACE: dict[str, dict[str, Any]] = {
@@ -77,7 +77,7 @@ PARAMS = {'annual_scale': 1.73,
  'productive_range_brake': 6.5,
  'surface_seasonality_capacity': 4.0,
  'arrival_order_strength': -0.25,
- 'cross_stratum_strength': 0.125,
+ 'secondary_open_footprint_strength': 0.5,
  'seasonal_rain_capacity': 0.6,
  'fire_season_w': 0.3,
  'fire_season_half': 0.04,
@@ -861,52 +861,54 @@ def _ignition_combustibility_arrival_order(
     )
 
 
-def _cross_stratum_propagation(
+def _secondary_open_footprint(
     prediction: np.ndarray,
     data: Mapping[str, np.ndarray],
     p: Mapping[str, float],
     enabled: set[str],
 ) -> np.ndarray:
-    """Let surface fire weakly enter woody fuel during a mature dry window.
+    """Represent event footprint carried by open secondary regrowth.
 
-    Surface and woody pathways are normally independent in the model, but a
-    landscape carrying both fine fuel and canopy fuel can propagate vertically
-    when antecedent rain has matured into drought and current weather supports
-    combustion. Twice their harmonic mean bounds the connected fuel fraction,
-    so trace fuel in either layer cannot create a crown-fire multiplier. The
-    weak response is continuous, pointwise, and uses one coefficient globally.
+    Existing secondary-litter stores redistribute incumbent hazard through
+    time but do not give regrowth mosaics their own annual event-size capacity.
+    Open secondary cover therefore receives a bounded share of the footprint,
+    relative to competing open, woody, crop, and background structure. Fuel,
+    weather, and ignition terms still decide whether monthly hazard exists;
+    this state only changes how much connected secondary cover it can burn.
     """
-    if "cross_stratum_propagation" not in enabled:
+    if "secondary_open_footprint" not in enabled:
         return prediction
-    strength = float(max(p.get("cross_stratum_strength", 0.0), 0.0))
+    strength = float(
+        max(p.get("secondary_open_footprint_strength", 0.0), 0.0)
+    )
     if strength <= 0.0:
         return prediction
 
-    alpha_12 = 1.0 - np.exp(-1.0 / 12.0)
-    gpp = np.clip(np.asarray(data["gpp"], dtype=np.float64), 0.0, None)
-    gpp_12 = _antecedent(gpp, alpha_12)
-    fine_fuel = gpp_12 / (gpp_12 + 0.35)
-    natural = np.clip(
-        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
-        0.0,
-        1.0,
-    )
     secondary = np.clip(
         np.asarray(data["secondary_vegetation_fraction"], dtype=np.float64),
         0.0,
         1.0,
     )
-    canopy = np.clip(
-        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
-    )
     secondary_canopy = np.clip(
         np.asarray(data["secondary_canopy_height"], dtype=np.float64), 0.0, None
     )
-    biomass = np.clip(
-        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
-    )
     crop = np.clip(
         np.asarray(data["luh2_cropland_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    urban = np.clip(
+        np.asarray(data["luh2_urban_fraction"], dtype=np.float64), 0.0, 1.0
+    )
+    secondary_open = secondary * 8.0 / (secondary_canopy + 8.0)
+    continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
+    secondary_structure = secondary_open * continuity
+
+    natural = np.clip(
+        np.asarray(data["natural_vegetation_fraction"], dtype=np.float64),
+        0.0,
+        1.0,
+    )
+    canopy = np.clip(
+        np.asarray(data["natural_canopy_height"], dtype=np.float64), 0.0, None
     )
     pasture = np.clip(
         np.asarray(data["luh2_pasture_fraction"], dtype=np.float64), 0.0, 1.0
@@ -914,56 +916,35 @@ def _cross_stratum_propagation(
     rangeland = np.clip(
         np.asarray(data["luh2_rangeland_fraction"], dtype=np.float64), 0.0, 1.0
     )
-    urban = np.clip(
-        np.asarray(data["luh2_urban_fraction"], dtype=np.float64), 0.0, 1.0
+    natural_open = np.clip(
+        rangeland + pasture + natural * 8.0 / (canopy + 8.0), 0.0, 1.0
     )
-    natural_open = natural * 8.0 / (canopy + 8.0)
-    secondary_open = secondary * 8.0 / (secondary_canopy + 8.0)
-    open_cover = np.clip(
-        natural_open + secondary_open + pasture + rangeland, 0.0, 2.0
+    surface_structure = (1.0 - crop) * natural_open * continuity
+    biomass = np.clip(
+        np.asarray(data["aboveground_biomass"], dtype=np.float64), 0.0, None
     )
-    continuity = 1.0 / (1.0 + 2.0 * crop**1.5 + 5.0 * urban)
-    surface_capacity = (1.0 - crop) * fine_fuel * open_cover * continuity
-    woody_capacity = biomass / (biomass + 1.0) * (
-        natural * canopy / (canopy + 8.0)
-        + secondary * secondary_canopy / (secondary_canopy + 8.0)
+    woody_structure = (
+        natural
+        * canopy
+        / (canopy + 8.0)
+        * biomass
+        / (biomass + 1.0)
     )
-    vertical_overlap = np.clip(
-        2.0
-        * surface_capacity
-        * woody_capacity
-        / (surface_capacity + woody_capacity + 0.05),
+    secondary_share = np.clip(
+        secondary_structure
+        / (
+            0.05
+            + secondary_structure
+            + surface_structure
+            + woody_structure
+            + crop
+        ),
         0.0,
         1.0,
     )
 
-    rain = np.clip(
-        np.asarray(data["monthly_precipitation"], dtype=np.float64), 0.0, None
-    )
-    rain_12 = _antecedent(rain, alpha_12)
-    drought_maturation = np.maximum(
-        (rain_12 - rain) / (rain_12 + rain + 10.0), 0.0
-    )
-    dryness = np.clip(
-        np.asarray(data["dryness"], dtype=np.float64), 0.0, None
-    )
-    temperature = np.asarray(data["air_temperature"], dtype=np.float64)
-    combustion = (
-        dryness / (dryness + 250.0)
-        * 1.0 / (1.0 + rain / 35.0)
-        * _rising(temperature, 1.0 / 3.0, 5.0)
-    )
-    compound_window = np.sqrt(
-        np.clip(drought_maturation * combustion, 0.0, 1.0)
-    )
-    transition = _rising(compound_window, 12.0, 0.28)
-    transition_multiplier = 0.5 + 1.5 * transition
-    factor = 1.0 + strength * vertical_overlap * (
-        transition_multiplier - 1.0
-    )
-
     hazard = -np.log1p(-np.clip(prediction, 0.0, 1.0 - 1e-7))
-    adjusted_hazard = hazard * np.clip(factor, 0.25, 2.5)
+    adjusted_hazard = hazard * (1.0 + strength * secondary_share)
     return np.asarray(
         1.0 - np.exp(-np.clip(adjusted_hazard, 0.0, 50.0)),
         dtype=np.float32,
@@ -2741,7 +2722,7 @@ def predict(
     prediction = _ignition_combustibility_arrival_order(
         prediction, data, fallback, enabled
     )
-    prediction = _cross_stratum_propagation(
+    prediction = _secondary_open_footprint(
         prediction, data, fallback, enabled
     )
     return np.asarray(np.clip(prediction, 0.0, 1.0), dtype=np.float32)
