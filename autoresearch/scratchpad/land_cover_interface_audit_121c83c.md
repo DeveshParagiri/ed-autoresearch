@@ -1,0 +1,17 @@
+# Land-cover interface novelty audit at `121c83c`
+
+The pinned model has several footprint and fragmentation terms, but none computes a normalized within-cell compositional edge or diversity index from local land-cover shares. This leaves a narrow, genuinely new test: require natural or secondary vegetation and managed-open land to coexist before granting anthropogenic ignition access, while deriving the spread brake separately from crop/urban interspersion.
+
+| Existing mechanism | Existing equation and role | Why the proposed test does not duplicate it |
+| --- | --- | --- |
+| `_local_fire_footprint`, lines 1724–1805 | `managed_access = managed / (managed + half)` enters a fuel-weighted footprint; `managed` includes range, pasture, and crop. | Access does not require a natural-managed interface. A pure managed cell and a mixed natural-managed cell can receive the same access, and crop is both access and a separate capacity penalty. |
+| `_secondary_open_footprint`, lines 864–959 | Open secondary capacity is multiplied by `1 / (1 + 2 crop^1.5 + 5 urban)`. | This is an absolute crop/urban continuity penalty on one secondary pathway, not a compositional edge measure and not a separate ignition-access term. |
+| `_cold_thaw_capacity_multiplier`, lines 1808–1881 | `1 - continuity(crop, urban)` is converted into `managed_ignition`. | It deliberately uses fragmentation pressure as ignition access inside a cold-thaw mechanism, so access and spread interruption are not separated. |
+| `_fragmented_managed_recurrence_brake`, lines 2597–2645 | Crop/urban fragmentation suppresses only recurrent fire where managed cover exists and the secondary-open matrix is absent. | It is conditional on trailing modeled fire and secondary canopy. It does not describe the instantaneous pointwise mosaic, and it cannot represent a natural-managed ignition interface. |
+| `_rain_conditioned_crop_management`, lines 1234–1314 | Crop removal/residue effects depend on productivity and rainfall seasonality. | It is a crop-climate mechanism, not within-cell composition. |
+
+The new state is built only from current pointwise fractions. Fractions are clipped, combined into `wild = natural + secondary`, `managed_open = pasture + rangeland`, `developed = crop + urban`, and normalized with a residual `other` class so the composition sums to one. No neighbour, coordinate, region, target, incumbent residual, or completed-record statistic enters either formulation.
+
+The pairwise formulation uses `access = 4 wild * managed_open` and `spread_break = 4 developed * (wild + managed_open)`. The Simpson formulation uses the five-class diversity `D = (1 - sum(s_i^2)) / 0.8`, then `access = D * 4 wild * managed_open` and `spread_break = D * developed`. In both cases, access and spread are distinct non-negative signals applied with separate fixed globally shared coefficients in hazard space as `hazard * exp(a * access - b * spread_break)`. The bracket is interpretable because `a` is the maximum log-access boost and `b` the maximum log-spread penalty after clipping each signal to `[0,1]`.
+
+The screen must start from the exact `121c83c` model blob `b82c285259f35f0f942ddc8a78663d8d14dd36b1`. Eligibility requires lower annual-log, normalized-allocation, and raw-cycle loss in every one of the standard four disjoint whole-cell folds. A candidate that clears those gates must also reproduce its full-run prefix exactly before any full-grid score or ecological ratio is considered.
