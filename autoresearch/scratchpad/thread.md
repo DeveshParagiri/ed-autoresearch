@@ -6192,3 +6192,38 @@ compromise improves raw cycle in every block but worsens annual and allocation e
 ecological shifts remain bounded and the prefix mutation is exactly zero. No exact or official
 evaluation is justified. The physical family is falsified at `5804a38`, so greater spread-model
 detail cannot substitute for the missing native fuel and moisture state.
+
+
+### Entry 219: lightning by thermal coherence is not a global capacity law
+
+The fold-stable annual reverse-ML interaction between trailing lightning and trailing temperature
+variability is translated into one smooth physical capacity: lightning raises natural/open fine-fuel
+opportunity only in thermally coherent climates, while high thermal variability without lightning
+suppresses it. The equation uses causal twelve-month states, globally fixed .02-flash and 4 C
+saturation scales, and no learned or geographic values. Prefix mutation is exactly zero and held
+ecological shifts are bounded.
+
+At the weakest strength .05, annual error improves in only one of four spatial blocks, allocation
+improves in one, and raw cycle worsens in the remaining block. Strengths .10 through .40 preserve
+or deepen the annual sign reversal. The learned interaction is descriptive but cannot become one
+globally shared causal law, so exact, canonical, official, and Optuna work are skipped. Scratch
+evidence is committed at `f3782d7`.
+
+
+### Entry 220: no clean public ED pre-fire state archive exists
+
+The public-state search resolves the input route rather than relaxing it. The downloadable Zenodo
+EDv3 global simulation archive contains one 1981--2016 NetCDF and no restart, while its paper states
+that transient fire was prescribed from GFED4; using its vegetation state would therefore import
+observed-fire ancestry. Public TRENDY/GCB products expose coarse monthly diagnostics without the
+configuration, restart, and fire-lineage manifest needed to prove a clean causal state. Neither is
+eligible as a new model input.
+
+The smallest useful route is now explicit: request a point-local monthly pre-fire export containing
+fast and structural litter, live herbaceous and small-woody fuel, fuel-weighted moisture or dry
+fraction, snow/SWE, patch or cohort age/area, and the existing aggregate vegetation state from a
+native 1850 spin-up, together with code commit, configuration, forcing, restart, calendar, units,
+aggregation, pre-fire timing, and endogenous-fire ancestry. The proposed 17-channel 1-degree
+2000-12--2016-12 cube is about 811 MiB raw. Until that lineage exists, current-input mechanisms may
+continue as diagnostics, but no GFED-descended state may enter the canonical model. The procurement
+gate is committed at `369f23a`.
