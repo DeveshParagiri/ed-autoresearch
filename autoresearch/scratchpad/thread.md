@@ -5616,3 +5616,23 @@ propensity, but the compact finite allocator does not generalize monthly timing 
 enough for exact evaluation. No form passes the joint held gate, so none receives exact,
 canonical, official, or Optuna evaluation. The family is closed after its requested
 diagnostic evolution.
+
+
+### Entry 193: cross-stratum propagation helps the map but mistimes fire
+
+The incumbent separately represents surface and woody fuel but has no propagation law for
+their vertical interface. A new globally shared gate uses twice their harmonic-mean capacity
+as the cross-stratum share, then lets that share respond to a smooth compound window of
+mature rainfall deficit, atmospheric dryness, rain suppression, and warmth. It is pointwise,
+prefix-exact, target-independent, and tests both instantaneous fine-fuel weather and slower
+two-, three-, and six-month canopy-moisture equilibration.
+
+The annual-map signal is real but not jointly usable. Every strength from .125 through 1.0
+improves aggregate held annual loss, with three of four whole-cell folds better. The weak
+instantaneous form improves annual loss by .001952, and strength .5 by .006821. However,
+instantaneous transition worsens centered-cycle loss in all four folds at every strength;
+slower canopy moisture improves only one of four cycle folds and never changes the adverse
+aggregate sign. Fire-weighted signal quintiles are also nonmonotone: model/observed area rises
+from .663 to 1.067 before falling to .861 in the highest quintile, so a monotone vertical-fuel
+multiplier cannot safely recover the remaining annual deficit. No variant passes the joint
+held gate, and none receives exact, canonical, official, or Optuna evaluation.
