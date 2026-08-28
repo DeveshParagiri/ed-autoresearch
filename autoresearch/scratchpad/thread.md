@@ -6055,3 +6055,52 @@ The result rejects this simple fixed-area subgrid mixture: a credible heterogene
 tile would first need its own finite fuel accumulation and event-capacity physics, not a larger
 mixing fraction or tuned empirical weight. Canonical, official, results, and progress artifacts
 remain unchanged.
+
+
+### Entry 212: held reverse ML confirms a shallow residual ceiling
+
+Two separate depth-2 gradient-boosted diagnostics are fit out of fold on four 15-degree
+whole-cell spatial blocks against pinned `75fc017`: one predicts annual log residual and one
+predicts normalized monthly-cycle residual. The feature matrix contains only valid incumbent
+inputs and point-local current or prefix-causal summaries. Coordinates assign blocks but are
+not features; regions, future values, and incumbent prediction are excluded. The selected
+4,470-cell audit covers 92.52% of observed fire and 90.42% of incumbent excess fire. Learned
+corrections are diagnostic only and are neither canonical nor official.
+
+The best fixed OOF blend is .25: annual-only correction scores .722641, cycle-only .720007,
+and their combination **.722807209**, versus **.719756369** for the mechanistic incumbent.
+This is .000116 below the earlier exogenous-only .722923 ceiling, so the refreshed shallow
+learner does not reveal a new large reservoir of black-box headroom. Stable annual structure
+is dominated by natural vegetation, lightning climatology, urban cover, warming, dryness
+variability, and biomass. Its recurring interactions include lightning climatology by
+temperature variability, rain climatology by urban cover, natural cover by temperature
+variability, and biomass by canopy. These are already addressed in kind by rare ignition,
+continuity/fragmentation, annual closure, and woody event capacity.
+
+The cycle learner has a clearer unrepresented interaction: `warming_3 * gpp_curing` appears
+in every held model, while the learned residual correction rises with three-month warming
+and falls with GPP curing in all four folds. This suggests testing one globally shared
+thermal-curing phase lag rather than copying the learned surface. No ML prediction or learned
+coefficient advances to the scientific model.
+
+
+### Entry 213: the thermal-curing phase lag is not spatially stable
+
+The one novel ML interaction from Entry 212 is translated into the fixed physical signal
+
+`S = surface_share * sigmoid((T - 5) / 3) * sigmoid((T - T3 - .5) / 1.5) * (1 - c / (c + .05))`,
+
+where `c = max((GPP3 - GPP) / (GPP3 + GPP + .2), 0)` and `T3` and `GPP3` are causal
+three-month antecedents. It redistributes existing hazard with
+`F = exp(k S) / EMA12(exp(k S))`; it neither adds an annual source nor uses learned values.
+The law is pointwise, target blind, globally shared, prefix causal, and reconstructs surface
+share only from current valid vegetation, fuel, and continuity inputs.
+
+Fixed strengths .1, .25, .5, and 1 improve annual loss in all four held blocks except the
+strongest bracket in one block. However, every strength worsens normalized-cycle loss in the
+same held block: -.000216, -.000642, -.001676, and -.004153 respectively. The other three
+blocks improve, but the failure grows monotonically with strength, showing a real spatial
+sign reversal rather than a poorly chosen scalar. No formulation clears the predeclared
+all-block cycle gate, so exact evaluation is deliberately skipped. The interaction is useful
+as a residual description but not as a globally shared mechanism; this family is falsified
+without a canonical, official, results, or progress change.
